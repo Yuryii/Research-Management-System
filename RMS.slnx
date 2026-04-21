@@ -1,0 +1,15 @@
+<Solution>
+  <Project Path="RMS/src/AppHost/AppHost.csproj" />
+  <Project Path="RMS/src/Application/Application.csproj" />
+  <Project Path="RMS/src/Domain/Domain.csproj" />
+  <Project Path="RMS/src/Infrastructure/Infrastructure.csproj" />
+  <Project Path="RMS/src/ServiceDefaults/ServiceDefaults.csproj" />
+  <Project Path="RMS/src/Shared/Shared.csproj" />
+  <Project Path="RMS/src/Web/Web.csproj" />
+  <Project Path="RMS/tests/Application.FunctionalTests/Application.FunctionalTests.csproj" />
+  <Project Path="RMS/tests/Application.UnitTests/Application.UnitTests.csproj" />
+  <Project Path="RMS/tests/Domain.UnitTests/Domain.UnitTests.csproj" />
+  <Project Path="RMS/tests/Infrastructure.IntegrationTests/Infrastructure.IntegrationTests.csproj" />
+  <Project Path="RMS/tests/TestAppHost/TestAppHost.csproj" />
+  <Project Path="RMS/tests/Web.AcceptanceTests/Web.AcceptanceTests.csproj" />
+</Solution>
