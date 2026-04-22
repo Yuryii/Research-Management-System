@@ -31,20 +31,53 @@ public class DispatchDomainEventsInterceptor : SaveChangesInterceptor
 
     public async Task DispatchDomainEvents(DbContext? context)
     {
-        if (context == null) return;
+        if (context is null) return;
 
         var entities = context.ChangeTracker
-            .Entries<BaseEntity>()
-            .Where(e => e.Entity.DomainEvents.Any())
-            .Select(e => e.Entity);
-
-        var domainEvents = entities
-            .SelectMany(e => e.DomainEvents)
+            .Entries()
+            .Select(e => e.Entity)
+            .Where(IsBaseEntity)
+            .Where(e => GetDomainEvents(e).Any())
             .ToList();
 
-        entities.ToList().ForEach(e => e.ClearDomainEvents());
+        var domainEvents = entities
+            .SelectMany(GetDomainEvents)
+            .ToList();
+
+        entities.ForEach(ClearDomainEvents);
 
         foreach (var domainEvent in domainEvents)
+        {
             await _mediator.Publish(domainEvent);
+        }
+    }
+
+    private static bool IsBaseEntity(object entity)
+    {
+        var type = entity.GetType();
+
+        while (type is not null)
+        {
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(BaseEntity<>))
+            {
+                return true;
+            }
+
+            type = type.BaseType;
+        }
+
+        return false;
+    }
+
+    private static IReadOnlyCollection<BaseEvent> GetDomainEvents(object entity)
+    {
+        var property = entity.GetType().GetProperty(nameof(BaseEntity<int>.DomainEvents));
+        return property?.GetValue(entity) as IReadOnlyCollection<BaseEvent> ?? Array.Empty<BaseEvent>();
+    }
+
+    private static void ClearDomainEvents(object entity)
+    {
+        var method = entity.GetType().GetMethod(nameof(BaseEntity<int>.ClearDomainEvents));
+        method?.Invoke(entity, null);
     }
 }

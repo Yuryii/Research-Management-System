@@ -4,5 +4,7 @@ public partial class Step : BaseAuditableEntity<Guid>
 {
 
     public required string Name { get; set; }
-    public virtual IList<StepDetail> StepDetails { get; set; } = new List<StepDetail>();
+    public IList<StepDetail> StepDetails { get; set; } = new List<StepDetail>();
+    public IList<RoleStepPermission> RoleStepPermission { get; set; } = new List<RoleStepPermission>();
+
 }
