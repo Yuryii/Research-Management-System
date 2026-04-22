@@ -1,6 +1,10 @@
-﻿namespace RMS.Domain.Common;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
 
-public abstract class BaseAuditableEntity<T> : BaseEntity<T>, IBaseAuditableEntity
+namespace RMS.Domain.Common;
+
+public interface IBaseAuditableEntity
 {
     public DateTimeOffset Created { get; set; }
 
