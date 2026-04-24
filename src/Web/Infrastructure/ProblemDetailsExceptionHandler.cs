@@ -9,13 +9,13 @@ namespace RMS.Web.Infrastructure;
 /// <see cref="UnauthorizedAccessException"/> → 401, and <see cref="ForbiddenAccessException"/> → 403.
 /// Unrecognised exceptions are not handled and fall through to the default middleware.
 /// </summary>
-public class ProblemDetailsExceptionHandler : IExceptionHandler
+public class ProblemDetailsExceptionHandler() : IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
         var (statusCode, problemDetails) = exception switch
         {
-            ValidationException ve => (StatusCodes.Status400BadRequest, (ProblemDetails)new ValidationProblemDetails(ve.Errors)
+            ValidationException ve => (StatusCodes.Status400BadRequest, new ValidationProblemDetails(ve.Errors)
             {
                 Status = StatusCodes.Status400BadRequest,
                 Type = "https://tools.ietf.org/html/rfc9110#section-15.5.1"
@@ -43,9 +43,17 @@ public class ProblemDetailsExceptionHandler : IExceptionHandler
         };
 
         if (problemDetails is null) return false;
-
         httpContext.Response.StatusCode = statusCode;
-        await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
+        switch (problemDetails)
+        {
+            case ValidationProblemDetails validationProblemDetails:
+                await httpContext.Response.WriteAsJsonAsync(validationProblemDetails, cancellationToken);
+                break;
+            default:
+                await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
+                break;
+        }
+
         return true;
     }
 }
