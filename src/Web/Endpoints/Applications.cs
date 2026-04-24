@@ -5,6 +5,7 @@ using RMS.Application.Application.Commands.DeleteApplication;
 using RMS.Application.Application.Commands.UpdateApplication;
 using RMS.Application.Application.Dtos;
 using RMS.Application.Application.Queries.GetApplications;
+using RMS.Application.Common.Models;
 using RMS.Application.TodoLists.Commands.UpdateTodoList;
 using RMS.Web.Endpoints.Models;
 using ApplicationFile = RMS.Web.Services.File;
@@ -24,10 +25,14 @@ public class Applications : IEndpointGroup
     }
 
     [EndpointSummary("Get all Applications")]
-    [EndpointDescription("Retrieves all applications.")]
-    public static async Task<Ok<IReadOnlyList<ApplicationDto>>> GetApplications(ISender sender)
+    [EndpointDescription("Retrieves applications with pagination.")]
+    public static async Task<Ok<PaginatedResult<ApplicationDto>>> GetApplications(ISender sender, int pageNumber = 1, int pageSize = 10)
     {
-        var applications = await sender.Send(new GetApplicationsQuery());
+        var applications = await sender.Send(new GetApplicationsQuery
+        {
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        });
 
         return TypedResults.Ok(applications);
     }
