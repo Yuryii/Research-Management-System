@@ -13,7 +13,7 @@ public class CreateApplicationCommandHandler : IRequestHandler<CreateApplication
     private readonly IFileService _fileService;
     private readonly ICodeGeneratorService _codeGeneratorService;
     private readonly IStepResolver _stepResolver;
-
+        
     public CreateApplicationCommandHandler(IApplicationDbContext context, IFileService fileService, ICodeGeneratorService codeGeneratorService, IStepResolver stepResolver)
     {
         _context = context;

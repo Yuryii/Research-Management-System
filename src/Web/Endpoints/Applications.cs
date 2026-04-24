@@ -28,6 +28,7 @@ public class Applications : IEndpointGroup
             Title = request.Title,
             Description = request.Description,
             StepDetailId = request.StepDetailId,
+            Status = request.Status,
             Files = ApplicationFile.FilesToFileDtos(request.Files)
         };
 
