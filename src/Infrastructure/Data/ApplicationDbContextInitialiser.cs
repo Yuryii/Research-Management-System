@@ -5,9 +5,10 @@ using Microsoft.Extensions.Logging;
 using RMS.Domain.Constants;
 using RMS.Domain.Entities;
 using RMS.Domain.Entities.Models;
+using RMS.Domain.Enums;
 using RMS.Domain.ValueObjects;
 using RMS.Infrastructure.Identity;
-
+using DomainApplication = RMS.Domain.Entities.Models.Application;
 namespace RMS.Infrastructure.Data;
 
 public static class InitialiserExtensions
@@ -214,6 +215,40 @@ public class ApplicationDbContextInitialiser
                 }
             };
             _context.Steps.AddRange(steps);
+            await _context.SaveChangesAsync();
+        }
+
+        if (!_context.Applications.Any())
+        {
+            var initialStepDetailId = _context.StepDetails
+                .OrderBy(sd => sd.Step.Order)
+                .ThenBy(sd => sd.Order)
+                .Select(sd => sd.Id)
+                .First();
+
+            var applications = new List<DomainApplication>
+            {
+                new()
+                {
+                    Id = Guid.NewGuid(),
+                    Code = "APP-SEED-001",
+                    Title = "Hồ sơ đề nghị công nhận bài báo khoa học",
+                    Description = "Hồ sơ mẫu được tạo sẵn để kiểm thử luồng xử lý hồ sơ nghiên cứu khoa học.",
+                    Status = ApplicationStatus.Draft,
+                    StepDetailId = initialStepDetailId
+                },
+                new()
+                {
+                    Id = Guid.NewGuid(),
+                    Code = "APP-SEED-002",
+                    Title = "Hồ sơ xác nhận giờ nghiên cứu khoa học",
+                    Description = "Dữ liệu mẫu phục vụ kiểm tra chức năng danh sách, chi tiết và cập nhật trạng thái hồ sơ.",
+                    Status = ApplicationStatus.Draft,
+                    StepDetailId = initialStepDetailId
+                }
+            };
+
+            _context.Applications.AddRange(applications);
             await _context.SaveChangesAsync();
         }
 
