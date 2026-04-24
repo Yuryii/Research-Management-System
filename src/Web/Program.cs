@@ -10,6 +10,8 @@ builder.AddKeyVaultIfConfigured();
 builder.AddApplicationServices();
 builder.AddInfrastructureServices();
 builder.AddWebServices();
+builder.Services.AddExceptionHandler<ProblemDetailsExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 
@@ -35,7 +37,7 @@ app.UseFileServer();
 app.MapOpenApi();
 app.MapScalarApiReference();
 
-app.UseExceptionHandler(options => { });
+app.UseExceptionHandler();
 
 app.UseAntiforgery();
 app.MapDefaultEndpoints();

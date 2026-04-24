@@ -25,7 +25,7 @@ public class CreateApplicationCommandHandler : IRequestHandler<CreateApplication
     public async Task<Guid> Handle(CreateApplicationCommand request, CancellationToken cancellationToken)
     {
         // Add Application
-        var stepDetailId = request.StepDetailId ?? await _stepResolver.ResolveAsync(cancellationToken);
+        var stepDetailId = await _stepResolver.ResolveAsync(cancellationToken);
         var code = _codeGeneratorService.GenerateApplicationCode(request.Title);
 
         var application = new DomainApplication

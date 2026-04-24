@@ -10,7 +10,6 @@ public record CreateApplicationCommand : IRequest<Guid>
 {
     public required string Title { get; init; }
     public required string Description { get; init; }
-    public Guid? StepDetailId { get; init; }
     public ApplicationStatus Status { get; set; }
     public IReadOnlyList<FileUploadDto> Files { get; init; } = [];
 }
