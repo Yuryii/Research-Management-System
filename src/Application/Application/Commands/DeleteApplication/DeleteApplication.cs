@@ -2,18 +2,8 @@ using RMS.Application.Common.Interfaces;
 
 namespace RMS.Application.Application.Commands.DeleteApplication;
 
-public record DeleteApplicationCommand : IRequest<Guid>
-{
-}
-
-public class DeleteApplicationCommandValidator : AbstractValidator<DeleteApplicationCommand>
-{
-    public DeleteApplicationCommandValidator()
-    {
-    }
-}
-
-public class DeleteApplicationCommandHandler : IRequestHandler<DeleteApplicationCommand, Guid>
+public record DeleteApplicationCommand(Guid Id) : IRequest;
+public class DeleteApplicationCommandHandler : IRequestHandler<DeleteApplicationCommand>
 {
     private readonly IApplicationDbContext _context;
 
@@ -22,8 +12,16 @@ public class DeleteApplicationCommandHandler : IRequestHandler<DeleteApplication
         _context = context;
     }
 
-    public async Task<Guid> Handle(DeleteApplicationCommand request, CancellationToken cancellationToken)
+    public async Task Handle(DeleteApplicationCommand request, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var entity = await _context.Applications
+            .Where(a => a.Id == request.Id)
+            .SingleOrDefaultAsync(cancellationToken);
+
+        Guard.Against.NotFound(request.Id, entity, "Application not found.");
+
+        _context.Applications.Remove(entity);
+
+        await _context.SaveChangesAsync(cancellationToken);
     }
 }

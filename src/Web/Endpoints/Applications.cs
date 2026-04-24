@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using RMS.Application.Application.Commands.CreateApplication;
+using RMS.Application.Application.Commands.DeleteApplication;
 using RMS.Application.Application.Commands.UpdateApplication;
+using RMS.Application.Application.Dtos;
+using RMS.Application.Application.Queries.GetApplications;
 using RMS.Application.TodoLists.Commands.UpdateTodoList;
 using RMS.Web.Endpoints.Models;
 using ApplicationFile = RMS.Web.Services.File;
@@ -14,8 +17,19 @@ public class Applications : IEndpointGroup
     {
         groupBuilder.RequireAuthorization();
 
+        groupBuilder.MapGet(GetApplications);
         groupBuilder.MapPost(CreateApplication, "CreateApplication").DisableAntiforgery();
         groupBuilder.MapPost(UpdateApplication, "UpdateApplication");
+        groupBuilder.MapDelete(DeleteApplication, "{id}");
+    }
+
+    [EndpointSummary("Get all Applications")]
+    [EndpointDescription("Retrieves all applications.")]
+    public static async Task<Ok<IReadOnlyList<ApplicationDto>>> GetApplications(ISender sender)
+    {
+        var applications = await sender.Send(new GetApplicationsQuery());
+
+        return TypedResults.Ok(applications);
     }
 
     [EndpointSummary("Create a new Application")]
@@ -46,6 +60,15 @@ public class Applications : IEndpointGroup
         if (id != command.Id) return TypedResults.BadRequest();
 
         await sender.Send(command);
+
+        return TypedResults.NoContent();
+    }
+
+    [EndpointSummary("Delete an Application")]
+    [EndpointDescription("Deletes the application with the specified ID.")]
+    public static async Task<NoContent> DeleteApplication(ISender sender, Guid id)
+    {
+        await sender.Send(new DeleteApplicationCommand(id));
 
         return TypedResults.NoContent();
     }
