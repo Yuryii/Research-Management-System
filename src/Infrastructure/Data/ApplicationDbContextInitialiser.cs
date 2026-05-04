@@ -49,20 +49,23 @@ public class ApplicationDbContextInitialiser
         try
         {
             // See https://jasontaylor.dev/ef-core-database-initialisation-strategies
-            if (_environment.IsDevelopment())
-            {
-                await _context.Database.EnsureDeletedAsync();
-                await _context.Database.EnsureCreatedAsync();
-                return;
-            }
+            //if (_environment.IsDevelopment())
+            //{
+            //    await _context.Database.EnsureDeletedAsync();
+            //    await _context.Database.EnsureCreatedAsync();
+            //    return;
+            //}
 
-            if (_environment.IsStaging())
-            {
-                await _context.Database.MigrateAsync();
-                return;
-            }
+            //if (_environment.IsStaging())
+            //{
+            //    await _context.Database.MigrateAsync();
+            //    return;
+            //}
+            await _context.Database.EnsureDeletedAsync();
+            await _context.Database.EnsureCreatedAsync();
+            return;
 
-            _logger.LogInformation("Skipping database initialisation for {EnvironmentName} environment.", _environment.EnvironmentName);
+            //_logger.LogInformation("Skipping database initialisation for {EnvironmentName} environment.", _environment.EnvironmentName);
         }
         catch (Exception ex)
         {
