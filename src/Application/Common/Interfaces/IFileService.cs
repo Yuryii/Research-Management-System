@@ -1,9 +1,10 @@
 using RMS.Application.Common.Models;
-
+using DomainFile = RMS.Domain.Entities.Models.File;
 namespace RMS.Application.Common.Interfaces;
 
 public interface IFileService
 {
-    Task<RMS.Domain.Entities.Models.File> SaveFileAsync(FileUploadDto file, CancellationToken cancellationToken = default, string? subFolder = null);
-    Task<IReadOnlyList<RMS.Domain.Entities.Models.File>> SaveFilesAsync(IReadOnlyList<FileUploadDto> files, CancellationToken cancellationToken = default, string? subFolder = null);
+    Task<DomainFile> SaveFileAsync(FileUploadDto file, CancellationToken cancellationToken = default, string? subFolder = null);
+    Task<IReadOnlyList<DomainFile>> SaveFilesAsync(IReadOnlyList<FileUploadDto> files, CancellationToken cancellationToken = default, string? subFolder = null);
+    Task<bool> DeleteFileAsync(Guid fileId, CancellationToken cancellationToken = default);
 }

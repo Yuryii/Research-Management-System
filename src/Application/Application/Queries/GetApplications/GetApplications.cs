@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using RMS.Application.Application.Dtos;
 using RMS.Application.Common.Interfaces;
 using RMS.Application.Common.Models;
+using RMS.Domain.Entities.Models;
 
 namespace RMS.Application.Application.Queries.GetApplications;
 

@@ -1,3 +1,5 @@
+using Amazon.Extensions.NETCore.Setup;
+using Amazon.S3;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -55,7 +57,19 @@ public static class DependencyInjection
 
         builder.Services.AddSingleton(TimeProvider.System);
         builder.Services.AddTransient<IIdentityService, IdentityService>();
-        builder.Services.AddTransient<IFileService, LocalFileService>();
+
+        var storageProvider = builder.Configuration["Storage:Provider"];
+        if (builder.Environment.IsStaging() || string.Equals(storageProvider, "S3", StringComparison.OrdinalIgnoreCase))
+        {
+            builder.Services.Configure<S3StorageOptions>(builder.Configuration.GetSection(S3StorageOptions.SectionName));
+            builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions());
+            builder.Services.AddAWSService<IAmazonS3>();
+            builder.Services.AddTransient<IFileService, S3FileService>();
+        }
+        else
+        {
+            builder.Services.AddTransient<IFileService, LocalFileService>();
+        }
 
         builder.Services.AddScoped<ICodeGeneratorService, CodeGeneratorService>();
         builder.Services.AddScoped<IStepResolver, StepResolver>();

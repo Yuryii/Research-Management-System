@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RMS.Domain.Constants;
 using RMS.Domain.Entities;
@@ -28,13 +31,15 @@ public class ApplicationDbContextInitialiser
 {
     private readonly ILogger<ApplicationDbContextInitialiser> _logger;
     private readonly ApplicationDbContext _context;
+    private readonly IWebHostEnvironment _environment;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<ApplicationRole> _roleManager;
 
-    public ApplicationDbContextInitialiser(ILogger<ApplicationDbContextInitialiser> logger, ApplicationDbContext context, UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager)
+    public ApplicationDbContextInitialiser(ILogger<ApplicationDbContextInitialiser> logger, ApplicationDbContext context, IWebHostEnvironment environment, UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager)
     {
         _logger = logger;
         _context = context;
+        _environment = environment;
         _userManager = userManager;
         _roleManager = roleManager;
     }
@@ -44,8 +49,20 @@ public class ApplicationDbContextInitialiser
         try
         {
             // See https://jasontaylor.dev/ef-core-database-initialisation-strategies
-            await _context.Database.EnsureDeletedAsync();
-            await _context.Database.EnsureCreatedAsync();
+            if (_environment.IsDevelopment())
+            {
+                await _context.Database.EnsureDeletedAsync();
+                await _context.Database.EnsureCreatedAsync();
+                return;
+            }
+
+            if (_environment.IsStaging())
+            {
+                await _context.Database.MigrateAsync();
+                return;
+            }
+
+            _logger.LogInformation("Skipping database initialisation for {EnvironmentName} environment.", _environment.EnvironmentName);
         }
         catch (Exception ex)
         {

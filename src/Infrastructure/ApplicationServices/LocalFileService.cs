@@ -68,4 +68,22 @@ public class LocalFileService : IFileService
 
         return savedFiles;
     }
+
+    public async Task<bool> DeleteFileAsync(Guid fileId, CancellationToken cancellationToken = default)
+    {
+        var fileEntity = await _context.Files.FindAsync([fileId], cancellationToken);
+        if (fileEntity is null)
+            return false;
+
+        var normalizedPath = fileEntity.Path.Replace('/', Path.DirectorySeparatorChar);
+        var filePath = Path.Combine(_uploadRootPath, normalizedPath);
+
+        if (File.Exists(filePath))
+            File.Delete(filePath);
+
+        _context.Files.Remove(fileEntity);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return true;
+    }
 }
