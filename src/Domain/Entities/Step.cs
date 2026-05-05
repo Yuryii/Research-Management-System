@@ -7,5 +7,6 @@ public partial class Step : BaseAuditableEntity<Guid>
     public string ShortName { get; set; } = string.Empty;
     public int Order { get; set; }
     public IList<StepDetail> StepDetails { get; set; } = new List<StepDetail>();
+    public IList<RoleStepPermission> RoleStepPermissions { get; set; } = new List<RoleStepPermission>();
 
 }

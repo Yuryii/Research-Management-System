@@ -377,12 +377,12 @@ namespace RMS.Infrastructure.Data.Migrations
                     b.Property<string>("RoleId")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<Guid>("StepDetailId")
+                    b.Property<Guid>("StepId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.HasKey("RoleId", "StepDetailId");
+                    b.HasKey("RoleId", "StepId");
 
-                    b.HasIndex("StepDetailId");
+                    b.HasIndex("StepId");
 
                     b.ToTable("RoleStepPermissions");
                 });
@@ -660,13 +660,13 @@ namespace RMS.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("RMS.Domain.Entities.Models.StepDetail", "StepDetail")
+                    b.HasOne("RMS.Domain.Entities.Models.Step", "Step")
                         .WithMany("RoleStepPermissions")
-                        .HasForeignKey("StepDetailId")
+                        .HasForeignKey("StepId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("StepDetail");
+                    b.Navigation("Step");
                 });
 
             modelBuilder.Entity("RMS.Domain.Entities.TodoItem", b =>
@@ -715,14 +715,14 @@ namespace RMS.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("RMS.Domain.Entities.Models.Step", b =>
                 {
+                    b.Navigation("RoleStepPermissions");
+
                     b.Navigation("StepDetails");
                 });
 
             modelBuilder.Entity("RMS.Domain.Entities.Models.StepDetail", b =>
                 {
                     b.Navigation("Applications");
-
-                    b.Navigation("RoleStepPermissions");
                 });
 
             modelBuilder.Entity("RMS.Domain.Entities.TodoList", b =>

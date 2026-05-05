@@ -11,7 +11,6 @@ public partial class StepDetail : BaseAuditableEntity<Guid>
     public StepDetail NextStepDetail { get; set; } = null!;
 
     public virtual ICollection<Application> Applications { get; set; } = new List<Application>();
-    public IList<RoleStepPermission> RoleStepPermissions { get; set; } = new List<RoleStepPermission>();
 
     public virtual Step Step { get; set; } = null!;
 }

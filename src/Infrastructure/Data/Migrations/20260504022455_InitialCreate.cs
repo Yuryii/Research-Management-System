@@ -307,11 +307,11 @@ namespace RMS.Infrastructure.Data.Migrations
                 columns: table => new
                 {
                     RoleId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    StepDetailId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    StepId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_RoleStepPermissions", x => new { x.RoleId, x.StepDetailId });
+                    table.PrimaryKey("PK_RoleStepPermissions", x => new { x.RoleId, x.StepId });
                     table.ForeignKey(
                         name: "FK_RoleStepPermissions_AspNetRoles_RoleId",
                         column: x => x.RoleId,
@@ -319,9 +319,9 @@ namespace RMS.Infrastructure.Data.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_RoleStepPermissions_StepDetails_StepDetailId",
-                        column: x => x.StepDetailId,
-                        principalTable: "StepDetails",
+                        name: "FK_RoleStepPermissions_Steps_StepId",
+                        column: x => x.StepId,
+                        principalTable: "Steps",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -426,9 +426,9 @@ namespace RMS.Infrastructure.Data.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_RoleStepPermissions_StepDetailId",
+                name: "IX_RoleStepPermissions_StepId",
                 table: "RoleStepPermissions",
-                column: "StepDetailId");
+                column: "StepId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_StepDetails_NextStepDetailId",
