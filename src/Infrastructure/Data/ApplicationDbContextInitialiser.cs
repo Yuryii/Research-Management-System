@@ -89,37 +89,6 @@ public class ApplicationDbContextInitialiser
 
     public async Task TrySeedAsync()
     {
-        // Default roles and users
-        var roles = new[]
-        {
-            Roles.Administrator,
-            Roles.Teacher,
-            Roles.Tttv,
-            Roles.Dvqltt,
-            Roles.KhcnHtqt
-        };
-
-        foreach (var roleName in roles)
-        {
-            if (_roleManager.Roles.All(r => r.Name != roleName))
-            {
-                await _roleManager.CreateAsync(new ApplicationRole
-                {
-                    Name = roleName,
-                    NormalizedName = roleName.ToUpperInvariant()
-                });
-            }
-
-            var userName = $"{roleName.ToLowerInvariant()}@123";
-            var user = new ApplicationUser { UserName = userName, Email = userName };
-
-            if (_userManager.Users.All(u => u.UserName != user.UserName))
-            {
-                await _userManager.CreateAsync(user, $"{roleName}@123");
-                await _userManager.AddToRoleAsync(user, roleName);
-            }
-        }
-
         // Default data
         // Seed, if necessary
         if (!_context.TodoLists.Any())
@@ -248,6 +217,76 @@ public class ApplicationDbContextInitialiser
             _context.Steps.AddRange(steps);
             await _context.SaveChangesAsync();
         }
+
+        // Default roles and users are seeded after steps so RoleStepPermissions can be seeded immediately afterwards.
+        var roles = new[]
+        {
+            Roles.Administrator,
+            Roles.Teacher,
+            Roles.Tttv,
+            Roles.Dvqltt,
+            Roles.KhcnHtqt
+        };
+
+        foreach (var roleName in roles)
+        {
+            if (_roleManager.Roles.All(r => r.Name != roleName))
+            {
+                await _roleManager.CreateAsync(new ApplicationRole
+                {
+                    Name = roleName,
+                    NormalizedName = roleName.ToUpperInvariant()
+                });
+            }
+
+            var userName = $"{roleName.ToLowerInvariant()}@123";
+            var user = new ApplicationUser { UserName = userName, Email = userName };
+
+            if (_userManager.Users.All(u => u.UserName != user.UserName))
+            {
+                await _userManager.CreateAsync(user, $"{roleName}@123");
+                await _userManager.AddToRoleAsync(user, roleName);
+            }
+        }
+
+        var roleStepMappings = new Dictionary<string, int[]>
+        {
+            [Roles.Administrator] = [1, 2, 3, 4, 5],
+            [Roles.Dvqltt] = [1, 3],
+            [Roles.Tttv] = [2],
+            [Roles.KhcnHtqt] = [4]
+        };
+
+        var rolesByName = await _roleManager.Roles
+            .Where(role => role.Name != null && roleStepMappings.Keys.Contains(role.Name))
+            .ToDictionaryAsync(role => role.Name!);
+
+        var stepsByOrder = await _context.Steps
+            .Where(step => roleStepMappings.Values.SelectMany(stepOrders => stepOrders).Contains(step.Order))
+            .ToDictionaryAsync(step => step.Order);
+
+        var roleStepPermissions = roleStepMappings
+            .Where(mapping => rolesByName.ContainsKey(mapping.Key))
+            .SelectMany(mapping => mapping.Value
+                .Where(stepOrder => stepsByOrder.ContainsKey(stepOrder))
+                .Select(stepOrder => new RoleStepPermission
+                {
+                    RoleId = rolesByName[mapping.Key].Id,
+                    StepId = stepsByOrder[stepOrder].Id
+                }))
+            .ToList();
+
+        foreach (var roleStepPermission in roleStepPermissions)
+        {
+            if (!_context.RoleStepPermissions.Any(existingPermission =>
+                    existingPermission.RoleId == roleStepPermission.RoleId &&
+                    existingPermission.StepId == roleStepPermission.StepId))
+            {
+                _context.RoleStepPermissions.Add(roleStepPermission);
+            }
+        }
+
+        await _context.SaveChangesAsync();
 
         if (!_context.Applications.Any())
         {
