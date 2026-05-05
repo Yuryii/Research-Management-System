@@ -9,15 +9,18 @@ namespace RMS.Infrastructure.Identity;
 public class IdentityService : IIdentityService
 {
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly RoleManager<ApplicationRole> _roleManager;
     private readonly IUserClaimsPrincipalFactory<ApplicationUser> _userClaimsPrincipalFactory;
     private readonly IAuthorizationService _authorizationService;
 
     public IdentityService(
         UserManager<ApplicationUser> userManager,
+        RoleManager<ApplicationRole> roleManager,
         IUserClaimsPrincipalFactory<ApplicationUser> userClaimsPrincipalFactory,
         IAuthorizationService authorizationService)
     {
         _userManager = userManager;
+        _roleManager = roleManager;
         _userClaimsPrincipalFactory = userClaimsPrincipalFactory;
         _authorizationService = authorizationService;
     }
@@ -47,6 +50,25 @@ public class IdentityService : IIdentityService
         var user = await _userManager.FindByIdAsync(userId);
 
         return user != null && await _userManager.IsInRoleAsync(user, role);
+    }
+
+    public async Task<IReadOnlyCollection<string>> GetRoleIdsAsync(IEnumerable<string> roleNames, CancellationToken cancellationToken)
+    {
+        var normalizedRoleNames = roleNames
+            .Where(roleName => !string.IsNullOrWhiteSpace(roleName))
+            .Select(roleName => roleName.ToUpperInvariant())
+            .Distinct()
+            .ToList();
+
+        if (normalizedRoleNames.Count == 0)
+        {
+            return [];
+        }
+
+        return await _roleManager.Roles
+            .Where(role => role.NormalizedName != null && normalizedRoleNames.Contains(role.NormalizedName))
+            .Select(role => role.Id)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<bool> AuthorizeAsync(string userId, string policyName)

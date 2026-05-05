@@ -120,4 +120,13 @@ public static class TestApp
 
         return await context.Set<TEntity>().CountAsync();
     }
+
+    public static async Task ExecuteDbContextAsync(Func<ApplicationDbContext, Task> action)
+    {
+        using var scope = FunctionalTestSetup.ScopeFactory.CreateScope();
+
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        await action(context);
+    }
 }

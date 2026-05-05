@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using RMS.Application.Application.Commands.CreateApplication;
 using RMS.Application.Application.Commands.DeleteApplication;
 using RMS.Application.Application.Commands.UpdateApplication;
+using RMS.Application.Application.Commands.UpdateApplicationStepDetail;
 using RMS.Application.Application.Dtos;
 using RMS.Application.Application.Queries.GetApplications;
 using RMS.Application.Common.Models;
@@ -21,6 +22,7 @@ public class Applications : IEndpointGroup
         groupBuilder.MapGet(GetApplications);
         groupBuilder.MapPost(CreateApplication, "CreateApplication").DisableAntiforgery();
         groupBuilder.MapPost(UpdateApplication, "UpdateApplication");
+        groupBuilder.MapPost(UpdateApplicationStepDetail, "UpdateApplicationStepDetail");
         groupBuilder.MapDelete(DeleteApplication, "{id}");
     }
 
@@ -64,6 +66,15 @@ public class Applications : IEndpointGroup
     {
         if (id != command.Id) return TypedResults.BadRequest();
 
+        await sender.Send(command);
+
+        return TypedResults.NoContent();
+    }
+
+    [EndpointSummary("Update an Application Step Detail")]
+    [EndpointDescription("Updates Application.StepDetailId when the current user has a role assigned to the target Step.")]
+    public static async Task<NoContent> UpdateApplicationStepDetail(ISender sender, UpdateApplicationStepDetailCommand command)
+    {
         await sender.Send(command);
 
         return TypedResults.NoContent();

@@ -1,5 +1,7 @@
 using RMS.Domain.Entities;
 using RMS.Domain.Entities.Models;
+using DomainFile = RMS.Domain.Entities.Models.File;
+using DomainApplication = RMS.Domain.Entities.Models.Application;
 
 namespace RMS.Application.Common.Interfaces;
 
@@ -9,10 +11,10 @@ public interface IApplicationDbContext
 
     DbSet<TodoItem> TodoItems { get; }
 
-    DbSet<RMS.Domain.Entities.Models.Application> Applications { get; }
+    DbSet<DomainApplication> Applications { get; }
     DbSet<Step> Steps { get; }
     DbSet<StepDetail> StepDetails { get; }
-    DbSet<Domain.Entities.Models.File> Files { get; }
+    DbSet<DomainFile> Files { get; }
     DbSet<ApplicationFile> ApplicationFiles { get; }
     DbSet<RoleStepPermission> RoleStepPermissions { get; }
     DbSet<AcademicDegree> AcademicDegrees { get; }
