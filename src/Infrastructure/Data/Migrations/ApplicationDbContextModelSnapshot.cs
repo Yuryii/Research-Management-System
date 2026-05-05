@@ -371,18 +371,13 @@ namespace RMS.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("RMS.Domain.Entities.RoleStepPermission", b =>
                 {
-                    b.Property<Guid>("RoleId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("RoleId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<Guid>("StepDetailId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ApplicationRoleId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("RoleId", "StepDetailId");
-
-                    b.HasIndex("ApplicationRoleId");
 
                     b.HasIndex("StepDetailId");
 
@@ -658,7 +653,9 @@ namespace RMS.Infrastructure.Data.Migrations
                 {
                     b.HasOne("RMS.Infrastructure.Identity.ApplicationRole", null)
                         .WithMany("RoleStepPermissions")
-                        .HasForeignKey("ApplicationRoleId");
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("RMS.Domain.Entities.Models.StepDetail", "StepDetail")
                         .WithMany("RoleStepPermissions")

@@ -306,18 +306,18 @@ namespace RMS.Infrastructure.Data.Migrations
                 name: "RoleStepPermissions",
                 columns: table => new
                 {
-                    RoleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    StepDetailId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ApplicationRoleId = table.Column<string>(type: "nvarchar(450)", nullable: true)
+                    RoleId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    StepDetailId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_RoleStepPermissions", x => new { x.RoleId, x.StepDetailId });
                     table.ForeignKey(
-                        name: "FK_RoleStepPermissions_AspNetRoles_ApplicationRoleId",
-                        column: x => x.ApplicationRoleId,
+                        name: "FK_RoleStepPermissions_AspNetRoles_RoleId",
+                        column: x => x.RoleId,
                         principalTable: "AspNetRoles",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_RoleStepPermissions_StepDetails_StepDetailId",
                         column: x => x.StepDetailId,
@@ -424,11 +424,6 @@ namespace RMS.Infrastructure.Data.Migrations
                 column: "NormalizedUserName",
                 unique: true,
                 filter: "[NormalizedUserName] IS NOT NULL");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_RoleStepPermissions_ApplicationRoleId",
-                table: "RoleStepPermissions",
-                column: "ApplicationRoleId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RoleStepPermissions_StepDetailId",
