@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using RMS.Application.Common.Security;
+using RMS.Domain.Constants;
 using RMS.Domain.Entities.Models;
 using RMS.Domain.Enums;
 
 namespace RMS.Application.Application.Commands.UpdateApplication;
 
+[Authorize]
 public record UpdateApplicationCommand : IRequest
 {
     public Guid Id { get; set; }

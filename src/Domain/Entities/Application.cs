@@ -14,4 +14,6 @@ public partial class Application : BaseAuditableEntity<Guid>
     public  IList<ApplicationFile> ApplicationFiles { get; set; } = new List<ApplicationFile>();
 
     public  StepDetail StepDetail { get; set; } = null!;
+
+    public Guid? ParentApplicationId { get; set; }
 }
