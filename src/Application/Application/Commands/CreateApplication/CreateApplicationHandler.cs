@@ -34,7 +34,6 @@ public class CreateApplicationCommandHandler : IRequestHandler<CreateApplication
             Code = code,
             Title = request.Title,
             Description = request.Description,
-            Status = ApplicationStatus.Draft,
             StepDetailId = stepDetailId
         };
 

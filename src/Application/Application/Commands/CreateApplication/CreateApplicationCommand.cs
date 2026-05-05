@@ -8,7 +8,7 @@ using RMS.Domain.Enums;
 
 namespace RMS.Application.Application.Commands.CreateApplication;
 
-[Authorize(Roles = Roles.Teacher)]
+[Authorize(Roles = $"{Roles.Teacher},{Roles.Administrator}")]
 public record CreateApplicationCommand : IRequest<Guid>
 {
     public required string Title { get; init; }
