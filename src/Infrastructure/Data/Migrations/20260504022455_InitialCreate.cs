@@ -245,30 +245,6 @@ namespace RMS.Infrastructure.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "RoleStepPermissions",
-                columns: table => new
-                {
-                    RoleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    StepId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ApplicationRoleId = table.Column<string>(type: "nvarchar(450)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_RoleStepPermissions", x => new { x.RoleId, x.StepId });
-                    table.ForeignKey(
-                        name: "FK_RoleStepPermissions_AspNetRoles_ApplicationRoleId",
-                        column: x => x.ApplicationRoleId,
-                        principalTable: "AspNetRoles",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_RoleStepPermissions_Steps_StepId",
-                        column: x => x.StepId,
-                        principalTable: "Steps",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "StepDetails",
                 columns: table => new
                 {
@@ -322,6 +298,30 @@ namespace RMS.Infrastructure.Data.Migrations
                         name: "FK_TodoItems_TodoLists_ListId",
                         column: x => x.ListId,
                         principalTable: "TodoLists",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RoleStepPermissions",
+                columns: table => new
+                {
+                    RoleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    StepDetailId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ApplicationRoleId = table.Column<string>(type: "nvarchar(450)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RoleStepPermissions", x => new { x.RoleId, x.StepDetailId });
+                    table.ForeignKey(
+                        name: "FK_RoleStepPermissions_AspNetRoles_ApplicationRoleId",
+                        column: x => x.ApplicationRoleId,
+                        principalTable: "AspNetRoles",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_RoleStepPermissions_StepDetails_StepDetailId",
+                        column: x => x.StepDetailId,
+                        principalTable: "StepDetails",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -431,9 +431,9 @@ namespace RMS.Infrastructure.Data.Migrations
                 column: "ApplicationRoleId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_RoleStepPermissions_StepId",
+                name: "IX_RoleStepPermissions_StepDetailId",
                 table: "RoleStepPermissions",
-                column: "StepId");
+                column: "StepDetailId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_StepDetails_NextStepDetailId",

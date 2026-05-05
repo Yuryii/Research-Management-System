@@ -4,7 +4,7 @@ public abstract class Roles
 {
     public const string Administrator = nameof(Administrator);
     public const string Teacher = nameof(Teacher);
-    public const string TTTV = nameof(TTTV);
-    public const string DVQLTT = nameof(DVQLTT);
-    public const string KHCNHTQT = nameof(KHCNHTQT);
+    public const string Tttv = nameof(Tttv);
+    public const string Dvqltt = nameof(Dvqltt);
+    public const string KhcnHtqt = nameof(KhcnHtqt);
 }

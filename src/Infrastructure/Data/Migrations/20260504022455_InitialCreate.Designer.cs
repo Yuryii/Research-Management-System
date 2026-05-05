@@ -377,17 +377,17 @@ namespace RMS.Infrastructure.Data.Migrations
                     b.Property<Guid>("RoleId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("StepId")
+                    b.Property<Guid>("StepDetailId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ApplicationRoleId")
                         .HasColumnType("nvarchar(450)");
 
-                    b.HasKey("RoleId", "StepId");
+                    b.HasKey("RoleId", "StepDetailId");
 
                     b.HasIndex("ApplicationRoleId");
 
-                    b.HasIndex("StepId");
+                    b.HasIndex("StepDetailId");
 
                     b.ToTable("RoleStepPermissions");
                 });
@@ -663,13 +663,13 @@ namespace RMS.Infrastructure.Data.Migrations
                         .WithMany("RoleStepPermissions")
                         .HasForeignKey("ApplicationRoleId");
 
-                    b.HasOne("RMS.Domain.Entities.Models.Step", "Step")
-                        .WithMany("RoleStepPermission")
-                        .HasForeignKey("StepId")
+                    b.HasOne("RMS.Domain.Entities.Models.StepDetail", "StepDetail")
+                        .WithMany("RoleStepPermissions")
+                        .HasForeignKey("StepDetailId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Step");
+                    b.Navigation("StepDetail");
                 });
 
             modelBuilder.Entity("RMS.Domain.Entities.TodoItem", b =>
@@ -718,14 +718,14 @@ namespace RMS.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("RMS.Domain.Entities.Models.Step", b =>
                 {
-                    b.Navigation("RoleStepPermission");
-
                     b.Navigation("StepDetails");
                 });
 
             modelBuilder.Entity("RMS.Domain.Entities.Models.StepDetail", b =>
                 {
                     b.Navigation("Applications");
+
+                    b.Navigation("RoleStepPermissions");
                 });
 
             modelBuilder.Entity("RMS.Domain.Entities.TodoList", b =>

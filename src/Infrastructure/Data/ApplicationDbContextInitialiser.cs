@@ -94,9 +94,9 @@ public class ApplicationDbContextInitialiser
         {
             Roles.Administrator,
             Roles.Teacher,
-            Roles.TTTV,
-            Roles.DVQLTT,
-            Roles.KHCNHTQT
+            Roles.Tttv,
+            Roles.Dvqltt,
+            Roles.KhcnHtqt
         };
 
         foreach (var roleName in roles)

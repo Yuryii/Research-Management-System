@@ -5,6 +5,6 @@ namespace RMS.Domain.Entities;
 public class RoleStepPermission
 {
     public Guid RoleId { get; set; }
-    public Guid StepId { get; set; }
-    public Step Step { get; set; } = null!;
+    public Guid StepDetailId { get; set; }
+    public StepDetail StepDetail { get; set; } = null!;
 }
