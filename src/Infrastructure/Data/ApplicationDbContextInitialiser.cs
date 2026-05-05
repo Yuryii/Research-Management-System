@@ -107,12 +107,19 @@ public class ApplicationDbContextInitialiser
             });
         }
         // Defauld Steps
+        var dvqlttInitialStepId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var tttvStepId = Guid.Parse("22222222-2222-2222-2222-222222222222");
+        var dvqlttReviewStepId = Guid.Parse("33333333-3333-3333-3333-333333333333");
+        var khcnHtqtStepId = Guid.Parse("44444444-4444-4444-4444-444444444444");
+        var returnedStepId = Guid.Parse("55555555-5555-5555-5555-555555555555");
+
         if (!_context.Steps.Any())
         {
             var steps = new List<Step>
             {
                 new Step
                 {
+                    Id = dvqlttInitialStepId,
                     Name = "Đang xử lý bởi đơn vị quản lý trực tiếp",
                     ShortName = "Đang xử lý bởi DVQLTT",
                     Order = 1,
@@ -138,6 +145,7 @@ public class ApplicationDbContextInitialiser
                 },
                 new Step
                 {
+                    Id = tttvStepId,
                     Name = "Đang xử lý bởi Trung tâm thư viện",
                     ShortName = "Đang xử lý bởi TTTV",
                     Order = 2,
@@ -159,6 +167,7 @@ public class ApplicationDbContextInitialiser
                 },
                 new Step
                 {
+                    Id = dvqlttReviewStepId,
                     Name = "Đang xử lý bởi đơn vị quản lý trực tiếp",
                     ShortName = "Đang xử lý bởi DVQLTT",
                     Order = 3,
@@ -180,6 +189,7 @@ public class ApplicationDbContextInitialiser
                 },
                 new Step
                 {
+                    Id = khcnHtqtStepId,
                     Name = "Đang xử lý bởi phòng khoa học công nghệ - hợp tác quốc tế",
                     ShortName = "Đang xử lý bởi KHCN-HTQT",
                     Order = 4,
@@ -210,6 +220,7 @@ public class ApplicationDbContextInitialiser
                 },
                 new Step
                 {
+                    Id = returnedStepId,
                     Name = "Hồ sơ đã bị trả về",
                     Order = 5
                 }
@@ -249,30 +260,25 @@ public class ApplicationDbContextInitialiser
             }
         }
 
-        var roleStepMappings = new Dictionary<string, int[]>
+        var roleStepMappings = new Dictionary<string, Guid[]>
         {
-            [Roles.Administrator] = [1, 2, 3, 4, 5],
-            [Roles.Dvqltt] = [1, 3],
-            [Roles.Tttv] = [2],
-            [Roles.KhcnHtqt] = [4]
+            [Roles.Administrator] = [dvqlttInitialStepId, tttvStepId, dvqlttReviewStepId, khcnHtqtStepId, returnedStepId],
+            [Roles.Dvqltt] = [dvqlttInitialStepId, dvqlttReviewStepId],
+            [Roles.Tttv] = [tttvStepId],
+            [Roles.KhcnHtqt] = [khcnHtqtStepId]
         };
 
         var rolesByName = await _roleManager.Roles
             .Where(role => role.Name != null && roleStepMappings.Keys.Contains(role.Name))
             .ToDictionaryAsync(role => role.Name!);
 
-        var stepsByOrder = await _context.Steps
-            .Where(step => roleStepMappings.Values.SelectMany(stepOrders => stepOrders).Contains(step.Order))
-            .ToDictionaryAsync(step => step.Order);
-
         var roleStepPermissions = roleStepMappings
             .Where(mapping => rolesByName.ContainsKey(mapping.Key))
             .SelectMany(mapping => mapping.Value
-                .Where(stepOrder => stepsByOrder.ContainsKey(stepOrder))
-                .Select(stepOrder => new RoleStepPermission
+                .Select(stepId => new RoleStepPermission
                 {
                     RoleId = rolesByName[mapping.Key].Id,
-                    StepId = stepsByOrder[stepOrder].Id
+                    StepId = stepId
                 }))
             .ToList();
 
