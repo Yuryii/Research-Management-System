@@ -1,4 +1,6 @@
+@if (showNav) {
 <app-nav-menu></app-nav-menu>
-<main>
+}
+<main [class.no-nav]="!showNav">
   <router-outlet></router-outlet>
 </main>
