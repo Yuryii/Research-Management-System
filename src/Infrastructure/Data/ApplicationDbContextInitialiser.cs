@@ -89,23 +89,34 @@ public class ApplicationDbContextInitialiser
 
     public async Task TrySeedAsync()
     {
-        // Default roles
-        var administratorRole = new ApplicationRole() { Name = Roles.Administrator, NormalizedName = Roles.Administrator.ToUpper() };
-
-        if (_roleManager.Roles.All(r => r.Name != administratorRole.Name))
+        // Default roles and users
+        var roles = new[]
         {
-            await _roleManager.CreateAsync(administratorRole);
-        }
+            Roles.Administrator,
+            Roles.Teacher,
+            Roles.TTTV,
+            Roles.DVQLTT,
+            Roles.KHCNHTQT
+        };
 
-        // Default users
-        var administrator = new ApplicationUser { UserName = "admin@123", Email = "admin@123" };
-
-        if (_userManager.Users.All(u => u.UserName != administrator.UserName))
+        foreach (var roleName in roles)
         {
-            await _userManager.CreateAsync(administrator, "Admin@123");
-            if (!string.IsNullOrWhiteSpace(administratorRole.Name))
+            if (_roleManager.Roles.All(r => r.Name != roleName))
             {
-                await _userManager.AddToRolesAsync(administrator, new[] { administratorRole.Name });
+                await _roleManager.CreateAsync(new ApplicationRole
+                {
+                    Name = roleName,
+                    NormalizedName = roleName.ToUpperInvariant()
+                });
+            }
+
+            var userName = $"{roleName.ToLowerInvariant()}@123";
+            var user = new ApplicationUser { UserName = userName, Email = userName };
+
+            if (_userManager.Users.All(u => u.UserName != user.UserName))
+            {
+                await _userManager.CreateAsync(user, $"{roleName}@123");
+                await _userManager.AddToRoleAsync(user, roleName);
             }
         }
 
