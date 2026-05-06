@@ -107,6 +107,7 @@ public class ApplicationDbContextInitialiser
             });
         }
         // Defauld Steps
+        var teacherInitialStepId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
         var dvqlttInitialStepId = Guid.Parse("11111111-1111-1111-1111-111111111111");
         var tttvStepId = Guid.Parse("22222222-2222-2222-2222-222222222222");
         var dvqlttReviewStepId = Guid.Parse("33333333-3333-3333-3333-333333333333");
@@ -117,6 +118,21 @@ public class ApplicationDbContextInitialiser
         {
             var steps = new List<Step>
             {
+                new Step
+                {
+                    Id = teacherInitialStepId,
+                    Name = "Đang xử lý bởi giáo viên",
+                    ShortName = "Đang xử lý bởi GV",
+                    Order = 0,
+                    StepDetails = new List<StepDetail>
+                    {
+                        new StepDetail
+                        {
+                            Name = "Giáo viên đang chuẩn bị hồ sơ",
+                            Order = 1
+                        }
+                    }
+                },
                 new Step
                 {
                     Id = dvqlttInitialStepId,
@@ -262,7 +278,8 @@ public class ApplicationDbContextInitialiser
 
         var roleStepMappings = new Dictionary<string, Guid[]>
         {
-            [Roles.Administrator] = [dvqlttInitialStepId, tttvStepId, dvqlttReviewStepId, khcnHtqtStepId, returnedStepId],
+            [Roles.Administrator] = [teacherInitialStepId, dvqlttInitialStepId, tttvStepId, dvqlttReviewStepId, khcnHtqtStepId, returnedStepId],
+            [Roles.Teacher] = [teacherInitialStepId],
             [Roles.Dvqltt] = [dvqlttInitialStepId, dvqlttReviewStepId],
             [Roles.Tttv] = [tttvStepId],
             [Roles.KhcnHtqt] = [khcnHtqtStepId]
@@ -302,7 +319,13 @@ public class ApplicationDbContextInitialiser
                 .ThenBy(sd => sd.Order)
                 .Select(sd => sd.Id)
                 .First();
-            var TttvStepDetailId = _context.StepDetails
+            var dvqlttStepDetailId = _context.StepDetails
+                .Where(sd => sd.Step.Order == 1)
+                .OrderBy(sd => sd.Step.Order)
+                .ThenBy(sd => sd.Order)
+                .Select(sd => sd.Id)
+                .First();
+            var tttvStepDetailId = _context.StepDetails
                 .Where(sd => sd.Step.Order == 2)
                 .OrderBy(sd => sd.Step.Order)
                 .ThenBy(sd => sd.Order)
@@ -310,6 +333,7 @@ public class ApplicationDbContextInitialiser
                 .First();
 
             var teacherApplicationId = Guid.NewGuid();
+            var dvqlttApplicationId = Guid.NewGuid();
             var tttvApplicationId = Guid.NewGuid();
 
             var applications = new List<DomainApplication>
@@ -320,17 +344,26 @@ public class ApplicationDbContextInitialiser
                     Code = "APP-SEED-001",
                     Title = "Hồ sơ đề nghị công nhận bài báo khoa học",
                     Description = "Hồ sơ mẫu được tạo sẵn để kiểm thử luồng xử lý hồ sơ nghiên cứu khoa học.",
-                    Status = ApplicationStatus.Draft,
-                    StepDetailId = TttvStepDetailId,
+                    Status = ApplicationStatus.Published,
+                    StepDetailId = tttvStepDetailId,
+                },
+                new()
+                {
+                    Id = dvqlttApplicationId,
+                    Code = "APP-SEED-002",
+                    Title = "Hồ sơ kiểm tra xác nhận đơn vị quản lý trực tiếp",
+                    Description = "Dữ liệu mẫu phục vụ kiểm tra luồng xử lý hồ sơ tại đơn vị quản lý trực tiếp.",
+                    Status = ApplicationStatus.Published,
+                    StepDetailId = dvqlttStepDetailId,
                 },
                 new()
                 {
                     Id = tttvApplicationId,
-                    Code = "APP-SEED-002",
+                    Code = "APP-SEED-003",
                     Title = "Hồ sơ xác nhận giờ nghiên cứu khoa học",
                     Description = "Dữ liệu mẫu phục vụ kiểm tra chức năng danh sách, chi tiết và cập nhật trạng thái hồ sơ.",
-                    Status = ApplicationStatus.Draft,
-                    StepDetailId = TttvStepDetailId
+                    Status = ApplicationStatus.Published,
+                    StepDetailId = tttvStepDetailId
                 }
             };
 
@@ -354,6 +387,14 @@ public class ApplicationDbContextInitialiser
                     Path = "/uploads/seed/tttv/tttv-attachment-1.pdf",
                     ContentType = "application/pdf",
                     Length = 512000
+                },
+                new()
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "dvqltt-attachment-1.pdf",
+                    Path = "/uploads/seed/dvqltt/dvqltt-attachment-1.pdf",
+                    ContentType = "application/pdf",
+                    Length = 384000
                 }
             };
 
@@ -366,15 +407,19 @@ public class ApplicationDbContextInitialiser
                 {
                     ApplicationId = tttvApplicationId,
                     FileId = files[0].Id,
-                    Level = 1,
                     StepId = dvqlttInitialStepId
                 },
                 new()
                 {
                     ApplicationId = tttvApplicationId,
                     FileId = files[1].Id,
-                    Level = 2,
                     StepId = tttvStepId
+                },
+                new()
+                {
+                    ApplicationId = dvqlttApplicationId,
+                    FileId = files[2].Id,
+                    StepId = dvqlttInitialStepId
                 }
             };
 
