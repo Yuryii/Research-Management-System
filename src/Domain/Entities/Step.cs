@@ -8,5 +8,6 @@ public partial class Step : BaseAuditableEntity<Guid>
     public int Order { get; set; }
     public IList<StepDetail> StepDetails { get; set; } = new List<StepDetail>();
     public IList<RoleStepPermission> RoleStepPermissions { get; set; } = new List<RoleStepPermission>();
+    public IList<ApplicationFile> ApplicationFiles { get; set; } = new List<ApplicationFile>();
 
 }

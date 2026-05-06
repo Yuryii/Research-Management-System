@@ -8,6 +8,7 @@ using RMS.Application.Application.Dtos;
 using RMS.Application.Application.Queries.GetApplications;
 using RMS.Application.Common.Models;
 using RMS.Application.TodoLists.Commands.UpdateTodoList;
+using RMS.Domain.Entities.Models;
 using RMS.Web.Endpoints.Models;
 using ApplicationFile = RMS.Web.Services.File;
 
@@ -28,12 +29,18 @@ public class Applications : IEndpointGroup
 
     [EndpointSummary("Get all Applications")]
     [EndpointDescription("Retrieves applications with pagination.")]
-    public static async Task<Ok<PaginatedResult<ApplicationDto>>> GetApplications(ISender sender, int pageNumber = 1, int pageSize = 10)
+    public static async Task<Results<Ok<PaginatedResult<ApplicationDto>>, BadRequest<string>>> GetApplications(ISender sender, int pageNumber = 1, int pageSize = 10, Guid? stepId = null)
     {
+        if(stepId == null)
+        {
+            return TypedResults.BadRequest("StepId is required.");
+        }
+
         var applications = await sender.Send(new GetApplicationsQuery
         {
             PageNumber = pageNumber,
-            PageSize = pageSize
+            PageSize = pageSize,
+            StepId = stepId.Value
         });
 
         return TypedResults.Ok(applications);

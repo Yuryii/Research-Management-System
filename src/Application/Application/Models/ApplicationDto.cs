@@ -13,7 +13,8 @@ public record ApplicationDto
     public required string Description { get; init; }
     public required ApplicationStatus Status { get; init; }
     public required Guid StepDetailId { get; init; }
-    public IReadOnlyCollection<ApplicationFileDto> ApplicationFiles { get; init; } = [];
+    public List<ApplicationFileDto> MyApplications { get; set; } = new List<ApplicationFileDto>();
+    public List<ApplicationFileDto> PreAttachments { get; set; } = new List<ApplicationFileDto>();
 
     private class Mapping : Profile
     {

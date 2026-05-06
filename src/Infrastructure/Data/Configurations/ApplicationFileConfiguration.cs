@@ -9,5 +9,9 @@ public class ApplicationFileConfiguration : IEntityTypeConfiguration<Application
     public void Configure(EntityTypeBuilder<ApplicationFile> builder)
     {
         builder.HasKey(af => new { af.ApplicationId, af.FileId });
+        builder.HasOne(af => af.Step)
+            .WithMany(s => s.ApplicationFiles)
+            .HasForeignKey(af => af.StepId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

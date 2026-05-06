@@ -296,35 +296,89 @@ public class ApplicationDbContextInitialiser
 
         if (!_context.Applications.Any())
         {
-            var initialStepDetailId = _context.StepDetails
+            var teacherStepDetailId = _context.StepDetails
+                .Where(sd => sd.Step.Order == 1)
+                .OrderBy(sd => sd.Step.Order)
+                .ThenBy(sd => sd.Order)
+                .Select(sd => sd.Id)
+                .First();
+            var TttvStepDetailId = _context.StepDetails
+                .Where(sd => sd.Step.Order == 2)
                 .OrderBy(sd => sd.Step.Order)
                 .ThenBy(sd => sd.Order)
                 .Select(sd => sd.Id)
                 .First();
 
+            var teacherApplicationId = Guid.NewGuid();
+            var tttvApplicationId = Guid.NewGuid();
+
             var applications = new List<DomainApplication>
             {
                 new()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = teacherApplicationId,
                     Code = "APP-SEED-001",
                     Title = "Hồ sơ đề nghị công nhận bài báo khoa học",
                     Description = "Hồ sơ mẫu được tạo sẵn để kiểm thử luồng xử lý hồ sơ nghiên cứu khoa học.",
                     Status = ApplicationStatus.Draft,
-                    StepDetailId = initialStepDetailId
+                    StepDetailId = TttvStepDetailId,
                 },
                 new()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = tttvApplicationId,
                     Code = "APP-SEED-002",
                     Title = "Hồ sơ xác nhận giờ nghiên cứu khoa học",
                     Description = "Dữ liệu mẫu phục vụ kiểm tra chức năng danh sách, chi tiết và cập nhật trạng thái hồ sơ.",
                     Status = ApplicationStatus.Draft,
-                    StepDetailId = initialStepDetailId
+                    StepDetailId = TttvStepDetailId
                 }
             };
 
             _context.Applications.AddRange(applications);
+            await _context.SaveChangesAsync();
+
+            var files = new List<RMS.Domain.Entities.Models.File>
+            {
+                new()
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "teacher-attachment-1.pdf",
+                    Path = "/uploads/seed/teacher/teacher-attachment-1.pdf",
+                    ContentType = "application/pdf",
+                    Length = 245760
+                },
+                new()
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "tttv-attachment-1.pdf",
+                    Path = "/uploads/seed/tttv/tttv-attachment-1.pdf",
+                    ContentType = "application/pdf",
+                    Length = 512000
+                }
+            };
+
+            _context.Files.AddRange(files);
+            await _context.SaveChangesAsync();
+
+            var applicationFiles = new List<ApplicationFile>
+            {
+                new()
+                {
+                    ApplicationId = tttvApplicationId,
+                    FileId = files[0].Id,
+                    Level = 1,
+                    StepId = dvqlttInitialStepId
+                },
+                new()
+                {
+                    ApplicationId = tttvApplicationId,
+                    FileId = files[1].Id,
+                    Level = 2,
+                    StepId = tttvStepId
+                }
+            };
+
+            _context.ApplicationFiles.AddRange(applicationFiles);
             await _context.SaveChangesAsync();
         }
 
