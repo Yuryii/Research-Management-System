@@ -332,15 +332,15 @@ public class ApplicationDbContextInitialiser
                 .Select(sd => sd.Id)
                 .First();
 
-            var teacherApplicationId = Guid.NewGuid();
-            var dvqlttApplicationId = Guid.NewGuid();
-            var tttvApplicationId = Guid.NewGuid();
+            var teacherApplicationId = Guid.Parse("34BFFA1E-8D68-440D-80BB-2863614B7C50");
+            var dvqlttApplicationId = Guid.Parse("3C8C8FE4-36F8-4D45-B46B-AC705D028770"); 
+            var tttvApplicationId = Guid.Parse("ABC1743B-3DB7-4721-A859-1462572AC193");
 
             var applications = new List<DomainApplication>
             {
                 new()
                 {
-                    Id = teacherApplicationId,
+                    Id = tttvApplicationId,
                     Code = "APP-SEED-001",
                     Title = "Hồ sơ đề nghị công nhận bài báo khoa học",
                     Description = "Hồ sơ mẫu được tạo sẵn để kiểm thử luồng xử lý hồ sơ nghiên cứu khoa học.",
@@ -358,12 +358,20 @@ public class ApplicationDbContextInitialiser
                 },
                 new()
                 {
-                    Id = tttvApplicationId,
                     Code = "APP-SEED-003",
                     Title = "Hồ sơ xác nhận giờ nghiên cứu khoa học",
                     Description = "Dữ liệu mẫu phục vụ kiểm tra chức năng danh sách, chi tiết và cập nhật trạng thái hồ sơ.",
                     Status = ApplicationStatus.Published,
                     StepDetailId = tttvStepDetailId
+                },
+                new()
+                {
+                    Id = teacherApplicationId,
+                    Code = "APP-SEED-004",
+                    Title = "Hồ sơ xác nhận giáo viên",
+                    Description = "Dữ liệu mẫu phục vụ kiểm tra giáo viên",
+                    Status = ApplicationStatus.Draft,
+                    StepDetailId = teacherStepDetailId
                 }
             };
 

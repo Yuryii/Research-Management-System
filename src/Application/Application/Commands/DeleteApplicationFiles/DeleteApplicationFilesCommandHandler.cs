@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using RMS.Application.Common.Exceptions;
 using RMS.Application.Common.Interfaces;
+using RMS.Domain.Constants;
+using RMS.Domain.Enums;
 
 namespace RMS.Application.Application.Commands.DeleteApplicationFiles;
 
@@ -26,10 +28,16 @@ public class DeleteApplicationFilesCommandHandler : IRequestHandler<DeleteApplic
     public async Task Handle(DeleteApplicationFilesCommand request, CancellationToken cancellationToken)
     {
         var applicationFile = await _context.ApplicationFiles
+            .Include(af => af.Application)
             .Include(af => af.File)
             .SingleOrDefaultAsync(af => af.ApplicationId == request.ApplicationId && af.FileId == request.FileId, cancellationToken);
 
         Guard.Against.NotFound(request.FileId, applicationFile, "Application file not found.");
+
+        if (_user.Roles?.Contains(Roles.Teacher) == true && applicationFile.Application.Status != ApplicationStatus.Draft)
+        {
+            throw new ForbiddenAccessException();
+        }
 
         var currentRoleNames = _user.Roles ?? [];
         var currentRoleIds = await _identityService.GetRoleIdsAsync(currentRoleNames, cancellationToken);

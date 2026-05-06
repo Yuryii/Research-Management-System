@@ -2,6 +2,7 @@ using RMS.Application.Common.Exceptions;
 using RMS.Application.Common.Interfaces;
 using RMS.Domain.Constants;
 using RMS.Domain.Entities.Models;
+using RMS.Domain.Enums;
 
 namespace RMS.Application.Application.Commands.CreateApplicationFiles;
 
@@ -31,6 +32,11 @@ public class CreateApplicationFilesCommandHandler : IRequestHandler<CreateApplic
 
         Guard.Against.NotFound(request.ApplicationId, application, "Application not found.");
         Guard.Against.NotFound(request.ApplicationId, application.StepDetail, "Step detail not found.");
+
+        if (_user.Roles?.Contains(Roles.Teacher) == true && application.Status != ApplicationStatus.Draft)
+        {
+            throw new ForbiddenAccessException();
+        }
 
         var stepId = application.StepDetail.StepId;
 
