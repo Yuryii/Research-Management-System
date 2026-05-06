@@ -28,14 +28,16 @@ public class CreateApplicationFilesCommandHandler : IRequestHandler<CreateApplic
     {
         var application = await _context.Applications
             .Include(a => a.StepDetail)
+            .ThenInclude(sd => sd.Step)
             .SingleOrDefaultAsync(a => a.Id == request.ApplicationId, cancellationToken);
 
         Guard.Against.NotFound(request.ApplicationId, application, "Application not found.");
         Guard.Against.NotFound(request.ApplicationId, application.StepDetail, "Step detail not found.");
+        Guard.Against.NotFound(request.ApplicationId, application.StepDetail.Step, "Step not found.");
 
         if (_user.Roles?.Contains(Roles.Teacher) == true && application.Status != ApplicationStatus.Draft)
         {
-            throw new ForbiddenAccessException();
+            throw new ForbiddenAccessException("Teacher can only upload files when application is in Draft status.");
         }
 
         var stepId = application.StepDetail.StepId;
@@ -51,8 +53,9 @@ public class CreateApplicationFilesCommandHandler : IRequestHandler<CreateApplic
 
         if (!canUpdateStep)
         {
-            throw new ForbiddenAccessException();
+            throw new ForbiddenAccessException("Current role is not permitted to upload files for this step.");
         }
+
 
         var savedFiles = await _fileService.SaveFilesAsync(request.Files, cancellationToken, Config.Store.APPLICATION_PATH);
         var fileIds = new List<Guid>();

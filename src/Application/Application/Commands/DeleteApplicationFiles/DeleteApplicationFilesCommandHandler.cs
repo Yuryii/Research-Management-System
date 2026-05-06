@@ -29,14 +29,17 @@ public class DeleteApplicationFilesCommandHandler : IRequestHandler<DeleteApplic
     {
         var applicationFile = await _context.ApplicationFiles
             .Include(af => af.Application)
+            .ThenInclude(a => a.StepDetail)
+            .ThenInclude(sd => sd.Step)
             .Include(af => af.File)
+            .Include(af => af.Step)
             .SingleOrDefaultAsync(af => af.ApplicationId == request.ApplicationId && af.FileId == request.FileId, cancellationToken);
 
         Guard.Against.NotFound(request.FileId, applicationFile, "Application file not found.");
 
         if (_user.Roles?.Contains(Roles.Teacher) == true && applicationFile.Application.Status != ApplicationStatus.Draft)
         {
-            throw new ForbiddenAccessException();
+            throw new ForbiddenAccessException("Teacher can only delete files when application is in Draft status.");
         }
 
         var currentRoleNames = _user.Roles ?? [];
@@ -50,7 +53,15 @@ public class DeleteApplicationFilesCommandHandler : IRequestHandler<DeleteApplic
 
         if (!canUpdateStep)
         {
-            throw new ForbiddenAccessException();
+            throw new ForbiddenAccessException("Current role is not permitted to delete files for this step.");
+        }
+
+        var applicationStepOrder = applicationFile.Application.StepDetail.Step.Order;
+        var targetStepOrder = applicationFile.Step.Order;
+
+        if (applicationStepOrder > targetStepOrder)
+        {
+            throw new ForbiddenAccessException("Cannot delete files from a previous step after the application has advanced.");
         }
 
         _context.ApplicationFiles.Remove(applicationFile);

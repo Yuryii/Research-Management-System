@@ -33,11 +33,12 @@ public class ProblemDetailsExceptionHandler() : IExceptionHandler
                 Title = "Unauthorized",
                 Type = "https://tools.ietf.org/html/rfc9110#section-15.5.2"
             }),
-            ForbiddenAccessException => (StatusCodes.Status403Forbidden, new ProblemDetails
+            ForbiddenAccessException fae => (StatusCodes.Status403Forbidden, new ProblemDetails
             {
                 Status = StatusCodes.Status403Forbidden,
                 Title = "Forbidden",
-                Type = "https://tools.ietf.org/html/rfc9110#section-15.5.4"
+                Type = "https://tools.ietf.org/html/rfc9110#section-15.5.4",
+                Detail = fae.Message
             }),
             _ => (-1, null)
         };
