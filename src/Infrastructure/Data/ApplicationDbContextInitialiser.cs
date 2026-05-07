@@ -130,7 +130,7 @@ public class ApplicationDbContextInitialiser
                         {
                             Id = Guid.Parse("343B1904-AB23-42D4-80DB-760E93F15B09"),
                             Name = "Giáo viên đang chuẩn bị hồ sơ",
-                            Order = 1
+                            Order = 0
                         }
                     }
                 },
@@ -214,7 +214,7 @@ public class ApplicationDbContextInitialiser
                     {
                         new StepDetail()
                         {
-                            Id = Guid.Parse("C9B1F8A7-5B3B-4E5B-9C0D-1F2E3A4B5C6D"),
+                            Id = Guid.Parse("CF22AED9-0B93-4D2F-9D03-0A4C2485DABE"),
                             Name = "KNCH-HTQT đã tiếp nhân hồ sơ",
                             Order = 1
                         },
@@ -239,7 +239,17 @@ public class ApplicationDbContextInitialiser
                 {
                     Id = returnedStepId,
                     Name = "Hồ sơ đã bị trả về",
-                    Order = 5
+                    Order = 5,
+                    StepDetails = new List<StepDetail>()
+                    {
+                        new StepDetail()
+                        {
+                            Id = Guid.Parse("C9B1F8A7-5B3B-4E5B-9C0D-1F2E3A4B5C6D"),
+                            Name = "Hồ sơ đã bị trả về",
+                            Order = 1,
+                            IsReturnStep = true
+                        }
+                    }
                 }
             };
             _context.Steps.AddRange(steps);

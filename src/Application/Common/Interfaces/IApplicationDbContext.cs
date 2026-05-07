@@ -16,6 +16,8 @@ public interface IApplicationDbContext
     DbSet<StepDetail> StepDetails { get; }
     DbSet<DomainFile> Files { get; }
     DbSet<ApplicationFile> ApplicationFiles { get; }
+    DbSet<Notification> Notifications { get; }
+    DbSet<NotificationFile> NotificationFiles { get; }
     DbSet<RoleStepPermission> RoleStepPermissions { get; }
     DbSet<AcademicDegree> AcademicDegrees { get; }
     DbSet<ResearchHour> ResearchHours { get; }

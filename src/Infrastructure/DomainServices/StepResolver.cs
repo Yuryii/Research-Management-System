@@ -15,10 +15,7 @@ public class StepResolver : IStepResolver
     }
     public async Task<Guid> ResolveAsync(CancellationToken cancellationToken)
     {
-        var defaultStep = await _context.StepDetails
-            .OrderBy(sd => sd.StepId)
-            .ThenBy(sd => sd.Id)
-            .FirstOrDefaultAsync(cancellationToken);
+        var defaultStep = await _context.StepDetails.Where(x => x.Step.Order == 0).FirstOrDefaultAsync();
 
         return defaultStep?.Id
             ?? throw new InvalidOperationException("No StepDetail found. Please ensure the workflow is seeded.");

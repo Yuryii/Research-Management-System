@@ -1,0 +1,109 @@
+<section class="app-layout">
+  <aside class="app-sidebar">
+    <div class="sidebar-toggle">&#9776;</div>
+    <nav>
+      <h5 class="sidebar-heading">Active Item</h5>
+      <ul>
+        <li class="active">Manage Application</li>
+        <li>Nested Item</li>
+        <li>Nested Item</li>
+      </ul>
+      <div class="sidebar-divider"></div>
+      <ul>
+        <li>Research Hours</li>
+        <li>Default Item</li>
+        <li>Default Item</li>
+        <li>Default Item</li>
+      </ul>
+    </nav>
+  </aside>
+
+  <div class="app-content">
+    <header class="app-topbar">
+      <div class="topbar-logo">&#128202;</div>
+      <div class="topbar-steps">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <button class="topbar-cta">Get Started</button>
+    </header>
+
+    <div class="app-tabs">
+      @for (tab of tabs; track tab) {
+        <button type="button" class="tab" [class.active]="activeTab() === tab" (click)="setTab(tab)">{{ tab }}</button>
+      }
+    </div>
+
+    <div class="app-toolbar">
+      <div class="toolbar-title">
+        <h2>Applications</h2>
+        <p>Shared board for {{ currentRole() }}</p>
+      </div>
+      <div class="toolbar-controls">
+        <select [value]="currentRole()" (change)="setRole(($event.target as HTMLSelectElement).value)">
+          @for (role of roles; track role) {
+            <option [value]="role">{{ role }}</option>
+          }
+        </select>
+        <select>
+          <option>Filter</option>
+          <option>Status</option>
+          <option>Date</option>
+        </select>
+        <input type="search" placeholder="Search here..." />
+      </div>
+    </div>
+
+    <div class="app-table">
+      <div class="app-table-header">
+        <div>No.</div>
+        <div>Title</div>
+        <div>Description</div>
+        <div>Attachments</div>
+        <div>Teacher's Name</div>
+        <div>My Attachments</div>
+        <div>Status</div>
+        <div class="actions">Actions</div>
+      </div>
+      @for (row of applications(); track row.id) {
+        <div class="app-table-row">
+          <div>{{ row.id }}</div>
+          <div>{{ row.title }}</div>
+          <div>{{ row.description }}</div>
+          <div>
+            <span class="attachment-pill">
+              <span class="attachment-icon">&#128206;</span>
+              <span>{{ row.attachments }}</span>
+            </span>
+          </div>
+          <div>{{ row.teacherName }}</div>
+          <div>
+            <span class="attachment-pill secondary">
+              <span class="attachment-icon">&#128206;</span>
+              <span>{{ row.myAttachments }}</span>
+            </span>
+          </div>
+          <div>
+            @if (isTeacher()) {
+              <span class="status-chip" [class.draft]="row.teacherStatus === 'Draft'" [class.submitted]="row.teacherStatus === 'Submitted'">
+                {{ row.teacherStatus }}
+              </span>
+            } @else {
+              <span class="status-chip neutral">{{ row.status }}</span>
+            }
+          </div>
+          <div class="actions">
+            @if (isTeacher()) {
+              <button class="chip-button submitted">Submitted</button>
+              <button class="chip-button draft">Draft</button>
+            } @else {
+              <button class="chip-button forward">Forward to next step</button>
+              <button class="chip-button return">Return application</button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</section>

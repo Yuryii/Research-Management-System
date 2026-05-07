@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using RMS.Application.Application.Commands.CreateApplication;
 using RMS.Application.Application.Commands.DeleteApplication;
 using RMS.Application.Application.Commands.ForwardNextToStep;
+using RMS.Application.Application.Commands.ReturnApplication;
 using RMS.Application.Application.Commands.UpdateApplication;
 using RMS.Application.Application.Commands.UpdateApplicationStepDetail;
 using RMS.Application.Application.Dtos;
@@ -27,6 +28,7 @@ public class Applications : IEndpointGroup
         groupBuilder.MapPost(UpdateApplicationStepDetail, "UpdateApplicationStepDetail");
         groupBuilder.MapDelete(DeleteApplication, "{id}");
         groupBuilder.MapPost(ForwardNextToStep, "ForwardNextToStep").DisableAntiforgery();
+        groupBuilder.MapPost(ReturnApplication, "ReturnApplication").DisableAntiforgery();
     }
 
     [EndpointSummary("Get all Applications")]
@@ -106,6 +108,32 @@ public class Applications : IEndpointGroup
         {
             var applicationId = await sender.Send(command);
             return TypedResults.Ok(applicationId);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return TypedResults.BadRequest(ex.Message);
+        }
+    }
+
+    [EndpointSummary("Return an Application")]
+    [EndpointDescription("Returns an application to the return step, saves notification and files.")]
+    public static async Task<Results<Ok<Guid>, BadRequest<string>>> ReturnApplication(
+        ISender sender,
+        [FromForm] ReturnApplicationRequest request,
+        CancellationToken cancellationToken)
+    {
+        var command = new ReturnApplicationCommand
+        {
+            ApplicationId = request.ApplicationId,
+            Title = request.Title,
+            Description = request.Description,
+            Files = ApplicationFile.FilesToFileDtos(request.Files)
+        };
+
+        try
+        {
+            var notificationId = await sender.Send(command, cancellationToken);
+            return TypedResults.Ok(notificationId);
         }
         catch (InvalidOperationException ex)
         {

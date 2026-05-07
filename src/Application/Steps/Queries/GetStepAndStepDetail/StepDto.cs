@@ -24,4 +24,5 @@ public class StepDetailDto
 {
     public required string Name { get; set; }
     public int Order { get; set; }
+    public bool IsReturnStep { get; set; }
 }

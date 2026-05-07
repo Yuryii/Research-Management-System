@@ -23,6 +23,15 @@ public class ForwardNextToStepCommandHandler : IRequestHandler<ForwardNextToStep
 
         Guard.Against.NotFound(request.ApplicationId, application, "Application not found.");
 
+        var isReturnStep = await _context.StepDetails
+            .AsNoTracking()
+            .AnyAsync(sd => sd.Id == application.StepDetailId && sd.IsReturnStep, cancellationToken);
+
+        if (isReturnStep)
+        {
+            throw new InvalidOperationException("Cannot update step detail for application in return step.");
+        }
+
         // validate only have permissions to  update application on step match with their role
         List<string> roleNames = _user.Roles!;
         var roleIds = await _identityService.GetRoleIdsAsync(roleNames, cancellationToken);

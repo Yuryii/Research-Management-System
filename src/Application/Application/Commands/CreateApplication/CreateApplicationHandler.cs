@@ -26,6 +26,10 @@ public class CreateApplicationCommandHandler : IRequestHandler<CreateApplication
     {
         // Add Application
         var stepDetailId = await _stepResolver.ResolveAsync(cancellationToken);
+        var stepId = await _context.StepDetails
+            .Where(x => x.Id == stepDetailId)
+            .Select(x => x.StepId)
+            .SingleAsync(cancellationToken);
         var code = _codeGeneratorService.GenerateApplicationCode(request.Title);
 
         var application = new DomainApplication
@@ -48,7 +52,8 @@ public class CreateApplicationCommandHandler : IRequestHandler<CreateApplication
                 _context.ApplicationFiles.Add(new ApplicationFile
                 {
                     ApplicationId = application.Id,
-                    FileId = file.Id
+                    FileId = file.Id,
+                    StepId = stepId
                 });
             }
         }
