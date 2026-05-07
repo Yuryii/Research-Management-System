@@ -128,6 +128,7 @@ public class ApplicationDbContextInitialiser
                     {
                         new StepDetail
                         {
+                            Id = Guid.Parse("343B1904-AB23-42D4-80DB-760E93F15B09"),
                             Name = "Giáo viên đang chuẩn bị hồ sơ",
                             Order = 1
                         }
