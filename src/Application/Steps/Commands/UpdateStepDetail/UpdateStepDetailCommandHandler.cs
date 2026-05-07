@@ -38,6 +38,16 @@ public class UpdateStepDetailCommandHandler : IRequestHandler<UpdateStepDetailCo
             entity.NextStepDetailId = request.NextStepDetailId;
         }
 
+        if (request.IsReturnStep.HasValue)
+        {
+            entity.IsReturnStep = request.IsReturnStep.Value;
+        }
+
+        if (request.IsCaculateScoreStep.HasValue)
+        {
+            entity.IsCaculateScoreStep = request.IsCaculateScoreStep.Value;
+        }
+
         await _context.SaveChangesAsync(cancellationToken);
     }
 }

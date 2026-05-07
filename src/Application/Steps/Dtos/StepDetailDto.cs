@@ -9,6 +9,8 @@ public record StepDetailDto
     public required string Name { get; init; }
     public int Order { get; init; }
     public Guid? NextStepDetailId { get; init; }
+    public bool IsReturnStep { get; init; }
+    public bool IsCaculateScoreStep { get; init; }
 
     private class Mapping : Profile
     {

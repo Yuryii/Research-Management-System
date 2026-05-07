@@ -10,5 +10,6 @@ public record UpdateStepDetailCommand : IRequest
     public string? Name { get; init; }
     public int? Order { get; init; }
     public Guid? NextStepDetailId { get; init; }
-    public Guid IsReturnStep { get; set; }
+    public bool? IsReturnStep { get; init; }
+    public bool? IsCaculateScoreStep { get; init; }
 }

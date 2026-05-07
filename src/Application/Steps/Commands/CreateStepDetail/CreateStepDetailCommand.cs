@@ -11,4 +11,5 @@ public record CreateStepDetailCommand : IRequest<Guid>
     public int Order { get; init; }
     public Guid? NextStepDetailId { get; init; }
     public bool IsReturnStep { get; set; }
+    public bool IsCaculateScoreStep { get; set; }
 }

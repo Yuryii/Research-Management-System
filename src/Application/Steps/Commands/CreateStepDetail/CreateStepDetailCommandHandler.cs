@@ -36,7 +36,8 @@ public class CreateStepDetailCommandHandler : IRequestHandler<CreateStepDetailCo
             Name = request.Name,
             Order = request.Order,
             NextStepDetailId = request.NextStepDetailId,
-            IsReturnStep = request.IsReturnStep
+            IsReturnStep = request.IsReturnStep,
+            IsCaculateScoreStep = request.IsCaculateScoreStep
         };
 
         _context.StepDetails.Add(entity);
