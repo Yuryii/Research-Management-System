@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using RMS.Application.Application.Commands.CreateApplication;
 using RMS.Application.Application.Commands.DeleteApplication;
+using RMS.Application.Application.Commands.ForwardNextToStep;
 using RMS.Application.Application.Commands.UpdateApplication;
 using RMS.Application.Application.Commands.UpdateApplicationStepDetail;
 using RMS.Application.Application.Dtos;
@@ -25,6 +26,7 @@ public class Applications : IEndpointGroup
         groupBuilder.MapPost(UpdateApplication, "UpdateApplication");
         groupBuilder.MapPost(UpdateApplicationStepDetail, "UpdateApplicationStepDetail");
         groupBuilder.MapDelete(DeleteApplication, "{id}");
+        groupBuilder.MapPost(ForwardNextToStep, "ForwardNextToStep").DisableAntiforgery();
     }
 
     [EndpointSummary("Get all Applications")]
@@ -95,4 +97,21 @@ public class Applications : IEndpointGroup
 
         return TypedResults.NoContent();
     }
+
+    [EndpointSummary("Forward an Application to the next Step")]
+    [EndpointDescription("Forwards the application to the next step. The user must have a")]
+    public static async Task<Results<Ok<Guid>, BadRequest<string>>> ForwardNextToStep(ISender sender, ForwardNextToStepCommand command)
+    {
+        try
+        {
+            var applicationId = await sender.Send(command);
+            return TypedResults.Ok(applicationId);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return TypedResults.BadRequest(ex.Message);
+        }
+    }
+
+
 }
