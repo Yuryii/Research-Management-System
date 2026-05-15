@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using RMS.Application.Application.Commands.UpdateApplicationStepDetail;
 using RMS.Application.Common.Exceptions;
 using RMS.Domain.Constants;
@@ -21,7 +22,7 @@ public class UpdateApplicationStepDetailTests : TestBase
         var command = new UpdateApplicationStepDetailCommand
         {
             ApplicationId = Guid.NewGuid(),
-            StepDetailId = stepDetail.Id!.Value
+            StepDetailId = stepDetail.Id
         };
 
         await Should.ThrowAsync<NotFoundException>(() => TestApp.SendAsync(command));
@@ -35,7 +36,7 @@ public class UpdateApplicationStepDetailTests : TestBase
         var application = await CreateApplicationAsync();
         var command = new UpdateApplicationStepDetailCommand
         {
-            ApplicationId = application.Id!.Value,
+            ApplicationId = application.Id,
             StepDetailId = Guid.NewGuid()
         };
 
@@ -52,13 +53,13 @@ public class UpdateApplicationStepDetailTests : TestBase
 
         var command = new UpdateApplicationStepDetailCommand
         {
-            ApplicationId = application.Id!.Value,
-            StepDetailId = stepDetail.Id!.Value
+            ApplicationId = application.Id,
+            StepDetailId = stepDetail.Id
         };
 
         await TestApp.SendAsync(command);
 
-        var updatedApplication = await TestApp.FindAsync<DomainApplication>(application.Id!.Value);
+        var updatedApplication = await TestApp.FindAsync<DomainApplication>(application.Id);
 
         updatedApplication.ShouldNotBeNull();
         updatedApplication!.StepDetailId.ShouldBe(command.StepDetailId);
@@ -75,13 +76,13 @@ public class UpdateApplicationStepDetailTests : TestBase
 
         var command = new UpdateApplicationStepDetailCommand
         {
-            ApplicationId = application.Id!.Value,
-            StepDetailId = stepDetail.Id!.Value
+            ApplicationId = application.Id,
+            StepDetailId = stepDetail.Id
         };
 
         await Should.ThrowAsync<ForbiddenAccessException>(() => TestApp.SendAsync(command));
 
-        var unchangedApplication = await TestApp.FindAsync<DomainApplication>(application.Id!.Value);
+        var unchangedApplication = await TestApp.FindAsync<DomainApplication>(application.Id);
 
         unchangedApplication.ShouldNotBeNull();
         unchangedApplication!.StepDetailId.ShouldBe(application.StepDetailId);
@@ -110,11 +111,11 @@ public class UpdateApplicationStepDetailTests : TestBase
 
         await TestApp.ExecuteDbContextAsync(async context =>
         {
-            var role = await context.Roles.SingleAsync(role => role.Name == permittedRoleName);
+            var role = await context.Roles.SingleAsync(role => role.Name == permittedRoleName, CancellationToken.None);
             context.RoleStepPermissions.Add(new RoleStepPermission
             {
                 RoleId = role.Id,
-                StepId = step.Id!.Value
+                StepId = step.Id
             });
 
             await context.SaveChangesAsync();
@@ -133,7 +134,7 @@ public class UpdateApplicationStepDetailTests : TestBase
             Title = "Application for step detail update",
             Description = "Application created by functional tests.",
             Status = ApplicationStatus.Draft,
-            StepDetailId = initialStepDetail.Id!.Value
+            StepDetailId = initialStepDetail.Id
         };
 
         await TestApp.AddAsync(application);

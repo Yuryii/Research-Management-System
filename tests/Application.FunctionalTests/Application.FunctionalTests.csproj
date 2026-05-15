@@ -37,4 +37,8 @@
         <ProjectReference Include="..\TestAppHost\TestAppHost.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="TodoItems\Commands\" />
+    </ItemGroup>
+
 </Project>

@@ -9,10 +9,7 @@ using RMS.Application.Application.Commands.UpdateApplicationStepDetail;
 using RMS.Application.Application.Dtos;
 using RMS.Application.Application.Queries.GetApplications;
 using RMS.Application.Common.Models;
-using RMS.Application.TodoLists.Commands.UpdateTodoList;
 using RMS.Domain.Entities.Models;
-using RMS.Web.Endpoints.Models;
-using ApplicationFile = RMS.Web.Services.File;
 
 namespace RMS.Web.Endpoints;
 
@@ -54,18 +51,9 @@ public class Applications : IEndpointGroup
     [EndpointDescription("Creates a new application with optional file attachments and returns the ID of the created application.")]
     public static async Task<Created<Guid>> CreateApplication(
         ISender sender,
-        [FromForm] CreateApplicationRequest request,
+        [FromForm] CreateApplicationCommand command,
         CancellationToken cancellationToken)
     {
-
-        var command = new CreateApplicationCommand
-        {
-            Title = request.Title,
-            Description = request.Description,
-            Status = request.Status,
-            Files = ApplicationFile.FilesToFileDtos(request.Files)
-        };
-
         var id = await sender.Send(command, cancellationToken);
 
         return TypedResults.Created($"/{nameof(Applications)}/{id}", id);
@@ -119,17 +107,9 @@ public class Applications : IEndpointGroup
     [EndpointDescription("Returns an application to the return step, saves notification and files.")]
     public static async Task<Results<Ok<Guid>, BadRequest<string>>> ReturnApplication(
         ISender sender,
-        [FromForm] ReturnApplicationRequest request,
+        [FromForm] ReturnApplicationCommand command,
         CancellationToken cancellationToken)
     {
-        var command = new ReturnApplicationCommand
-        {
-            ApplicationId = request.ApplicationId,
-            Title = request.Title,
-            Description = request.Description,
-            Files = ApplicationFile.FilesToFileDtos(request.Files)
-        };
-
         try
         {
             var notificationId = await sender.Send(command, cancellationToken);

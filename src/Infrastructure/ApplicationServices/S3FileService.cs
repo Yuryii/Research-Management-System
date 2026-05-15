@@ -1,9 +1,11 @@
+using System.ComponentModel.DataAnnotations;
 using Amazon.S3;
 using Amazon.S3.Model;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
+using MimeDetective;
+using MimeDetective.Definitions;
 using RMS.Application.Common.Interfaces;
-using RMS.Application.Common.Models;
-using DomainFile = RMS.Domain.Entities.Models.File;
 
 namespace RMS.Infrastructure.Services;
 
@@ -18,31 +20,35 @@ public sealed class S3StorageOptions
 
 public class S3FileService : IFileService
 {
-    private readonly IApplicationDbContext _context;
     private readonly IAmazonS3 _s3Client;
     private readonly S3StorageOptions _options;
 
-    public S3FileService(IApplicationDbContext context, IAmazonS3 s3Client, IOptions<S3StorageOptions> options)
+    public S3FileService(IAmazonS3 s3Client, IOptions<S3StorageOptions> options)
     {
-        _context = context;
         _s3Client = s3Client;
         _options = options.Value;
     }
 
-    public async Task<DomainFile> SaveFileAsync(FileUploadDto file, CancellationToken cancellationToken = default, string? subFolder = null)
+    public async Task<string> SaveFileAsync(
+        IFormFile file,
+        HashSet<string> allowedMimeTypes,
+        string subFolder,
+        CancellationToken cancellationToken = default)
     {
         Guard.Against.NullOrWhiteSpace(_options.BucketName, message: "S3 bucket name is required when Storage:Provider is S3.");
+        ValidateFile(file, allowedMimeTypes);
 
         var id = Guid.NewGuid();
         var extension = Path.GetExtension(file.FileName);
         var storedFileName = $"{id}{extension}";
         var objectKey = BuildObjectKey(storedFileName, subFolder);
 
+        await using var input = file.OpenReadStream();
         var putRequest = new PutObjectRequest
         {
             BucketName = _options.BucketName,
             Key = objectKey,
-            InputStream = file.Stream,
+            InputStream = input,
             ContentType = file.ContentType,
             AutoCloseStream = false
         };
@@ -51,54 +57,43 @@ public class S3FileService : IFileService
 
         await _s3Client.PutObjectAsync(putRequest, cancellationToken);
 
-        var fileEntity = new DomainFile
-        {
-            Id = id,
-            Name = file.FileName,
-            Path = objectKey,
-            ContentType = file.ContentType,
-            Length = file.Length
-        };
-
-        _context.Files.Add(fileEntity);
-        await _context.SaveChangesAsync(cancellationToken);
-
-        return fileEntity;
+        return objectKey;
     }
 
-    public async Task<IReadOnlyList<DomainFile>> SaveFilesAsync(IReadOnlyList<FileUploadDto> files, CancellationToken cancellationToken = default, string? subFolder = null)
+    public async Task<IReadOnlyList<string>> SaveFilesAsync(
+        IReadOnlyList<IFormFile> files,
+        HashSet<string> allowedMimeTypes,
+        string subFolder,
+        CancellationToken cancellationToken = default)
     {
-        var savedFiles = new List<DomainFile>(files.Count);
+        var savedFiles = new List<string>(files.Count);
 
         foreach (var file in files)
         {
-            var saved = await SaveFileAsync(file, cancellationToken, subFolder);
+            var saved = await SaveFileAsync(file, allowedMimeTypes, subFolder, cancellationToken);
             savedFiles.Add(saved);
         }
 
         return savedFiles;
     }
 
-    public async Task<bool> DeleteFileAsync(Guid fileId, CancellationToken cancellationToken = default)
+    public Stream GetFile(string path)
+    {
+        throw new NotSupportedException("GetFile is not supported for S3 storage. Use S3 SDK to retrieve objects.");
+    }
+
+    public void DeleteFile(string path, CancellationToken cancellationToken = default)
     {
         Guard.Against.NullOrWhiteSpace(_options.BucketName, message: "S3 bucket name is required when Storage:Provider is S3.");
-
-        var fileEntity = await _context.Files.FindAsync([fileId], cancellationToken);
-        if (fileEntity is null)
-            return false;
 
         var deleteRequest = new DeleteObjectRequest
         {
             BucketName = _options.BucketName,
-            Key = fileEntity.Path
+            Key = path
         };
 
-        await _s3Client.DeleteObjectAsync(deleteRequest, cancellationToken);
+        _s3Client.DeleteObjectAsync(deleteRequest, cancellationToken).GetAwaiter().GetResult();
 
-        _context.Files.Remove(fileEntity);
-        await _context.SaveChangesAsync(cancellationToken);
-
-        return true;
     }
 
     private string BuildObjectKey(string storedFileName, string? subFolder)
@@ -122,6 +117,37 @@ public class S3FileService : IFileService
         foreach (var segment in path.Split(['/', '\\'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
         {
             segments.Add(segment);
+        }
+    }
+
+    private void ValidateFile(IFormFile file, HashSet<string> allowedMimeTypes)
+    {
+        if (file == null || file.Length == 0)
+        {
+            throw new ValidationException("File không hợp lệ");
+        }
+
+        var inspector = new ContentInspectorBuilder
+        {
+            Definitions = MimeDetective.Definitions.DefaultDefinitions.All()
+        }.Build();
+
+        using var stream = file.OpenReadStream();
+
+        var result = inspector.Inspect(stream).FirstOrDefault();
+
+        if (result == null)
+        {
+            throw new ValidationException("Không xác định được loại file");
+        }
+
+        string mimeType = result.Definition.File.MimeType
+            ?? throw new ValidationException("Không xác định được loại file");
+
+        if (!allowedMimeTypes.Contains(mimeType))
+        {
+            throw new ValidationException(
+                $"File type không được hỗ trợ: {mimeType}");
         }
     }
 }

@@ -7,7 +7,6 @@ public class DeleteApplicationCommandHandler : IRequestHandler<DeleteApplication
 {
     private readonly IApplicationDbContext _context;
     private readonly IFileService _fileService;
-
     public DeleteApplicationCommandHandler(IApplicationDbContext context, IFileService fileService)
     {
         _context = context;
@@ -23,17 +22,8 @@ public class DeleteApplicationCommandHandler : IRequestHandler<DeleteApplication
 
         Guard.Against.NotFound(request.Id, entity, "Application not found.");
 
-        var fileIds = entity.ApplicationFiles
-            .Select(af => af.FileId)
-            .ToList();
-
-        _context.Applications.Remove(entity);
-
-        await _context.SaveChangesAsync(cancellationToken);
-
-        foreach (var fileId in fileIds)
+        foreach (var item in entity.ApplicationFiles)
         {
-            await _fileService.DeleteFileAsync(fileId, cancellationToken);
+            _fileService.DeleteFile(item.File.Path);
         }
-    }
-}
+    }}

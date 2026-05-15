@@ -1,5 +1,4 @@
 using RMS.Application.Common.Interfaces;
-using RMS.Application.Common.Models;
 using RMS.Application.Common.Security;
 using RMS.Domain.Constants;
 using RMS.Domain.Entities;
@@ -13,7 +12,7 @@ public record ReturnApplicationCommand : IRequest<Guid>
     public Guid ApplicationId { get; init; }
     public required string Title { get; init; }
     public required string Description { get; init; }
-    public IReadOnlyList<FileUploadDto> Files { get; init; } = [];
+    public List<IFormFile> Files { get; init; } = [];
 }
 
 public class ReturnApplicationCommandValidator : AbstractValidator<ReturnApplicationCommand>
@@ -65,20 +64,48 @@ public class ReturnApplicationCommandHandler : IRequestHandler<ReturnApplication
 
         _context.Notifications.Add(notification);
 
+        IReadOnlyList<string> savedFilePaths = [];
         if (request.Files.Count > 0)
         {
-            var savedFiles = await _fileService.SaveFilesAsync(request.Files, cancellationToken, Config.Store.APPLICATION_PATH);
-            foreach (var file in savedFiles)
+            var folders = $"{Config.Store.ROOT_PATH}{Config.Store.APPLICATION_PATH}";
+            savedFilePaths = await _fileService.SaveFilesAsync(
+                request.Files,
+                Config.Store.AllowedMimeTypes,
+                folders,
+                cancellationToken);
+
+            for (var index = 0; index < request.Files.Count; index++)
             {
+                var file = request.Files[index];
+                var savedFilePath = savedFilePaths[index];
+
                 _context.NotificationFiles.Add(new NotificationFile
                 {
                     NotificationId = notification.Id,
-                    FileId = file.Id
+                    File = new RMS.Domain.Entities.Models.File
+                    {
+                        Name = file.FileName,
+                        ContentType = file.ContentType,
+                        Length = file.Length,
+                        Path = savedFilePath
+                    }
                 });
             }
         }
 
-        await _context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch
+        {
+            foreach (var filePath in savedFilePaths)
+            {
+                _fileService.DeleteFile(filePath, cancellationToken);
+            }
+
+            throw;
+        }
 
         return notification.Id;
     }

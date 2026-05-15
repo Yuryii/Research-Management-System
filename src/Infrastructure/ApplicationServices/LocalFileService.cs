@@ -1,5 +1,8 @@
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
+using MimeDetective;
+using MimeDetective.Definitions;
 using RMS.Application.Common.Interfaces;
-using RMS.Application.Common.Models;
 using RMS.Domain.Constants;
 using DomainFile = RMS.Domain.Entities.Models.File;
 
@@ -8,82 +11,129 @@ namespace RMS.Infrastructure.Services;
 public class LocalFileService : IFileService
 {
     private readonly IApplicationDbContext _context;
-    private readonly string _uploadRootPath;
 
     public LocalFileService(IApplicationDbContext context)
     {
         _context = context;
-        _uploadRootPath = Path.Combine(Directory.GetCurrentDirectory(), Config.Store.ROOT_PATH);
-
-        if (!Directory.Exists(_uploadRootPath))
-            Directory.CreateDirectory(_uploadRootPath);
     }
 
-    public async Task<DomainFile> SaveFileAsync(FileUploadDto file, CancellationToken cancellationToken = default, string? subFolder = null)
+
+    public async Task<string> SaveFileAsync(
+        IFormFile file,
+        HashSet<string> allowedMimeTypes,
+        string subFolder,
+        CancellationToken cancellationToken = default)
     {
-        var folder = string.IsNullOrWhiteSpace(subFolder) ? string.Empty : subFolder.Trim();
-        var targetFolderPath = string.IsNullOrEmpty(folder)
-            ? _uploadRootPath
-            : Path.Combine(_uploadRootPath, folder);
+        ValidateFile(file, allowedMimeTypes);
 
-        if (!Directory.Exists(targetFolderPath))
-            Directory.CreateDirectory(targetFolderPath);
+        var folder = CreateDirectory(subFolder);
 
+        var filePath = GenFilePath(folder, file);
+
+        await using var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, useAsync: true);
+
+        await file.CopyToAsync(stream, cancellationToken);
+
+        return NormalizeStoredPath(filePath);
+    }
+
+    public async Task<IReadOnlyList<string>> SaveFilesAsync(
+        IReadOnlyList<IFormFile> files,
+        HashSet<string> allowedMimeTypes,
+        string subFolder,
+        CancellationToken cancellationToken = default)
+    {
+        List<string> filePaths = new List<string>();
+        foreach (var file in files)
+        {
+            var filePath = await SaveFileAsync(file, allowedMimeTypes, subFolder, cancellationToken);
+            filePaths.Add(filePath);
+        }
+
+        return filePaths;
+    }
+
+    public void DeleteFile(string path, CancellationToken cancellationToken = default)
+    {
+        string fullPath = Path.GetFullPath(path);
+
+        if (File.Exists(fullPath))
+        {
+            File.Delete(fullPath);
+        }
+    }
+
+    public Stream GetFile(string path)
+    {
+        string fullPath = Path.GetFullPath(path);
+
+        if (!File.Exists(fullPath))
+            throw new FileNotFoundException();
+
+        return new FileStream(
+            fullPath,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            4096,
+            useAsync: true);
+    }
+    // Helpers
+    private string CreateDirectory(string? folderPath)
+    {
+        var folder = string.IsNullOrWhiteSpace(folderPath)
+            ? Directory.GetCurrentDirectory()
+            : folderPath.Trim();
+
+        var fullTargetPath = Path.GetFullPath(folder);
+        Directory.CreateDirectory(fullTargetPath);
+
+        return fullTargetPath;
+    }
+    private string GenFilePath(string folderPath, IFormFile file)
+    {
         var id = Guid.NewGuid();
         var extension = Path.GetExtension(file.FileName);
         var storedFileName = $"{id}{extension}";
-        var filePath = Path.Combine(targetFolderPath, storedFileName);
+        var filePath = Path.Combine(folderPath, storedFileName);
 
-        await using var output = File.Create(filePath);
-        await file.Stream.CopyToAsync(output, cancellationToken);
-
-        var relativePath = string.IsNullOrEmpty(folder)
-            ? storedFileName
-            : Path.Combine(folder, storedFileName).Replace('\\', '/');
-
-        var fileEntity = new DomainFile
-        {
-            Id = id,
-            Name = file.FileName,
-            Path = relativePath,
-            ContentType = file.ContentType,
-            Length = file.Length
-        };
-
-        _context.Files.Add(fileEntity);
-        await _context.SaveChangesAsync(cancellationToken);
-
-        return fileEntity;
+        return filePath;
     }
 
-    public async Task<IReadOnlyList<DomainFile>> SaveFilesAsync(IReadOnlyList<FileUploadDto> files, CancellationToken cancellationToken = default, string? subFolder = null)
+    private string NormalizeStoredPath(string filePath)
     {
-        var savedFiles = new List<DomainFile>(files.Count);
+        var fullPath = Path.GetFullPath(filePath);
+        return fullPath.Replace('\\', '/');
+    }
 
-        foreach (var file in files)
+    private void ValidateFile(IFormFile file, HashSet<string> allowedMimeTypes)
+    {
+        if (file == null || file.Length == 0)
         {
-            var saved = await SaveFileAsync(file, cancellationToken, subFolder);
-            savedFiles.Add(saved);
+            throw new ValidationException("File không hợp lệ");
         }
 
-        return savedFiles;
-    }
+        var inspector = new ContentInspectorBuilder
+        {
+            Definitions = MimeDetective.Definitions.DefaultDefinitions.All()
+        }.Build();
 
-    public async Task<bool> DeleteFileAsync(Guid fileId, CancellationToken cancellationToken = default)
-    {
-        var fileEntity = await _context.Files.FindAsync([fileId], cancellationToken);
-        if (fileEntity is null)
-            return false;
+        using var stream = file.OpenReadStream();
 
-        var normalizedPath = fileEntity.Path.Replace('/', Path.DirectorySeparatorChar);
-        var filePath = Path.Combine(_uploadRootPath, normalizedPath);
+        var result = inspector.Inspect(stream).FirstOrDefault();
 
-        if (File.Exists(filePath))
-            File.Delete(filePath);
+        if (result == null)
+        {
+            throw new ValidationException("Không xác định được loại file");
+        }
 
-        _context.Files.Remove(fileEntity);
-        await _context.SaveChangesAsync(cancellationToken);
+        string mimeType = result.Definition.File.MimeType
+            ?? throw new ValidationException("Không xác định được loại file");
 
-        return true;
+        if (!allowedMimeTypes.Contains(mimeType))
+        {
+            throw new ValidationException(
+                $"File type không được hỗ trợ: {mimeType}");
+        }
     }
 }

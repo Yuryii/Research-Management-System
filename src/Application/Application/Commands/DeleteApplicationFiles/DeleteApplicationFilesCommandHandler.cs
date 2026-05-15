@@ -64,6 +64,8 @@ public class DeleteApplicationFilesCommandHandler : IRequestHandler<DeleteApplic
             throw new ForbiddenAccessException("Cannot delete files from a previous step after the application has advanced.");
         }
 
+        var filePath = applicationFile.File?.Path;
+
         _context.ApplicationFiles.Remove(applicationFile);
 
         if (applicationFile.File is not null)
@@ -73,6 +75,9 @@ public class DeleteApplicationFilesCommandHandler : IRequestHandler<DeleteApplic
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        await _fileService.DeleteFileAsync(request.FileId, cancellationToken);
+        if (!string.IsNullOrWhiteSpace(filePath))
+        {
+            _fileService.DeleteFile(filePath, cancellationToken);
+        }
     }
 }

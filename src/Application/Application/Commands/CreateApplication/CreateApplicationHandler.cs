@@ -25,11 +25,13 @@ public class CreateApplicationCommandHandler : IRequestHandler<CreateApplication
     public async Task<Guid> Handle(CreateApplicationCommand request, CancellationToken cancellationToken)
     {
         // Add Application
-        var stepDetailId = await _stepResolver.ResolveAsync(cancellationToken);
+        var firstStepDetailId = await _stepResolver.ResolveAsync(cancellationToken);
+
         var stepId = await _context.StepDetails
-            .Where(x => x.Id == stepDetailId)
+            .Where(x => x.Id == firstStepDetailId)
             .Select(x => x.StepId)
             .SingleAsync(cancellationToken);
+
         var code = _codeGeneratorService.GenerateApplicationCode(request.Title);
 
         var application = new DomainApplication
@@ -38,27 +40,55 @@ public class CreateApplicationCommandHandler : IRequestHandler<CreateApplication
             Code = code,
             Title = request.Title,
             Description = request.Description,
-            StepDetailId = stepDetailId
+            StepDetailId = firstStepDetailId
         };
 
         _context.Applications.Add(application);
 
         // Add ApplicationFiles and Save Files
+        IReadOnlyList<string> savedFilePaths = [];
         if (request.Files.Count > 0)
         {
-            var savedFiles = await _fileService.SaveFilesAsync(request.Files, cancellationToken, Config.Store.APPLICATION_PATH);
-            foreach (var file in savedFiles)
+            var folders = $"{Config.Store.ROOT_PATH}{Config.Store.APPLICATION_PATH}";
+            savedFilePaths = await _fileService.SaveFilesAsync(
+                request.Files,
+                Config.Store.AllowedMimeTypes,
+                folders,
+                cancellationToken);
+
+            for (var index = 0; index < request.Files.Count; index++)
             {
+                var file = request.Files[index];
+                var savedFilePath = savedFilePaths[index];
+
                 _context.ApplicationFiles.Add(new ApplicationFile
                 {
                     ApplicationId = application.Id,
-                    FileId = file.Id,
+                    File = new RMS.Domain.Entities.Models.File
+                    {
+                        Name = file.FileName,
+                        ContentType = file.ContentType,
+                        Length = file.Length,
+                        Path = savedFilePath
+                    },
                     StepId = stepId
                 });
             }
         }
 
-        await _context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch
+        {
+            foreach (var filePath in savedFilePaths)
+            {
+                _fileService.DeleteFile(filePath, cancellationToken);
+            }
+
+            throw;
+        }
 
         return application.Id;
     }

@@ -2,8 +2,6 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using RMS.Application.Application.Commands.CreateApplicationFiles;
 using RMS.Application.Application.Commands.DeleteApplicationFiles;
-using RMS.Web.Endpoints.Models;
-using ApplicationFile = RMS.Web.Services.File;
 
 namespace RMS.Web.Endpoints;
 
@@ -19,20 +17,14 @@ public class ApplicationFiles : IEndpointGroup
 
     [EndpointSummary("Create application files")]
 [EndpointDescription("Uploads files for an application and associates them with its current step.")]
-    public static async Task<Created<IReadOnlyList<Guid>>> Create(
+    public static async Task<NoContent> Create(
         ISender sender,
-        [FromForm] CreateApplicationFilesRequest request,
+        [FromForm] CreateApplicationFilesCommand command,
         CancellationToken cancellationToken)
     {
-        var command = new CreateApplicationFilesCommand
-        {
-            ApplicationId = request.ApplicationId,
-            Files = ApplicationFile.FilesToFileDtos(request.Files)
-        };
+        await sender.Send(command, cancellationToken);
 
-        var fileIds = await sender.Send(command, cancellationToken);
-
-        return TypedResults.Created($"/api/{nameof(ApplicationFiles)}", fileIds);
+        return TypedResults.NoContent();
     }
 
     [EndpointSummary("Delete application file")]
