@@ -1,4 +1,5 @@
 using RMS.Application.Application.Dtos;
+using RMS.Application.Common.Exceptions;
 using RMS.Application.Common.Interfaces;
 using RMS.Application.Common.Models;
 using RMS.Domain.Entities.Models;
@@ -10,25 +11,50 @@ public class GetApplicationsQueryHandler : IRequestHandler<GetApplicationsQuery,
 {
     private readonly IApplicationDbContext _context;
     private readonly IMapper _mapper;
+    private readonly IUser _user;
+    private readonly IIdentityService _identityService;
 
-    public GetApplicationsQueryHandler(IApplicationDbContext context, IMapper mapper)
+    public GetApplicationsQueryHandler(IApplicationDbContext context, IMapper mapper, IUser user, IIdentityService identityService)
     {
         _context = context;
         _mapper = mapper;
+        _user = user;
+        _identityService = identityService;
     }
 
     public async Task<PaginatedResult<ApplicationDto>> Handle(GetApplicationsQuery request, CancellationToken cancellationToken)
     {
         var query = _context.Applications;
+        var stepId = request.StepId ?? Guid.Empty;
+
+        if (stepId == Guid.Empty)
+        {
+            if (_user.Roles is null || _user.Roles.Count == 0)
+            {
+                throw new ForbiddenAccessException("User does not have any roles assigned.");
+            }
+
+            var roleIds = await _identityService.GetRoleIdsAsync(_user.Roles, cancellationToken);
+            stepId = await _context.RoleStepPermissions
+                .Where(x => roleIds.Contains(x.RoleId))
+                .OrderBy(x => x.Step.Order)
+                .Select(x => x.StepId)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (stepId == Guid.Empty)
+            {
+                throw new ForbiddenAccessException("No step is available for the current user roles.");
+            }
+        }
         //Gat my attachtments for current step
         var currentStepAttachments = await _context.ApplicationFiles
-            .Where(x => x.StepId == request.StepId)
+            .Where(x => x.StepId == stepId)
             .ProjectTo<ApplicationFileDto>(_mapper.ConfigurationProvider)
             .ToListAsync(cancellationToken);
 
         // Get attachments for the previous step
         var stepOrder = await _context.StepDetails
-            .Where(x => x.StepId == request.StepId).Select(x => x.Step.Order).FirstOrDefaultAsync(cancellationToken);
+            .Where(x => x.StepId == stepId).Select(x => x.Step.Order).FirstOrDefaultAsync(cancellationToken);
 
         var preStep = await _context.Steps
             .Where(x => x.Order == stepOrder - 1).FirstOrDefaultAsync(cancellationToken);

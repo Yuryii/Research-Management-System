@@ -13,10 +13,10 @@ export class AuthService {
   constructor(private usersClient: UsersClient) {}
 
   initialize(): Observable<boolean> {
-    return this.usersClient.infoGET().pipe(
-      map(() => true),
-      catchError(() => of(false)),
-      tap(isAuth => this._isAuthenticated.next(isAuth))
+    return this.getInfoStream().pipe(
+      map((): boolean => true),
+      catchError((): Observable<boolean> => of(false)),
+      tap((isAuth: boolean) => this._isAuthenticated.next(isAuth))
     );
   }
 
@@ -35,5 +35,22 @@ export class AuthService {
     return this.usersClient.logout({}).pipe(
       tap(() => this._isAuthenticated.next(false))
     );
+  }
+
+  private getInfoStream(): Observable<unknown> {
+    const client = this.usersClient as unknown as {
+      getInfoWithRoles?: () => Observable<unknown>;
+      infoGET?: () => Observable<unknown>;
+    };
+
+    if (client.getInfoWithRoles) {
+      return client.getInfoWithRoles();
+    }
+
+    if (client.infoGET) {
+      return client.infoGET();
+    }
+
+    return of(null);
   }
 }

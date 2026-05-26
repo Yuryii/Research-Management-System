@@ -6,5 +6,5 @@ namespace RMS.Application.Application.Commands.CreateApplicationFiles;
 public record CreateApplicationFilesCommand : IRequest
 {
     public Guid ApplicationId { get; init; }
-    public List<IFormFile> Files { get; init; } = [];
+    public IFormFileCollection Files { get; init; } = null!;
 }

@@ -25,21 +25,26 @@ public class GetApplicationsQueryValidator : AbstractValidator<GetApplicationsQu
             .GreaterThan(0)
             .LessThanOrEqualTo(100);
         RuleFor(x => x.StepId)
-            .NotEmpty()
-            .WithMessage("Step id is required")
-            .MustAsync(IsStepRoleMatch).WithMessage("Forbidden").WithErrorCode("403");
+            .MustAsync((stepId, cancellationToken) => IsStepRoleMatch(stepId, cancellationToken))
+            .When(x => x.StepId.HasValue && x.StepId != Guid.Empty)
+            .WithMessage("Forbidden")
+            .WithErrorCode("403");
         _identityService = identityService;
     }
 
-    internal async Task<bool> IsStepRoleMatch(Guid stepId, CancellationToken cancellationToken)
+    internal async Task<bool> IsStepRoleMatch(Guid? stepId, CancellationToken cancellationToken)
     {
+        if (!stepId.HasValue || stepId == Guid.Empty)
+        {
+            return true;
+        }
         if (_user.Roles is not null)
         {
             var roleIds = await _identityService.GetRoleIdsAsync(_user.Roles, cancellationToken);
             return _user.Roles is null
                 ? false
                 : await _context.RoleStepPermissions
-                .AnyAsync(x => x.StepId == stepId && roleIds.Contains(x.RoleId));
+                .AnyAsync(x => x.StepId == stepId.Value && roleIds.Contains(x.RoleId));
         }
         return false;
     }

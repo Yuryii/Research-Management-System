@@ -32,16 +32,11 @@ public class Applications : IEndpointGroup
     [EndpointDescription("Retrieves applications with pagination.")]
     public static async Task<Results<Ok<PaginatedResult<ApplicationDto>>, BadRequest<string>>> GetApplications(ISender sender, int pageNumber = 1, int pageSize = 10, Guid? stepId = null)
     {
-        if(stepId == null)
-        {
-            return TypedResults.BadRequest("StepId is required.");
-        }
-
         var applications = await sender.Send(new GetApplicationsQuery
         {
             PageNumber = pageNumber,
             PageSize = pageSize,
-            StepId = stepId.Value
+            StepId = stepId
         });
 
         return TypedResults.Ok(applications);
@@ -49,6 +44,7 @@ public class Applications : IEndpointGroup
 
     [EndpointSummary("Create a new Application")]
     [EndpointDescription("Creates a new application with optional file attachments and returns the ID of the created application.")]
+    [Consumes("multipart/form-data")]
     public static async Task<Created<Guid>> CreateApplication(
         ISender sender,
         [FromForm] CreateApplicationCommand command,

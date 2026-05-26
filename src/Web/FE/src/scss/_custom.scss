@@ -1,0 +1,77 @@
+// Here you can add other styles
+
+// custom .chartjs-tooltip-body-item padding
+@use "charts";
+
+// custom tweaks for scrollbar styling (wip)
+@use "scrollbar";
+
+ // custom calendar today cell color
+.calendar-cell.today {
+  --cui-calendar-cell-today-color: var(--cui-info) !important;
+}
+
+// custom select week cursor pointer
+.select-week .calendar-row.current {
+  cursor: pointer;
+}
+
+[data-coreui-theme="dark"] {
+  .p-dialog {
+    background: var(--cui-body-bg);
+    border: 1px solid var(--cui-border-color);
+    box-shadow: var(--cui-box-shadow-lg);
+    color: var(--cui-body-color);
+  }
+
+  .p-dialog-header,
+  .p-dialog-content,
+  .p-dialog-footer {
+    background: var(--cui-body-bg);
+    border-color: var(--cui-border-color);
+    color: var(--cui-body-color);
+  }
+
+  .p-dialog-header {
+    border-bottom: 1px solid var(--cui-border-color);
+  }
+
+  .p-dialog-footer {
+    border-top: 1px solid var(--cui-border-color);
+  }
+
+  .p-dialog-title {
+    color: var(--cui-body-color);
+  }
+
+  .p-dialog-header .p-dialog-close-button,
+  .p-dialog-header .p-dialog-maximize-button {
+    color: var(--cui-body-color);
+  }
+
+  .p-dialog-header .p-dialog-close-button:hover,
+  .p-dialog-header .p-dialog-maximize-button:hover {
+    background: var(--cui-tertiary-bg);
+  }
+
+  .p-fileupload {
+    background: var(--cui-body-bg);
+    border: 1px solid var(--cui-border-color);
+    color: var(--cui-body-color);
+  }
+
+  .p-fileupload-header {
+    background: var(--cui-body-bg);
+    border-bottom: 1px solid var(--cui-border-color);
+    color: var(--cui-body-color);
+  }
+
+  .p-fileupload-content {
+    background: var(--cui-body-bg);
+    color: var(--cui-body-color);
+  }
+
+  .p-fileupload-content .p-fileupload-empty {
+    color: var(--cui-body-color);
+  }
+}

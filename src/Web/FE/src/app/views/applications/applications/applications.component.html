@@ -1,0 +1,91 @@
+<p-toast></p-toast>
+<div>
+  <form cForm class="header-filter">
+    <div class="filter-box">
+      <i class="pi pi-filter filter-icon"></i>
+      <select aria-label="Default select example" cSelect>
+        <option value="" selected>Tất cả trạng thái</option>
+        <option value="1">Nháp</option>
+        <option value="2">Đã Nộp</option>
+      </select>
+    </div>
+    <div>
+      <div class="search-box">
+        <i class="pi pi-search search-input"></i>
+        <input
+          cFormControl
+          placeholder="Nhập tiêu đề, nội dung,..."
+          type="text"
+        />
+      </div>
+    </div>
+    <button cButton type="submit">Tìm kiếm</button>
+    <button
+      (click)="openModal()"
+      cButton
+      type="button"
+      variant="outline"
+      class="add-button"
+    >
+      Thêm mới
+    </button>
+  </form>
+</div>
+<table [striped]="true" cTable>
+  <thead>
+    <tr>
+      <th scope="col">STT</th>
+      <th scope="col">Tiêu Đề</th>
+      <th scope="col">Nội dung</th>
+      <th scope="col">Tài liệu</th>
+      <th scope="col">Bước Xử Lý</th>
+      <th scope="col">Trang thái</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngIf="isLoading">
+      <td colspan="6" class="text-center py-4">Đang tải dữ liệu...</td>
+    </tr>
+    <tr *ngIf="!isLoading && applications.length === 0">
+      <td colspan="6" class="text-center py-4">Chưa có hồ sơ đăng ký nào.</td>
+    </tr>
+    <tr *ngFor="let application of applications; let index = index">
+      <th scope="row" class="w-10">
+        {{ (pageNumber - 1) * pageSize + index + 1 }}
+      </th>
+      <td>{{ application.title }}</td>
+      <td>{{ application.description }}</td>
+      <td>
+        <button
+          cButton
+          color="secondary"
+          variant="outline"
+          class="position-relative m-1"
+        >
+          <c-icon name="cil-file"></c-icon>
+          <c-badge color="danger" position="top-end" shape="rounded-pill">
+            {{
+              (application.myApplications?.length || 0) +
+                (application.preAttachments?.length || 0)
+            }}
+          </c-badge>
+          <span class="visually-hidden">Tài liệu đính kèm</span>
+        </button>
+      </td>
+      <td>{{ application.stepDetailId || "Chưa có bước xử lý" }}</td>
+      <td>{{ application.status === 0 ? "Nháp" : "Đã Nộp" }}</td>
+    </tr>
+  </tbody>
+</table>
+<div class="pagination-wrapper">
+  <p-paginator
+    [first]="(pageNumber - 1) * pageSize"
+    [rows]="pageSize"
+    [totalRecords]="totalCount"
+    [rowsPerPageOptions]="rowsPerPageOptions"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="Trang {currentPage} / {totalPages}"
+    (onPageChange)="onPageChange($event)"
+  ></p-paginator>
+</div>
+<!-- Modal is opened dynamically via DialogService -->

@@ -1,5 +1,7 @@
 using Azure.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.OpenApi;
+using RMS.Application.Application.Commands.CreateApplication;
 using RMS.Application.Common.Interfaces;
 using RMS.Infrastructure.Data;
 using RMS.Web.Services;
@@ -28,6 +30,30 @@ public static class DependencyInjection
         {
             options.AddOperationTransformer<ApiExceptionOperationTransformer>();
             options.AddOperationTransformer<IdentityApiOperationTransformer>();
+
+            options.AddSchemaTransformer((schema, context, cancellationToken) =>
+            {
+                if (schema.Properties?.ContainsKey("files") == true)
+                {
+                    var prop = context.JsonTypeInfo.Type
+                        .GetProperty("Files");
+
+                    if (prop?.PropertyType == typeof(IFormFileCollection))
+                    {
+                        schema.Properties["files"] = new OpenApiSchema
+                        {
+                            Type = JsonSchemaType.Array,
+                            Items = new OpenApiSchema
+                            {
+                                Type = JsonSchemaType.String,
+                                Format = "binary"
+                            }
+                        };
+                    }
+                }
+
+                return Task.CompletedTask;
+            });
         });
 
         builder.Services.AddCors();
