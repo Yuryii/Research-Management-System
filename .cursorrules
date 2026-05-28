@@ -343,3 +343,59 @@ public class UpdateApplicationStepDetailTests : TestBase
 2. **Frontend**: Update NSwag client → Component → Modal → Service call
 3. **Testing**: Unit test for handler → Functional test for integration
 4. **Database**: Add migration if schema changes
+
+---
+
+## 5. API Client Generation Workflow
+
+### 5.1 Rule — Never Edit Generated Files Directly
+
+`src/Web/FE/src/app/web-api-client.ts` is an **auto-generated artifact** by NSwag. **Never edit this file manually**. All changes will be overwritten on the next regeneration.
+
+### 5.2 When to Regenerate
+
+Regenerate the client whenever backend API logic changes, including but not limited to:
+- Adding, modifying, or removing endpoints
+- Changing parameters, request bodies, or response models
+- Adding, modifying, or removing DTOs, Commands, Queries
+- Changing routes or HTTP methods
+
+### 5.3 Regeneration Steps
+
+Follow this exact order:
+
+**Step 1 — Build the Web project to generate the OpenAPI spec:**
+
+```bash
+cd src
+dotnet build Web/Web.csproj
+```
+
+This produces `src/Web/wwwroot/openapi/v1.json` — the OpenAPI document that NSwag reads from.
+
+**Step 2 — Regenerate the TypeScript client via NSwag:**
+
+```bash
+cd src/Web/FE
+nswag run /runtime:Net100
+```
+
+This reads `../wwwroot/openapi/v1.json` and regenerates `src/app/web-api-client.ts`.
+
+**Step 3 — Verify** that `src/Web/FE/src/app/web-api-client.ts` reflects the backend changes.
+
+### 5.4 Dependency Chain to Remember
+
+```
+dotnet build Web/Web.csproj
+  └── generates src/Web/wwwroot/openapi/v1.json
+        └── nswag reads from ../wwwroot/openapi/v1.json
+              └── generates src/Web/FE/src/app/web-api-client.ts
+```
+
+Every time backend changes, always go back to Step 1. Skipping Step 1 results in a stale client with old endpoint definitions.
+
+### 5.5 Prerequisites
+
+- `nswag` CLI must be installed: `dotnet tool install -g NSwag.ConsoleCore`
+- The Web project must be built at least once before running `nswag` standalone (so `wwwroot/openapi/v1.json` exists)
