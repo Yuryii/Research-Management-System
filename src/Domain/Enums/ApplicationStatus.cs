@@ -7,5 +7,5 @@ namespace RMS.Domain.Enums;
 public enum ApplicationStatus
 {
     Draft = 0,
-    Published = 1
+    Submitted = 1
 }

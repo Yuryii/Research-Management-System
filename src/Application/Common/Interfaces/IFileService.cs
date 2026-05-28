@@ -18,4 +18,5 @@ public interface IFileService
         CancellationToken cancellationToken = default);
     void DeleteFile(string path, CancellationToken cancellationToken = default);
     Stream GetFile(string path);
+    Task<Stream> GetFileAsync(string path, CancellationToken cancellationToken = default);
 }

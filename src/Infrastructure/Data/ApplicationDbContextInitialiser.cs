@@ -121,7 +121,7 @@ public class ApplicationDbContextInitialiser
                 new Step
                 {
                     Id = teacherInitialStepId,
-                    Name = "Đang xử lý bởi giáo viên",
+                    Name = "Đang xử lý bởi Giảng viên",
                     ShortName = "Đang xử lý bởi GV",
                     Order = 0,
                     StepDetails = new List<StepDetail>
@@ -129,7 +129,7 @@ public class ApplicationDbContextInitialiser
                         new StepDetail
                         {
                             Id = Guid.Parse("343B1904-AB23-42D4-80DB-760E93F15B09"),
-                            Name = "Giáo viên đang chuẩn bị hồ sơ",
+                            Name = "Giảng viên đang chuẩn bị hồ sơ",
                             Order = 0
                         }
                     }
@@ -344,7 +344,7 @@ public class ApplicationDbContextInitialiser
                 .First();
 
             var teacherApplicationId = Guid.Parse("34BFFA1E-8D68-440D-80BB-2863614B7C50");
-            var dvqlttApplicationId = Guid.Parse("3C8C8FE4-36F8-4D45-B46B-AC705D028770"); 
+            var dvqlttApplicationId = Guid.Parse("3C8C8FE4-36F8-4D45-B46B-AC705D028770");
             var tttvApplicationId = Guid.Parse("ABC1743B-3DB7-4721-A859-1462572AC193");
 
             var applications = new List<DomainApplication>
@@ -355,7 +355,7 @@ public class ApplicationDbContextInitialiser
                     Code = "APP-SEED-001",
                     Title = "Hồ sơ đề nghị công nhận bài báo khoa học",
                     Description = "Hồ sơ mẫu được tạo sẵn để kiểm thử luồng xử lý hồ sơ nghiên cứu khoa học.",
-                    Status = ApplicationStatus.Published,
+                    Status = ApplicationStatus.Submitted,
                     StepDetailId = tttvStepDetailId,
                 },
                 new()
@@ -364,7 +364,7 @@ public class ApplicationDbContextInitialiser
                     Code = "APP-SEED-002",
                     Title = "Hồ sơ kiểm tra xác nhận đơn vị quản lý trực tiếp",
                     Description = "Dữ liệu mẫu phục vụ kiểm tra luồng xử lý hồ sơ tại đơn vị quản lý trực tiếp.",
-                    Status = ApplicationStatus.Published,
+                    Status = ApplicationStatus.Submitted,
                     StepDetailId = dvqlttStepDetailId,
                 },
                 new()
@@ -372,15 +372,15 @@ public class ApplicationDbContextInitialiser
                     Code = "APP-SEED-003",
                     Title = "Hồ sơ xác nhận giờ nghiên cứu khoa học",
                     Description = "Dữ liệu mẫu phục vụ kiểm tra chức năng danh sách, chi tiết và cập nhật trạng thái hồ sơ.",
-                    Status = ApplicationStatus.Published,
+                    Status = ApplicationStatus.Submitted,
                     StepDetailId = tttvStepDetailId
                 },
                 new()
                 {
                     Id = teacherApplicationId,
                     Code = "APP-SEED-004",
-                    Title = "Hồ sơ xác nhận giáo viên",
-                    Description = "Dữ liệu mẫu phục vụ kiểm tra giáo viên",
+                    Title = "Hồ sơ xác nhận Giảng viên",
+                    Description = "Dữ liệu mẫu phục vụ kiểm tra Giảng viên",
                     Status = ApplicationStatus.Draft,
                     StepDetailId = teacherStepDetailId
                 }

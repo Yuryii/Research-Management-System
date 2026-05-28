@@ -13,25 +13,19 @@ public record ApplicationDto
     public required string Description { get; init; }
     public required ApplicationStatus Status { get; init; }
     public required Guid StepDetailId { get; init; }
-    public List<ApplicationFileDto> MyApplications { get; set; } = new List<ApplicationFileDto>();
-    public List<ApplicationFileDto> PreAttachments { get; set; } = new List<ApplicationFileDto>();
+    public required string StepDetailName { get; set; }
+    public List<FileDto> MyApplications { get; set; } = new List<FileDto>();
+    public List<FileDto> PreAttachments { get; set; } = new List<FileDto>();
 
     private class Mapping : Profile
     {
         public Mapping()
         {
-            CreateMap<DomainApplication, ApplicationDto>();
-            CreateMap<ApplicationFile, ApplicationFileDto>();
+            CreateMap<DomainApplication, ApplicationDto>()
+                .ForMember(dest => dest.StepDetailName, opt => opt.MapFrom(src => src.StepDetail.Name));
             CreateMap<DomainFile, FileDto>();
         }
     }
-}
-
-public record ApplicationFileDto
-{
-    public required Guid ApplicationId { get; init; }
-    public required Guid FileId { get; init; }
-    public required FileDto File { get; init; }
 }
 
 public record FileDto

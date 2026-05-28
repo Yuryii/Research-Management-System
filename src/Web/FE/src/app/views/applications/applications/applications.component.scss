@@ -1,5 +1,28 @@
 @import "primeicons/primeicons.css";
 
+table tbody tr {
+  cursor: pointer;
+}
+
+table tbody tr td button {
+  cursor: auto;
+}
+
+.file-icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  c-icon {
+    width: 28px;
+    height: 28px;
+  }
+  c-badge {
+    font-size: 0.6em;
+    transform: translate(-75%, -10%) !important;
+  }
+}
+
 table thead tr th {
   min-width: 120px;
 }

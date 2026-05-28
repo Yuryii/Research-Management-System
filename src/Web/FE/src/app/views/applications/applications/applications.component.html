@@ -3,10 +3,14 @@
   <form cForm class="header-filter">
     <div class="filter-box">
       <i class="pi pi-filter filter-icon"></i>
-      <select aria-label="Default select example" cSelect>
-        <option value="" selected>Tất cả trạng thái</option>
-        <option value="1">Nháp</option>
-        <option value="2">Đã Nộp</option>
+      <select
+        aria-label="Default select example"
+        cSelect
+        (change)="onStatusFilterChange($any($event.target).value === '' ? null : +$any($event.target).value)"
+      >
+        <option [value]="">Tất cả trạng thái</option>
+        <option [value]="0">Nháp</option>
+        <option [value]="1">Đã Nộp</option>
       </select>
     </div>
     <div>
@@ -49,31 +53,50 @@
     <tr *ngIf="!isLoading && applications.length === 0">
       <td colspan="6" class="text-center py-4">Chưa có hồ sơ đăng ký nào.</td>
     </tr>
-    <tr *ngFor="let application of applications; let index = index">
+    <tr
+      class="clickable"
+      (click)="openUpdateModal(application)"
+      *ngFor="let application of applications; let index = index"
+    >
       <th scope="row" class="w-10">
         {{ (pageNumber - 1) * pageSize + index + 1 }}
       </th>
       <td>{{ application.title }}</td>
       <td>{{ application.description }}</td>
       <td>
-        <button
-          cButton
-          color="secondary"
-          variant="outline"
-          class="position-relative m-1"
-        >
-          <c-icon name="cil-file"></c-icon>
-          <c-badge color="danger" position="top-end" shape="rounded-pill">
+        <div class="file-icon-wrapper position-relative m-1">
+          <c-icon name="cil-file" size="xl"></c-icon>
+          <c-badge
+            *ngIf="
+              (application.myApplications?.length || 0) +
+                (application.preAttachments?.length || 0) >
+              0
+            "
+            color="danger"
+            position="top-end"
+            shape="rounded-pill"
+          >
             {{
               (application.myApplications?.length || 0) +
                 (application.preAttachments?.length || 0)
             }}
           </c-badge>
-          <span class="visually-hidden">Tài liệu đính kèm</span>
-        </button>
+        </div>
       </td>
-      <td>{{ application.stepDetailId || "Chưa có bước xử lý" }}</td>
-      <td>{{ application.status === 0 ? "Nháp" : "Đã Nộp" }}</td>
+      <td>{{ application.stepDetailName || "Chưa có bước xử lý" }}</td>
+      <td>
+        <i
+          class="pi pi-times-circle text-danger me-1"
+          *ngIf="application.status === 0"
+          aria-hidden="true"
+        ></i>
+        <i
+          class="pi pi-check-circle text-success me-1"
+          *ngIf="application.status !== 0"
+          aria-hidden="true"
+        ></i>
+        {{ application.status === 0 ? "Nháp" : "Đã Nộp" }}
+      </td>
     </tr>
   </tbody>
 </table>

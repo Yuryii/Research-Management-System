@@ -10,6 +10,7 @@ using RMS.Application.Application.Dtos;
 using RMS.Application.Application.Queries.GetApplications;
 using RMS.Application.Common.Models;
 using RMS.Domain.Entities.Models;
+using RMS.Domain.Enums;
 
 namespace RMS.Web.Endpoints;
 
@@ -30,13 +31,14 @@ public class Applications : IEndpointGroup
 
     [EndpointSummary("Get all Applications")]
     [EndpointDescription("Retrieves applications with pagination.")]
-    public static async Task<Results<Ok<PaginatedResult<ApplicationDto>>, BadRequest<string>>> GetApplications(ISender sender, int pageNumber = 1, int pageSize = 10, Guid? stepId = null)
+    public static async Task<Results<Ok<PaginatedResult<ApplicationDto>>, BadRequest<string>>> GetApplications(ISender sender, int pageNumber = 1, int pageSize = 10, Guid? stepId = null, ApplicationStatus? status = null)
     {
         var applications = await sender.Send(new GetApplicationsQuery
         {
             PageNumber = pageNumber,
             PageSize = pageSize,
-            StepId = stepId
+            StepId = stepId,
+            Status = status
         });
 
         return TypedResults.Ok(applications);
@@ -57,7 +59,7 @@ public class Applications : IEndpointGroup
 
     [EndpointSummary("Update a Application")]
     [EndpointDescription("Updates the specified application. The ID in the URL must match the ID in the payload.")]
-    public static async Task<Results<NoContent, BadRequest>> UpdateApplication(ISender sender, Guid id, UpdateApplicationCommand command)
+    public static async Task<Results<NoContent, BadRequest>> UpdateApplication(ISender sender, Guid id, [FromBody] UpdateApplicationCommand command)
     {
         if (id != command.Id) return TypedResults.BadRequest();
 

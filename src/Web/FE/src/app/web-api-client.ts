@@ -27,6 +27,11 @@ export interface IApplicationFilesClient {
      * @return No Content
      */
     delete(applicationId: string, fileId: string): Observable<void>;
+    /**
+     * Download an application file
+     * @return Binary file content.
+     */
+    downloadApplicationFile(applicationId: string, fileId: string): Observable<FileResponse>;
 }
 
 @Injectable({
@@ -52,23 +57,21 @@ export class ApplicationFilesClient implements IApplicationFilesClient {
         let url_ = this.baseUrl + "/api/ApplicationFiles/CreateApplicationFiles";
         url_ = url_.replace(/[?&]$/, "");
 
-        let content_ = "";
-        if (applicationId === null)
+        const content_ = new FormData();
+        if (applicationId === null || applicationId === undefined)
             throw new globalThis.Error("The parameter 'applicationId' cannot be null.");
-        else if (applicationId !== undefined)
-            content_ += encodeURIComponent("applicationId") + "=" + encodeURIComponent("" + applicationId) + "&";
-        if (files === null)
+        else
+            content_.append("applicationId", applicationId.toString());
+        if (files === null || files === undefined)
             throw new globalThis.Error("The parameter 'files' cannot be null.");
-        else if (files !== undefined)
-            files && files.forEach(item => { content_ += encodeURIComponent("files") + "=" + encodeURIComponent("" + item) + "&"; });
-        content_ = content_.replace(/&$/, "");
+        else
+            files.forEach(item_ => content_.append("files", item_.data, item_.fileName ? item_.fileName : "files") );
 
         let options_ : any = {
             body: content_,
             observe: "response",
             responseType: "blob",
             headers: new HttpHeaders({
-                "Content-Type": "multipart/form-data",
             })
         };
 
@@ -182,6 +185,84 @@ export class ApplicationFilesClient implements IApplicationFilesClient {
         }
         return _observableOf(null as any);
     }
+
+    /**
+     * Download an application file
+     * @return Binary file content.
+     */
+    downloadApplicationFile(applicationId: string, fileId: string): Observable<FileResponse> {
+        let url_ = this.baseUrl + "/api/ApplicationFiles/{applicationId}/{fileId}";
+        if (applicationId === undefined || applicationId === null)
+            throw new globalThis.Error("The parameter 'applicationId' must be defined.");
+        url_ = url_.replace("{applicationId}", encodeURIComponent("" + applicationId));
+        if (fileId === undefined || fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' must be defined.");
+        url_ = url_.replace("{fileId}", encodeURIComponent("" + fileId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "application/octet-stream"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processDownloadApplicationFile(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processDownloadApplicationFile(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<FileResponse>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<FileResponse>;
+        }));
+    }
+
+    protected processDownloadApplicationFile(response: HttpResponseBase): Observable<FileResponse> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200 || status === 206) {
+            const contentDisposition = response.headers ? response.headers.get("content-disposition") : undefined;
+            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
+            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
+            if (fileName) {
+                fileName = decodeURIComponent(fileName);
+            } else {
+                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
+                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
+            }
+            return _observableOf({ fileName: fileName, data: responseBlob as any, status: status, headers: _headers });
+        } else if (status === 400) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            }));
+        } else if (status === 401) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            }));
+        } else if (status === 403) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            }));
+        } else if (status === 404) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("Not Found", status, _responseText, _headers);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
 }
 
 export interface IApplicationsClient {
@@ -190,9 +271,10 @@ export interface IApplicationsClient {
      * @param pageNumber (optional) 
      * @param pageSize (optional) 
      * @param stepId (optional) 
+     * @param status (optional) 
      * @return OK
      */
-    getApplications(pageNumber: number | undefined, pageSize: number | undefined, stepId: string | undefined): Observable<PaginatedResultOfApplicationDto>;
+    getApplications(pageNumber: number | undefined, pageSize: number | undefined, stepId: string | undefined, status: number | undefined): Observable<PaginatedResultOfApplicationDto>;
     /**
      * Create a new Application
      * @param title (optional) 
@@ -251,9 +333,10 @@ export class ApplicationsClient implements IApplicationsClient {
      * @param pageNumber (optional) 
      * @param pageSize (optional) 
      * @param stepId (optional) 
+     * @param status (optional) 
      * @return OK
      */
-    getApplications(pageNumber: number | undefined, pageSize: number | undefined, stepId: string | undefined): Observable<PaginatedResultOfApplicationDto> {
+    getApplications(pageNumber: number | undefined, pageSize: number | undefined, stepId: string | undefined, status: number | undefined): Observable<PaginatedResultOfApplicationDto> {
         let url_ = this.baseUrl + "/api/Applications?";
         if (pageNumber === null)
             throw new globalThis.Error("The parameter 'pageNumber' cannot be null.");
@@ -267,6 +350,10 @@ export class ApplicationsClient implements IApplicationsClient {
             throw new globalThis.Error("The parameter 'stepId' cannot be null.");
         else if (stepId !== undefined)
             url_ += "stepId=" + encodeURIComponent("" + stepId) + "&";
+        if (status === null)
+            throw new globalThis.Error("The parameter 'status' cannot be null.");
+        else if (status !== undefined)
+            url_ += "status=" + encodeURIComponent("" + status) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_ : any = {
@@ -2149,8 +2236,9 @@ export class ApplicationDto implements IApplicationDto {
     description!: string;
     status!: number;
     stepDetailId!: string;
-    myApplications?: ApplicationFileDto[];
-    preAttachments?: ApplicationFileDto[];
+    stepDetailName!: string;
+    myApplications?: FileDto[];
+    preAttachments?: FileDto[];
 
     [key: string]: any;
 
@@ -2175,15 +2263,16 @@ export class ApplicationDto implements IApplicationDto {
             this.description = _data["description"];
             this.status = _data["status"];
             this.stepDetailId = _data["stepDetailId"];
+            this.stepDetailName = _data["stepDetailName"];
             if (Array.isArray(_data["myApplications"])) {
                 this.myApplications = [] as any;
                 for (let item of _data["myApplications"])
-                    this.myApplications!.push(ApplicationFileDto.fromJS(item));
+                    this.myApplications!.push(FileDto.fromJS(item));
             }
             if (Array.isArray(_data["preAttachments"])) {
                 this.preAttachments = [] as any;
                 for (let item of _data["preAttachments"])
-                    this.preAttachments!.push(ApplicationFileDto.fromJS(item));
+                    this.preAttachments!.push(FileDto.fromJS(item));
             }
         }
     }
@@ -2207,6 +2296,7 @@ export class ApplicationDto implements IApplicationDto {
         data["description"] = this.description;
         data["status"] = this.status;
         data["stepDetailId"] = this.stepDetailId;
+        data["stepDetailName"] = this.stepDetailName;
         if (Array.isArray(this.myApplications)) {
             data["myApplications"] = [];
             for (let item of this.myApplications)
@@ -2228,67 +2318,9 @@ export interface IApplicationDto {
     description: string;
     status: number;
     stepDetailId: string;
-    myApplications?: ApplicationFileDto[];
-    preAttachments?: ApplicationFileDto[];
-
-    [key: string]: any;
-}
-
-export class ApplicationFileDto implements IApplicationFileDto {
-    applicationId!: string;
-    fileId!: string;
-    file!: FileDto;
-
-    [key: string]: any;
-
-    constructor(data?: IApplicationFileDto) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-        if (!data) {
-            this.file = new FileDto();
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.applicationId = _data["applicationId"];
-            this.fileId = _data["fileId"];
-            this.file = _data["file"] ? FileDto.fromJS(_data["file"]) : new FileDto();
-        }
-    }
-
-    static fromJS(data: any): ApplicationFileDto {
-        data = typeof data === 'object' ? data : {};
-        let result = new ApplicationFileDto();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["applicationId"] = this.applicationId;
-        data["fileId"] = this.fileId;
-        data["file"] = this.file ? this.file.toJSON() : undefined as any;
-        return data;
-    }
-}
-
-export interface IApplicationFileDto {
-    applicationId: string;
-    fileId: string;
-    file: FileDto;
+    stepDetailName: string;
+    myApplications?: FileDto[];
+    preAttachments?: FileDto[];
 
     [key: string]: any;
 }
@@ -3631,7 +3663,8 @@ export class UpdateApplicationCommand implements IUpdateApplicationCommand {
     id?: string;
     title?: string | undefined;
     description?: string | undefined;
-    status?: number;
+    status?: number | undefined;
+    fileIds?: string[] | undefined;
 
     [key: string]: any;
 
@@ -3654,6 +3687,11 @@ export class UpdateApplicationCommand implements IUpdateApplicationCommand {
             this.title = _data["title"];
             this.description = _data["description"];
             this.status = _data["status"];
+            if (Array.isArray(_data["fileIds"])) {
+                this.fileIds = [] as any;
+                for (let item of _data["fileIds"])
+                    this.fileIds!.push(item);
+            }
         }
     }
 
@@ -3674,6 +3712,11 @@ export class UpdateApplicationCommand implements IUpdateApplicationCommand {
         data["title"] = this.title;
         data["description"] = this.description;
         data["status"] = this.status;
+        if (Array.isArray(this.fileIds)) {
+            data["fileIds"] = [];
+            for (let item of this.fileIds)
+                data["fileIds"].push(item);
+        }
         return data;
     }
 }
@@ -3682,7 +3725,8 @@ export interface IUpdateApplicationCommand {
     id?: string;
     title?: string | undefined;
     description?: string | undefined;
-    status?: number;
+    status?: number | undefined;
+    fileIds?: string[] | undefined;
 
     [key: string]: any;
 }
@@ -3865,6 +3909,13 @@ export interface IUpdateStepDetailCommand {
     isCaculateScoreStep?: boolean | undefined;
 
     [key: string]: any;
+}
+
+export interface FileResponse {
+    data: Blob;
+    status: number;
+    fileName?: string;
+    headers?: { [name: string]: any };
 }
 
 export class SwaggerException extends Error {

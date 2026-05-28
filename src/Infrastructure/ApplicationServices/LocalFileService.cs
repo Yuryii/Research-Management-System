@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.IO.Compression;
 using Microsoft.AspNetCore.Http;
 using MimeDetective;
 using MimeDetective.Definitions;
@@ -68,7 +69,7 @@ public class LocalFileService : IFileService
         string fullPath = Path.GetFullPath(path);
 
         if (!File.Exists(fullPath))
-            throw new FileNotFoundException();
+            throw new FileNotFoundException($"File not found: {path}");
 
         return new FileStream(
             fullPath,
@@ -77,6 +78,11 @@ public class LocalFileService : IFileService
             FileShare.Read,
             4096,
             useAsync: true);
+    }
+
+    public Task<Stream> GetFileAsync(string path, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(GetFile(path));
     }
     // Helpers
     private string CreateDirectory(string? folderPath)
@@ -103,7 +109,8 @@ public class LocalFileService : IFileService
     private string NormalizeStoredPath(string filePath)
     {
         var fullPath = Path.GetFullPath(filePath);
-        return fullPath.Replace('\\', '/');
+        var currentDir = Directory.GetCurrentDirectory();
+        return Path.GetRelativePath(currentDir, fullPath).Replace('\\', '/');
     }
 
     private void ValidateFile(IFormFile file, HashSet<string> allowedMimeTypes)
@@ -127,13 +134,111 @@ public class LocalFileService : IFileService
             throw new ValidationException("Không xác định được loại file");
         }
 
-        string mimeType = result.Definition.File.MimeType
+        string detectedMime = result.Definition.File.MimeType
             ?? throw new ValidationException("Không xác định được loại file");
 
-        if (!allowedMimeTypes.Contains(mimeType))
+        // Trường hợp đặc biệt: file ZIP-based (bao gồm docx, xlsx, pptx, zip, jar, apk, v.v.)
+        if (detectedMime == "application/x-compressed" ||
+            detectedMime == "application/zip" ||
+            detectedMime == "application/x-zip-compressed")
+        {
+            // BẮT BUỘC kiểm tra nội dung bên trong
+            ValidateZipBasedFile(file, allowedMimeTypes);
+            return;
+        }
+
+
+        if (!allowedMimeTypes.Contains(detectedMime))
         {
             throw new ValidationException(
-                $"File type không được hỗ trợ: {mimeType}");
+                $"File type không được hỗ trợ: {detectedMime}");
         }
+    }
+    private void ValidateZipBasedFile(IFormFile file, HashSet<string> allowedMimeTypes)
+    {
+        using var stream = file.OpenReadStream();
+        using var archive = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: false);
+
+        // 1. Kiểm tra có phải Office Open XML không
+        bool isOfficeFile = archive.Entries.Any(e =>
+            e.FullName.Equals("[Content_Types].xml", StringComparison.OrdinalIgnoreCase));
+
+        if (isOfficeFile)
+        {
+            // Xác định loại Office file cụ thể
+            string realMime = DetermineOfficeMimeType(archive, file.FileName);
+
+            if (!allowedMimeTypes.Contains(realMime))
+            {
+                throw new ValidationException($"File type không được hỗ trợ: {realMime}");
+            }
+
+            // KIỂM TRA THÊM: không chứa macro độc hại trong .docm, .xlsm
+            if (HasMacroOrScript(archive))
+            {
+                throw new ValidationException("File chứa macro/script không an toàn");
+            }
+
+            return;
+        }
+
+        // 2. Nếu không phải Office file -> kiểm tra xem có được phép upload ZIP không
+        if (!allowedMimeTypes.Contains("application/zip"))
+        {
+            throw new ValidationException("Không cho phép upload file nén");
+        }
+
+        // 3. Nếu cho phép ZIP -> kiểm tra nội dung bên trong
+        foreach (var entry in archive.Entries)
+        {
+            // Không cho phép file thực thi
+            string ext = Path.GetExtension(entry.Name).ToLower();
+            var dangerousExtensions = new[] { ".exe", ".dll", ".bat", ".cmd", ".ps1", ".sh", ".js", ".vbs", ".jar", ".class" };
+
+            if (dangerousExtensions.Contains(ext))
+            {
+                throw new ValidationException($"File nén chứa file độc hại: {entry.Name}");
+            }
+
+            // Kiểm tra đường dẫn (tránh directory traversal: ../../config.php)
+            if (entry.FullName.Contains("..") || Path.IsPathRooted(entry.FullName))
+            {
+                throw new ValidationException("File nén chứa đường dẫn không an toàn");
+            }
+
+            // Giới hạn kích thước giải nén (tránh zip bomb)
+            if (entry.Length > 10 * 1024 * 1024) // 10MB mỗi file
+            {
+                throw new ValidationException($"File {entry.Name} quá lớn sau giải nén");
+            }
+        }
+    }
+
+    private string DetermineOfficeMimeType(ZipArchive archive, string fileName)
+    {
+        // Có thể kiểm tra file /word/document.xml, /xl/workbook.xml, /ppt/presentation.xml
+        if (archive.Entries.Any(e => e.FullName.StartsWith("word/")))
+            return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        if (archive.Entries.Any(e => e.FullName.StartsWith("xl/")))
+            return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        if (archive.Entries.Any(e => e.FullName.StartsWith("ppt/")))
+            return "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+
+        // Fallback dùng extension
+        return Path.GetExtension(fileName).ToLower() switch
+        {
+            ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            ".pptx" => "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            _ => "application/zip"
+        };
+    }
+
+    private bool HasMacroOrScript(ZipArchive archive)
+    {
+        // Kiểm tra file .bin có chứa VBA macro không
+        return archive.Entries.Any(e =>
+            e.FullName.EndsWith(".bin", StringComparison.OrdinalIgnoreCase) &&
+            e.Name.Contains("vba", StringComparison.OrdinalIgnoreCase));
     }
 }

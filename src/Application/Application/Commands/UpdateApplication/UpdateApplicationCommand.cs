@@ -17,5 +17,7 @@ public record UpdateApplicationCommand : IRequest
 
     public string? Description { get; set; }
 
-    public ApplicationStatus Status { get; set; }
+    public ApplicationStatus? Status { get; set; }
+
+    public List<Guid>? FileIds { get; set; }
 }

@@ -82,6 +82,18 @@ public class S3FileService : IFileService
         throw new NotSupportedException("GetFile is not supported for S3 storage. Use S3 SDK to retrieve objects.");
     }
 
+    public async Task<Stream> GetFileAsync(string path, CancellationToken cancellationToken = default)
+    {
+        var getRequest = new GetObjectRequest
+        {
+            BucketName = _options.BucketName,
+            Key = path
+        };
+
+        var response = await _s3Client.GetObjectAsync(getRequest, cancellationToken);
+        return response.ResponseStream;
+    }
+
     public void DeleteFile(string path, CancellationToken cancellationToken = default)
     {
         Guard.Against.NullOrWhiteSpace(_options.BucketName, message: "S3 bucket name is required when Storage:Provider is S3.");

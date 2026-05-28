@@ -24,7 +24,13 @@ public class GetApplicationsQueryHandler : IRequestHandler<GetApplicationsQuery,
 
     public async Task<PaginatedResult<ApplicationDto>> Handle(GetApplicationsQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.Applications;
+        IQueryable<DomainApplication> query = _context.Applications;
+
+        if (request.Status.HasValue)
+        {
+            query = query.Where(x => x.Status == request.Status.Value);
+        }
+
         var stepId = request.StepId ?? Guid.Empty;
 
         if (stepId == Guid.Empty)
@@ -46,11 +52,26 @@ public class GetApplicationsQueryHandler : IRequestHandler<GetApplicationsQuery,
                 throw new ForbiddenAccessException("No step is available for the current user roles.");
             }
         }
-        //Gat my attachtments for current step
+        // Get my attachments for current step
         var currentStepAttachments = await _context.ApplicationFiles
             .Where(x => x.StepId == stepId)
-            .ProjectTo<ApplicationFileDto>(_mapper.ConfigurationProvider)
+            .Select(x => new
+            {
+                x.ApplicationId,
+                File = new FileDto
+                {
+                    Id = x.File.Id,
+                    Name = x.File.Name,
+                    Path = x.File.Path,
+                    ContentType = x.File.ContentType,
+                    Length = x.File.Length
+                }
+            })
             .ToListAsync(cancellationToken);
+
+        var currentStepAttachmentsByApplication = currentStepAttachments
+            .GroupBy(x => x.ApplicationId)
+            .ToDictionary(g => g.Key, g => g.Select(x => x.File).ToList());
 
         // Get attachments for the previous step
         var stepOrder = await _context.StepDetails
@@ -59,14 +80,29 @@ public class GetApplicationsQueryHandler : IRequestHandler<GetApplicationsQuery,
         var preStep = await _context.Steps
             .Where(x => x.Order == stepOrder - 1).FirstOrDefaultAsync(cancellationToken);
 
-        List<ApplicationFileDto> preStepAttachments = new List<ApplicationFileDto>();
+        Dictionary<Guid, List<FileDto>> preStepAttachmentsByApplication = new();
 
         if (preStep is not null)
         {
-            preStepAttachments = await _context.ApplicationFiles
-            .Where(x => x.StepId == preStep.Id)
-            .ProjectTo<ApplicationFileDto>(_mapper.ConfigurationProvider)
-            .ToListAsync(cancellationToken);
+            var preStepAttachments = await _context.ApplicationFiles
+                .Where(x => x.StepId == preStep.Id)
+                .Select(x => new
+                {
+                    x.ApplicationId,
+                    File = new FileDto
+                    {
+                        Id = x.File.Id,
+                        Name = x.File.Name,
+                        Path = x.File.Path,
+                        ContentType = x.File.ContentType,
+                        Length = x.File.Length
+                    }
+                })
+                .ToListAsync(cancellationToken);
+
+            preStepAttachmentsByApplication = preStepAttachments
+                .GroupBy(x => x.ApplicationId)
+                .ToDictionary(g => g.Key, g => g.Select(x => x.File).ToList());
         }
 
         var totalCount = await query.CountAsync(cancellationToken);
@@ -83,20 +119,14 @@ public class GetApplicationsQueryHandler : IRequestHandler<GetApplicationsQuery,
 
         foreach (var item in result.Items)
         {
-
-            foreach (var item1 in preStepAttachments)
+            if (preStepAttachmentsByApplication.TryGetValue(item.Id, out var preFiles))
             {
-                if(item1.ApplicationId == item.Id)
-                {
-                    item.PreAttachments.Add(item1);
-                }
+                item.PreAttachments.AddRange(preFiles);
             }
-            foreach (var item2 in currentStepAttachments)
+
+            if (currentStepAttachmentsByApplication.TryGetValue(item.Id, out var currentFiles))
             {
-                if (item2.ApplicationId == item.Id)
-                {
-                    item.MyApplications.Add(item2);
-                }
+                item.MyApplications.AddRange(currentFiles);
             }
         }
 

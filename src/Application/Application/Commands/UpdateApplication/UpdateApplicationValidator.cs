@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using RMS.Domain.Enums;
+﻿using RMS.Application.Application.Commands.UpdateApplication;
 
 namespace RMS.Application.Application.Commands.UpdateApplication;
 
@@ -18,10 +15,5 @@ public class UpdateApplicationCommandValidator : AbstractValidator<UpdateApplica
         RuleFor(x => x.Description)
             .MaximumLength(500)
             .WithMessage("Description cannot exceed 500 characters.");
-        RuleFor(x => x.Status)
-            .IsInEnum()
-            .WithMessage("Invalid application status.")
-            .Equal(ApplicationStatus.Draft)
-            .WithMessage("Only applications in Draft status can be updated.");
     }
 }

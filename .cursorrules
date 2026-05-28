@@ -1,0 +1,345 @@
+# CA-RMS Cursor Rules
+
+## Project Overview
+
+CA-RMS is a Research Management System built with **Clean Architecture**, **CQRS + MediatR**, and **.NET Aspire**. The frontend is Angular 21+ with PrimeNG and CoreUI.
+
+### Solution Structure
+
+```
+src/
+├── Domain/           # Entities, Enums, Constants, Value Objects, Events
+├── Application/     # Commands, Queries, Behaviors, DTOs, Interfaces
+├── Infrastructure/  # Data access (EF Core), Identity, External services
+├── Web/             # Minimal API endpoints, Angular frontend (FE)
+├── Shared/          # Shared utilities, constants, DTOs
+└── ServiceDefaults/ # .NET Aspire service defaults
+```
+
+---
+
+## 1. Backend — C# / .NET Conventions
+
+### 1.1 Code Style
+
+- **Indent**: 4 spaces (enforced by `.editorconfig`)
+- **Namespaces**: File-scoped (`namespace RMS.Application.Commands;`)
+- **Var style**: Explicit types preferred (`MyClass` not `var`, except with `new`)
+- **Braces**: Always use braces (`if (x) { ... }`)
+- **Private fields**: `_camelCase` (underscore prefix)
+- **Newlines before brace**: All scopes (`if (...) {\n`)
+- **Interfaces**: Prefix with `I` (`IApplicationDbContext`)
+- **Predefined types**: Use `int`, `string`, etc. for locals/parameters/members
+
+### 1.2 CQRS — Folder Structure
+
+Each Command/Query lives in its **own subfolder** under `src/Application/Application/`:
+
+```
+Application/Commands/{Action}{Entity}/
+    ├── {Action}{Entity}Command.cs
+    ├── {Action}{Entity}CommandValidator.cs  (if applicable)
+    └── {Action}{Entity}CommandHandler.cs
+
+Application/Queries/{Get}{Entity}/
+    ├── {Get}{Entity}Query.cs
+    ├── {Get}{Entity}QueryValidator.cs
+    └── {Get}{Entity}QueryHandler.cs
+```
+
+**Naming rules**:
+- Commands: `{Action}{Entity}Command` (e.g., `CreateApplicationCommand`, `UpdateStepDetailCommand`)
+- Queries: `{Get}{Entity}Query` (e.g., `GetApplicationsQuery`)
+- Handlers: `IRequestHandler<Command, Response>`
+- Validators: `{Command}Validator : AbstractValidator<Command>`
+
+### 1.3 Handler Pattern
+
+```csharp
+public class CreateApplicationCommandHandler : IRequestHandler<CreateApplicationCommand, Guid>
+{
+    public CreateApplicationCommandHandler(
+        IApplicationDbContext context,
+        IFileService fileService,
+        ICodeGeneratorService codeGeneratorService,
+        IStepResolver stepResolver)
+    {
+        // Inject services via constructor
+    }
+
+    public async Task<Guid> Handle(CreateApplicationCommand request, CancellationToken cancellationToken)
+    {
+        // 1. Validate (via pipeline behavior)
+        // 2. Map request to domain entity
+        // 3. Add to DbContext
+        // 4. Save changes
+        // 5. Return result
+    }
+}
+```
+
+### 1.4 Validation — FluentValidation
+
+- Create validator for every Command that accepts user input
+- Use rule chaining with clear error messages
+- Never validate business rules here — only input validation
+
+```csharp
+public class UpdateApplicationCommandValidator : AbstractValidator<UpdateApplicationCommand>
+{
+    public UpdateApplicationCommandValidator()
+    {
+        RuleFor(x => x.Id).NotEmpty().WithMessage("Application Id is required.");
+        RuleFor(x => x.Title).MaximumLength(100).WithMessage("Title cannot exceed 100 characters.");
+    }
+}
+```
+
+### 1.5 Domain Layer
+
+- **Entities**: Extend `BaseAuditableEntity<TKey>`, use `required` + init for properties
+- **Enums**: Plain C# enums in `src/Domain/Enums/`
+- **Constants**: Abstract classes (e.g., `Roles`, `Policies`) with `const string` fields
+- **Value Objects**: Immutable, equality-based
+- **Events**: Implement `IMediatorDomainEventNotification<TEvent>`
+
+```csharp
+public partial class Application : BaseAuditableEntity<Guid>
+{
+    public required string Code { get; set; }
+    public required string Title { get; set; }
+    public ApplicationStatus Status { get; set; }
+    public IList<ApplicationFile> ApplicationFiles { get; set; } = new List<ApplicationFile>();
+}
+```
+
+### 1.6 Infrastructure Layer
+
+- **DbContext**: Extend `IdentityDbContext<ApplicationUser, ApplicationRole, string>`, implement `IApplicationDbContext`
+- **Configurations**: Fluent API via `IEntityTypeConfiguration<T>` in `Configurations/` folder, applied via `ApplyConfigurationsFromAssembly`
+- **Seeder**: `ApplicationDbContextInitialiser` with `InitialiseAsync()` and `SeedAsync()`
+
+### 1.7 Result / Error Handling
+
+- Use `Result` and `Result<T>` from `RMS.Application.Common.Models`
+- Throw domain-specific exceptions: `NotFoundException`, `ForbiddenAccessException`, `ValidationException`
+- Do NOT return `null` from handlers — return empty collections or `Result.Failure()`
+
+### 1.8 Authorization
+
+- Use `[Authorize]` attribute on endpoint groups and handlers
+- Role constants defined in `Domain/Constants/Roles.cs`: `Administrator`, `Teacher`, `Tttv`, `Dvqltt`, `KhcnHtqt`
+
+### 1.9 Minimal API Endpoints
+
+Define endpoints as `IEndpointGroup` implementations in `src/Web/Endpoints/`:
+
+```csharp
+public class Applications : IEndpointGroup
+{
+    public static void Map(RouteGroupBuilder groupBuilder)
+    {
+        groupBuilder.RequireAuthorization();
+        groupBuilder.MapGet(GetApplications);
+        groupBuilder.MapPost(CreateApplication, "CreateApplication").DisableAntiforgery();
+        groupBuilder.MapPost(UpdateApplication, "UpdateApplication");
+        groupBuilder.MapDelete(DeleteApplication, "{id}");
+    }
+}
+```
+
+Endpoint methods return `Results<Ok<T>, BadRequest<string>>`.
+
+### 1.10 Pipeline Behaviors (MediatR)
+
+MediatR pipeline handles these cross-cutting concerns — do NOT duplicate logic in handlers:
+- `LoggingBehaviour` — logs user and request details
+- `ValidationBehaviour` — runs FluentValidation before handler
+- `AuthorizationBehaviour` — checks `[Authorize]` attributes
+- `PerformanceBehaviour` — warns if request > 500ms
+- `UnhandledExceptionBehaviour` — catches unhandled exceptions
+
+---
+
+## 2. Frontend — Angular / TypeScript Conventions
+
+### 2.1 Code Style
+
+- **Indent**: 2 spaces (enforced by `.editorconfig`)
+- **Quotes**: Single quotes
+- **Standalone components**: All components use `standalone: true`
+- **Imports**: Explicit, no barrel exports (`index.ts`) unless necessary
+
+### 2.2 Component Structure
+
+```
+views/{feature}/
+├── {feature}.component.ts
+├── {feature}.component.html
+├── {feature}.component.scss
+└── {feature}-modal/
+    ├── {feature}-modal.component.ts
+    └── {feature}-modal.component.html
+```
+
+### 2.3 Component Pattern
+
+```typescript
+@Component({
+  selector: 'app-applications',
+  standalone: true,
+  imports: [CommonModule, TableDirective, ButtonDirective, ...],
+  providers: [MessageService, DialogService],
+  templateUrl: './applications.component.html',
+  styleUrls: ['./applications.component.scss'],
+})
+export class ApplicationsComponent implements OnInit {
+  form = new FormGroup({
+    title: new FormControl<string>('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.maxLength(100)],
+    }),
+    description: new FormControl<string>('', { nonNullable: true }),
+    isSubmitted: new FormControl<boolean>(false, { nonNullable: true }),
+  });
+
+  ngOnInit(): void { /* load data */ }
+}
+```
+
+### 2.4 API Calls
+
+- Always use the **NSwag-generated client** (`ApplicationsClient`, etc.) from `web-api-client.ts`
+- Do NOT call `HttpClient` directly in components
+- Always unsubscribe or use `takeUntilDestroyed(destroyRef)`
+- Handle errors with toast notifications via `MessageService`
+
+```typescript
+this.applicationService.getApplications(this.pageNumber, this.pageSize, undefined)
+  .subscribe({
+    next: (result) => { this.applications = result?.items ?? []; },
+    error: (err) => { this.messageService.add({ severity: 'error', summary: 'Error', detail: err.message }); }
+  });
+```
+
+### 2.5 Routing — Lazy Loading
+
+```typescript
+export const routes: Routes = [
+  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+  {
+    path: '',
+    loadComponent: () => import('./layout').then((m) => m.DefaultLayoutComponent),
+    canActivate: [AuthGuard],
+    children: [
+      { path: 'workflow', loadChildren: () => import('./views/applications/routes').then((m) => m.routes) },
+    ],
+  },
+];
+```
+
+### 2.6 UI Libraries
+
+- **CoreUI** (`@coreui/angular`) — layout, sidebar, header
+- **PrimeNG** (`primeng`) — Dialog, Paginator, FileUpload, Toast, DynamicDialog, Table
+
+---
+
+## 3. Testing Conventions
+
+### 3.1 Test Projects
+
+```
+tests/
+├── Application.UnitTests/
+├── Application.FunctionalTests/
+├── Domain.UnitTests/
+├── Infrastructure.IntegrationTests/
+├── Web.AcceptanceTests/
+└── TestAppHost/
+```
+
+### 3.2 Unit Tests — NUnit + Shouldly
+
+```csharp
+public class ValidationExceptionTests
+{
+    [Test]
+    public void DefaultConstructorCreatesAnEmptyErrorDictionary()
+    {
+        var actual = new ValidationException().Errors;
+        actual.Keys.ShouldBeEmpty();
+    }
+}
+```
+
+### 3.3 Functional Tests — TestBase Pattern
+
+```csharp
+public class UpdateApplicationStepDetailTests : TestBase
+{
+    [Test]
+    public async Task ShouldRequireValidApplicationId()
+    {
+        await TestApp.RunAsAdministratorAsync();
+        var stepDetail = await CreateStepDetailAsync(Roles.Administrator);
+        var command = new UpdateApplicationStepDetailCommand { ApplicationId = Guid.NewGuid(), StepDetailId = stepDetail.Id };
+        await Should.ThrowAsync<NotFoundException>(() => TestApp.SendAsync(command));
+    }
+}
+```
+
+- `TestApp.SendAsync(command)` — send commands/queries
+- `TestApp.RunAsAdministratorAsync()` — authenticate as admin
+- `TestApp.FindAsync<T>(id)` — find entity by ID
+- `TestApp.AddAsync(entity)` — add entity to context
+- `TestApp.ExecuteDbContextAsync()` — custom DbContext logic
+
+### 3.4 Always Write Tests
+
+- Every Command/Query handler should have unit tests
+- Critical business logic should have functional/integration tests
+
+---
+
+## 4. General Rules
+
+### 4.1 Architecture Enforcement
+
+- **Never** put business logic in Controllers or Endpoint methods
+- **Never** reference Infrastructure from Domain
+- **Never** reference Web/API from Application or Domain
+- **Always** use the `IApplicationDbContext` abstraction, not `DbContext` directly
+- **Always** use `IRequestHandler<TRequest, TResponse>` for command/query handlers
+
+### 4.2 Database & Config
+
+- Never hardcode connection strings — use `builder.Configuration`
+- Never commit secrets — use Azure Key Vault in production or `dotnet user-secrets` in development
+- Database schema changes: create EF Core migrations
+
+### 4.3 Dependency Injection
+
+- Register services in `DependencyInjection.cs` of the appropriate layer
+- Use constructor injection everywhere
+- Follow the dependency rule: Domain <- Application <- Infrastructure <- Web
+
+### 4.4 Naming Quick Reference
+
+| Element | Convention | Example |
+|---|---|---|
+| Folder | PascalCase | `CreateApplication/` |
+| C# Class | PascalCase | `CreateApplicationCommand` |
+| C# Method | PascalCase | `Handle`, `Map` |
+| C# Private Field | `_camelCase` | `_context`, `_fileService` |
+| C# Interface | IPascalCase | `IApplicationDbContext` |
+| TypeScript Class | PascalCase | `ApplicationsComponent` |
+| TypeScript Method | camelCase | `loadData`, `onSubmit` |
+| Angular Template | kebab-case | `application-modal.component.html` |
+
+### 4.5 When Creating New Features
+
+1. **Backend**: Create Command/Query → Handler → Validator → Endpoint → DTOs
+2. **Frontend**: Update NSwag client → Component → Modal → Service call
+3. **Testing**: Unit test for handler → Functional test for integration
+4. **Database**: Add migration if schema changes

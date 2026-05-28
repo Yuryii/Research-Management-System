@@ -45,55 +45,105 @@
       </div>
 
       <label class="mt-3">Tài liệu đính kèm</label>
-      <div class="card mt-2">
+
+      <!-- Tài liệu của tôi -->
+      <div *ngIf="myApplicationFiles.length > 0" class="d-flex flex-column gap-2 mt-2">
+        <div class="fw-semibold text-secondary small">Tài liệu của tôi</div>
+        <div
+          *ngFor="let file of myApplicationFiles; let i = index"
+          class="card"
+        >
+          <div class="card-body py-2 px-3">
+            <div class="d-flex align-items-center justify-content-between">
+              <div class="d-flex align-items-center gap-2">
+                <i class="pi pi-file text-primary"></i>
+                <span>{{ file.name }}</span>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <small class="text-medium-emphasis">{{
+                  formatFileSize(file.length)
+                }}</small>
+                <button
+                  *ngIf="!isReadOnly"
+                  type="button"
+                  class="btn btn-sm btn-link text-danger p-0"
+                  (click)="removeMyApplicationFile(i)"
+                >
+                Xóa tệp
+                  <i class="pi pi-times"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tài liệu được gửi -->
+      <div *ngIf="preAttachmentFiles.length > 0" class="d-flex flex-column gap-2 mt-2">
+        <div class="fw-semibold text-secondary small">Tài liệu được gửi</div>
+        <div
+          *ngFor="let file of preAttachmentFiles; let i = index"
+          class="card"
+        >
+          <div class="card-body py-2 px-3">
+            <div class="d-flex align-items-center justify-content-between">
+              <div class="d-flex align-items-center gap-2">
+                <i class="pi pi-file text-secondary"></i>
+                <span>{{ file.name }}</span>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <small class="text-medium-emphasis">{{
+                  formatFileSize(file.length)
+                }}</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt-2" *ngIf="!isReadOnly">
         <p-fileupload
-          (onClear)="onClear()"
-          (onRemove)="onRemove($event)"
           (onSelect)="onSelect($event)"
-          name="demo[]"
-          url="https://www.primefaces.org/cdn/api/upload.php"
-          (onUpload)="onUpload($event)"
+          (onRemove)="onRemove($event)"
+          name="files[]"
           [multiple]="true"
           accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           maxFileSize="1000000"
           mode="advanced"
+          [disabled]="isReadOnly"
+          [showUploadButton]="false"
+          [showCancelButton]="false"
         >
           <ng-template #empty>
             <div>Drag and drop files to here to upload.</div>
           </ng-template>
         </p-fileupload>
         <div
+          *ngIf="uploadedFiles.length > 0"
           class="d-flex align-items-center justify-content-between gap-3 px-3 pb-3 pt-2"
         >
           <small class="text-medium-emphasis">
             {{ uploadedFiles.length }} tệp đã được đính kèm
           </small>
-          <button
-            (click)="downloadAllFiles()"
-            [disabled]="!uploadedFiles.length || isDownloadingAll"
-            class="btn btn-outline-secondary"
-            type="button"
-          >
-            {{ isDownloadingAll ? "Đang nén..." : "Tải tất cả - zip files" }}
-          </button>
         </div>
       </div>
+
     </div>
-    <div class="form-check form-switch mb-3">
+    <div class="form-check form-switch mb-3" *ngIf="!isReadOnly">
       <input
         class="form-check-input"
         type="checkbox"
-        id="draftSwitch"
-        formControlName="isDraft"
+        id="submittedSwitch"
+        formControlName="isSubmitted"
       />
-      <label class="form-check-label" for="draftSwitch">Nộp Ngay</label>
+      <label class="form-check-label" for="submittedSwitch">Nộp Ngay</label>
     </div>
     <div class="d-flex justify-content-end gap-2 mt-3">
       <button type="button" class="btn btn-secondary" (click)="close()">
-        Hủy
+        Đóng
       </button>
-      <button type="submit" class="btn btn-primary" [disabled]="form.invalid">
-        Tạo
+      <button type="submit" class="btn btn-primary" [disabled]="form.invalid" *ngIf="!isReadOnly">
+        {{ isEditMode ? "Cập nhật" : "Tạo" }}
       </button>
     </div>
   </form>

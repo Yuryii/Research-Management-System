@@ -40,6 +40,7 @@ public class CreateApplicationCommandHandler : IRequestHandler<CreateApplication
             Code = code,
             Title = request.Title,
             Description = request.Description,
+            Status = request.Status,
             StepDetailId = firstStepDetailId
         };
 
@@ -49,7 +50,7 @@ public class CreateApplicationCommandHandler : IRequestHandler<CreateApplication
         IReadOnlyList<string> savedFilePaths = [];
         if (request.Files.Count > 0)
         {
-            var folders = $"{Config.Store.ROOT_PATH}{Config.Store.APPLICATION_PATH}";
+            var folders = $"{Config.Store.ROOT_PATH}/{Config.Store.APPLICATION_PATH}";
             savedFilePaths = await _fileService.SaveFilesAsync(
                 request.Files,
                 Config.Store.AllowedMimeTypes,

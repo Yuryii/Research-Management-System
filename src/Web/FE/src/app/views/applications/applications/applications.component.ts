@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { FileUploadModule } from 'primeng/fileupload';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
@@ -18,16 +19,22 @@ import {
 import { IconComponent } from '@coreui/icons-angular';
 import { ApplicationModalComponent } from './application-modal/application-modal.component';
 import { PaginatorModule, PaginatorState } from 'primeng/paginator';
-import { ApplicationDto, ApplicationsClient } from '../../../web-api-client';
+import {
+  ApplicationDto,
+  ApplicationsClient,
+  UpdateApplicationCommand,
+} from '../../../web-api-client';
 export enum ApplicationStatus {
   Draft = 0,
   Submitted = 1,
 }
 export interface ApplicationFormData {
+  id?: string;
   title: string;
   description: string;
   status: ApplicationStatus;
   files: File[];
+  existingFileIds?: string[];
 }
 @Component({
   selector: 'app-applications',
@@ -54,8 +61,10 @@ export class ApplicationsComponent implements OnInit {
   private readonly dialogService = inject(DialogService);
   private readonly messageService = inject(MessageService);
   private readonly applicationService = inject(ApplicationsClient);
+  private readonly http = inject(HttpClient);
   applications: ApplicationDto[] = [];
   isLoading = false;
+  selectedStatus: ApplicationStatus | null = null;
   pageNumber = 1;
   pageSize = 10;
   totalCount = 0;
@@ -69,7 +78,7 @@ export class ApplicationsComponent implements OnInit {
   loadApplications(): void {
     this.isLoading = true;
     this.applicationService
-      .getApplications(this.pageNumber, this.pageSize, undefined)
+      .getApplications(this.pageNumber, this.pageSize, undefined, this.selectedStatus ?? undefined)
       .subscribe({
         next: (result) => {
           this.applications = result?.items ?? [];
@@ -85,6 +94,12 @@ export class ApplicationsComponent implements OnInit {
           });
         },
       });
+  }
+
+  onStatusFilterChange(value: ApplicationStatus | null): void {
+    this.selectedStatus = value;
+    this.pageNumber = 1;
+    this.loadApplications();
   }
 
   onPageChange(event: PaginatorState): void {
@@ -132,6 +147,83 @@ export class ApplicationsComponent implements OnInit {
                 severity: 'error',
                 summary: 'Lỗi',
                 detail: 'Đã có lỗi xảy ra khi tạo hồ sơ đăng ký.',
+              });
+            },
+          });
+      }
+    });
+  }
+
+  openUpdateModal(application: ApplicationDto): void {
+    this.ref = this.dialogService.open(ApplicationModalComponent, {
+      header: 'Cập nhật hồ sơ đăng ký',
+      width: '60%',
+      closable: true,
+      draggable: false,
+      dismissableMask: true,
+      data: { application },
+    });
+
+    this.ref?.onClose.subscribe((data: ApplicationFormData) => {
+      if (data) {
+        const command = new UpdateApplicationCommand({
+          id: data.id,
+          title: data.title,
+          description: data.description,
+          status: data.status,
+          fileIds: data.existingFileIds,
+        });
+
+        this.applicationService
+          .updateApplication(application.id, command)
+          .subscribe({
+            next: () => {
+              // Upload files separately after text update succeeds
+              if (data.files && data.files.length > 0) {
+                const formData = new FormData();
+                formData.append('applicationId', application.id);
+                data.files.forEach((file) => {
+                  formData.append('files', file, file.name);
+                });
+
+                this.http
+                  .post(
+                    '/api/ApplicationFiles/CreateApplicationFiles',
+                    formData,
+                  )
+                  .subscribe({
+                    next: () => {
+                      this.messageService.add({
+                        severity: 'success',
+                        summary: 'Thành công',
+                        detail: 'Hồ sơ đăng ký đã được cập nhật thành công.',
+                      });
+                      this.loadApplications();
+                    },
+                    error: (err) => {
+                      this.messageService.add({
+                        severity: 'warn',
+                        summary: 'Cảnh báo',
+                        detail:
+                          'Cập nhật thông tin thành công nhưng upload file thất bại.',
+                      });
+                      this.loadApplications();
+                    },
+                  });
+              } else {
+                this.messageService.add({
+                  severity: 'success',
+                  summary: 'Thành công',
+                  detail: 'Hồ sơ đăng ký đã được cập nhật thành công.',
+                });
+                this.loadApplications();
+              }
+            },
+            error: () => {
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Lỗi',
+                detail: 'Đã có lỗi xảy ra khi cập nhật hồ sơ đăng ký.',
               });
             },
           });

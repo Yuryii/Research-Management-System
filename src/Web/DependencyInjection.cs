@@ -30,6 +30,7 @@ public static class DependencyInjection
         {
             options.AddOperationTransformer<ApiExceptionOperationTransformer>();
             options.AddOperationTransformer<IdentityApiOperationTransformer>();
+            options.AddOperationTransformer<BinaryResponseOperationTransformer>();
 
             options.AddSchemaTransformer((schema, context, cancellationToken) =>
             {
