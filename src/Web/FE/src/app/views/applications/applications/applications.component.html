@@ -1,6 +1,6 @@
 <p-toast></p-toast>
 <div>
-  <form cForm class="header-filter">
+  <form cForm class="header-filter" (ngSubmit)="onSearch()">
     <div class="filter-box">
       <i class="pi pi-filter filter-icon"></i>
       <select
@@ -18,8 +18,10 @@
         <i class="pi pi-search search-input"></i>
         <input
           cFormControl
-          placeholder="Nhập tiêu đề, nội dung,..."
+          placeholder="Nhập tiêu đề, nội dung"
           type="text"
+          [(ngModel)]="searchTerm"
+          name="searchTerm"
         />
       </div>
     </div>

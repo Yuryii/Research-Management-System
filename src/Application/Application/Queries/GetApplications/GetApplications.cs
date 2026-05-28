@@ -31,6 +31,14 @@ public class GetApplicationsQueryHandler : IRequestHandler<GetApplicationsQuery,
             query = query.Where(x => x.Status == request.Status.Value);
         }
 
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            var searchLower = request.Search.Trim().ToLower();
+            query = query.Where(x =>
+                x.Title.ToLower().Contains(searchLower) ||
+                x.Description.ToLower().Contains(searchLower));
+        }
+
         var stepId = request.StepId ?? Guid.Empty;
 
         if (stepId == Guid.Empty)

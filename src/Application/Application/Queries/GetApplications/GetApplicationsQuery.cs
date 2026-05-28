@@ -10,4 +10,5 @@ public record GetApplicationsQuery : IRequest<PaginatedResult<ApplicationDto>>
     public int PageSize { get; init; } = 10;
     public Guid? StepId { get; set; }
     public ApplicationStatus? Status { get; set; }
+    public string? Search { get; set; }
 }

@@ -14,7 +14,8 @@ import {
   ApplicationFormData,
   ApplicationStatus,
 } from '../applications.component';
-import { ApplicationDto, FileDto } from '../../../../web-api-client';
+import { ApplicationDto, FileDto, ApplicationFilesClient } from '../../../../web-api-client';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-application-modal',
@@ -40,6 +41,8 @@ export class ApplicationModalComponent implements OnInit {
   constructor(
     public ref: DynamicDialogRef,
     public config: DynamicDialogConfig,
+    private applicationFilesClient: ApplicationFilesClient,
+    private messageService: MessageService,
   ) {}
 
   form = new FormGroup({
@@ -129,5 +132,30 @@ export class ApplicationModalComponent implements OnInit {
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  }
+
+  downloadFile(file: FileDto): void {
+    if (!this.existingApplication?.id) return;
+    this.applicationFilesClient
+      .downloadApplicationFile(this.existingApplication.id, file.id)
+      .subscribe({
+        next: (result) => {
+          const url = URL.createObjectURL(result.data);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = file.name;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        },
+        error: () => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Lỗi',
+            detail: 'Không thể tải tệp.',
+          });
+        },
+      });
   }
 }

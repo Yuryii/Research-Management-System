@@ -51,13 +51,15 @@
         <div class="fw-semibold text-secondary small">Tài liệu của tôi</div>
         <div
           *ngFor="let file of myApplicationFiles; let i = index"
-          class="card"
+          class="card clickable-card"
+          (click)="downloadFile(file)"
         >
           <div class="card-body py-2 px-3">
             <div class="d-flex align-items-center justify-content-between">
               <div class="d-flex align-items-center gap-2">
                 <i class="pi pi-file text-primary"></i>
                 <span>{{ file.name }}</span>
+                <i class="pi pi-download text-primary ms-1"></i>
               </div>
               <div class="d-flex align-items-center gap-2">
                 <small class="text-medium-emphasis">{{
@@ -83,13 +85,15 @@
         <div class="fw-semibold text-secondary small">Tài liệu được gửi</div>
         <div
           *ngFor="let file of preAttachmentFiles; let i = index"
-          class="card"
+          class="card clickable-card"
+          (click)="downloadFile(file)"
         >
           <div class="card-body py-2 px-3">
             <div class="d-flex align-items-center justify-content-between">
               <div class="d-flex align-items-center gap-2">
                 <i class="pi pi-file text-secondary"></i>
                 <span>{{ file.name }}</span>
+                <i class="pi pi-download text-secondary ms-1"></i>
               </div>
               <div class="d-flex align-items-center gap-2">
                 <small class="text-medium-emphasis">{{

@@ -272,9 +272,10 @@ export interface IApplicationsClient {
      * @param pageSize (optional) 
      * @param stepId (optional) 
      * @param status (optional) 
+     * @param search (optional) 
      * @return OK
      */
-    getApplications(pageNumber: number | undefined, pageSize: number | undefined, stepId: string | undefined, status: number | undefined): Observable<PaginatedResultOfApplicationDto>;
+    getApplications(pageNumber: number | undefined, pageSize: number | undefined, stepId: string | undefined, status: number | undefined, search: string | undefined): Observable<PaginatedResultOfApplicationDto>;
     /**
      * Create a new Application
      * @param title (optional) 
@@ -334,9 +335,10 @@ export class ApplicationsClient implements IApplicationsClient {
      * @param pageSize (optional) 
      * @param stepId (optional) 
      * @param status (optional) 
+     * @param search (optional) 
      * @return OK
      */
-    getApplications(pageNumber: number | undefined, pageSize: number | undefined, stepId: string | undefined, status: number | undefined): Observable<PaginatedResultOfApplicationDto> {
+    getApplications(pageNumber: number | undefined, pageSize: number | undefined, stepId: string | undefined, status: number | undefined, search: string | undefined): Observable<PaginatedResultOfApplicationDto> {
         let url_ = this.baseUrl + "/api/Applications?";
         if (pageNumber === null)
             throw new globalThis.Error("The parameter 'pageNumber' cannot be null.");
@@ -354,6 +356,10 @@ export class ApplicationsClient implements IApplicationsClient {
             throw new globalThis.Error("The parameter 'status' cannot be null.");
         else if (status !== undefined)
             url_ += "status=" + encodeURIComponent("" + status) + "&";
+        if (search === null)
+            throw new globalThis.Error("The parameter 'search' cannot be null.");
+        else if (search !== undefined)
+            url_ += "search=" + encodeURIComponent("" + search) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_ : any = {

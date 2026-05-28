@@ -1,0 +1,8 @@
+.clickable-card {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background-color: var(--cui-tertiary-bg, #f8f9fa);
+  }
+}

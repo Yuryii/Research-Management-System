@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
 import { FileUploadModule } from 'primeng/fileupload';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
@@ -24,6 +24,7 @@ import {
   ApplicationsClient,
   UpdateApplicationCommand,
 } from '../../../web-api-client';
+import { HttpClient } from '@angular/common/http';
 export enum ApplicationStatus {
   Draft = 0,
   Submitted = 1,
@@ -41,6 +42,7 @@ export interface ApplicationFormData {
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     TableDirective,
     ButtonDirective,
     IconComponent,
@@ -65,6 +67,7 @@ export class ApplicationsComponent implements OnInit {
   applications: ApplicationDto[] = [];
   isLoading = false;
   selectedStatus: ApplicationStatus | null | undefined = null;
+  searchTerm = '';
   pageNumber = 1;
   pageSize = 10;
   totalCount = 0;
@@ -78,7 +81,7 @@ export class ApplicationsComponent implements OnInit {
   loadApplications(): void {
     this.isLoading = true;
     this.applicationService
-      .getApplications(this.pageNumber, this.pageSize, undefined, this.selectedStatus ?? undefined)
+      .getApplications(this.pageNumber, this.pageSize, undefined, this.selectedStatus ?? undefined, this.searchTerm || undefined)
       .subscribe({
         next: (result) => {
           this.applications = result?.items ?? [];
@@ -98,6 +101,11 @@ export class ApplicationsComponent implements OnInit {
 
   onStatusFilterChange(value: ApplicationStatus | null | undefined): void {
     this.selectedStatus = value == null || isNaN(value as number) ? undefined : value;
+    this.pageNumber = 1;
+    this.loadApplications();
+  }
+
+  onSearch(): void {
     this.pageNumber = 1;
     this.loadApplications();
   }
