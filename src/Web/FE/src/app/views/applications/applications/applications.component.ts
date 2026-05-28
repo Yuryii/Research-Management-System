@@ -64,7 +64,7 @@ export class ApplicationsComponent implements OnInit {
   private readonly http = inject(HttpClient);
   applications: ApplicationDto[] = [];
   isLoading = false;
-  selectedStatus: ApplicationStatus | null = null;
+  selectedStatus: ApplicationStatus | null | undefined = null;
   pageNumber = 1;
   pageSize = 10;
   totalCount = 0;
@@ -96,8 +96,8 @@ export class ApplicationsComponent implements OnInit {
       });
   }
 
-  onStatusFilterChange(value: ApplicationStatus | null): void {
-    this.selectedStatus = value;
+  onStatusFilterChange(value: ApplicationStatus | null | undefined): void {
+    this.selectedStatus = value == null || isNaN(value as number) ? undefined : value;
     this.pageNumber = 1;
     this.loadApplications();
   }
