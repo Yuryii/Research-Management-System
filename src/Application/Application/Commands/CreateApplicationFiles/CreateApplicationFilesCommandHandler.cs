@@ -61,7 +61,7 @@ public class CreateApplicationFilesCommandHandler : IRequestHandler<CreateApplic
 
         // Logic
 
-        var folders = $"{Config.Store.ROOT_PATH}{Config.Store.APPLICATION_PATH}";
+        var folders = $"{Config.Store.ROOT_PATH}/{Config.Store.APPLICATION_PATH}";
         var savedFilePaths = await _fileService.SaveFilesAsync(
             request.Files,
             Config.Store.AllowedMimeTypes,
