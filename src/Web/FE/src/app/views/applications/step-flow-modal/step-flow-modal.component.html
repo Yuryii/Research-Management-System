@@ -18,18 +18,18 @@
             </p-step>
             <p-step-panel>
               <ng-template #content>
-                @if (activeStepDetails.length > 0) {
+                @if (step.stepDetails && step.stepDetails.length > 0) {
                   <div class="flow-container">
                     <div class="flow-row">
-                      @for (detail of activeStepDetails; track detail.id; let i = $index) {
+                      @for (detail of step.stepDetails; track detail.id; let j = $index) {
                         <div class="flow-node"
                              [class.active]="detail.id === currentStepDetailId">
                           <div class="flow-node-inner">
-                            <div class="flow-node-badge">{{ currentStepIndex + 1 }}.{{ i + 1 }}</div>
+                            <div class="flow-node-badge">{{ i + 1 }}.{{ j + 1 }}</div>
                             <div class="flow-node-name">{{ detail.name | truncate: 28 }}</div>
                           </div>
                         </div>
-                        @if (i < activeStepDetails.length - 1) {
+                        @if (j < step.stepDetails.length - 1) {
                           <i class="pi pi-arrow-right flow-arrow"></i>
                         }
                       }
