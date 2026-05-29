@@ -18,6 +18,7 @@ import {
 } from 'primeng/dynamicdialog';
 import { IconComponent } from '@coreui/icons-angular';
 import { ApplicationModalComponent } from './application-modal/application-modal.component';
+import { StepFlowModalComponent } from '../step-flow-modal/step-flow-modal.component';
 import { PaginatorModule, PaginatorState } from 'primeng/paginator';
 import {
   ApplicationDto,
@@ -159,6 +160,18 @@ export class ApplicationsComponent implements OnInit {
             },
           });
       }
+    });
+  }
+
+  openStepFlowModal(event: Event, application: ApplicationDto): void {
+    event.stopPropagation();
+    this.ref = this.dialogService.open(StepFlowModalComponent, {
+      header: 'Quy trình xử lý',
+      width: '70%',
+      closable: true,
+      draggable: false,
+      dismissableMask: true,
+      data: { stepDetailId: application.stepDetailId },
     });
   }
 

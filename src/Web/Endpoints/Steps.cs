@@ -5,6 +5,7 @@ using RMS.Application.Steps.Commands.DeleteStep;
 using RMS.Application.Steps.Commands.DeleteStepDetail;
 using RMS.Application.Steps.Commands.UpdateStep;
 using RMS.Application.Steps.Commands.UpdateStepDetail;
+using RMS.Application.Steps.Dtos;
 using RMS.Application.Steps.Queries.GetStepAndStepDetail;
 
 namespace RMS.Web.Endpoints;
@@ -15,7 +16,7 @@ public class Steps : IEndpointGroup
     {
         groupBuilder.RequireAuthorization();
 
-        groupBuilder.MapGet(GetStepAndStepDetail, "{stepDetailId:guid}");
+        groupBuilder.MapGet(GetStepAndStepDetail);
         groupBuilder.MapPost(CreateStep);
         groupBuilder.MapPut(UpdateStep, "{id:guid}");
         groupBuilder.MapDelete(DeleteStep, "{id:guid}");
@@ -25,14 +26,11 @@ public class Steps : IEndpointGroup
         groupBuilder.MapDelete(DeleteStepDetail, "StepDetails/{id:guid}");
     }
 
-    [EndpointSummary("Get step and step details")]
-    [EndpointDescription("Retrieves the step and all step details for the specified step detail ID.")]
-    public static async Task<Results<Ok<StepDto>, NotFound>> GetStepAndStepDetail(ISender sender, Guid stepDetailId)
+    [EndpointSummary("Get all steps and step details")]
+    [EndpointDescription("Retrieves all steps with their step details, sorted by order.")]
+    public static async Task<Ok<IList<StepDto>>> GetStepAndStepDetail(ISender sender)
     {
-        var result = await sender.Send(new GetStepAndStepDetailQuery
-        {
-            StepDetailId = stepDetailId
-        });
+        var result = await sender.Send(new GetStepAndStepDetailQuery());
 
         return TypedResults.Ok(result);
     }

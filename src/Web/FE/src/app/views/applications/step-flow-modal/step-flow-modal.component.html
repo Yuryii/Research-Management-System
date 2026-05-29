@@ -1,0 +1,54 @@
+<div class="step-flow-modal">
+  @if (isLoading) {
+    <div class="text-center py-5">
+      <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+      <p class="mt-2 text-muted">Đang tải dữ liệu...</p>
+    </div>
+  } @else if (allSteps.length === 0) {
+    <div class="text-center py-5">
+      <p class="text-muted">Không có dữ liệu quy trình.</p>
+    </div>
+  } @else {
+    <div class="stepper-wrapper">
+      <p-stepper [value]="currentStepIndex" [linear]="false">
+        @for (step of allSteps; track step.id; let i = $index) {
+          <p-step-item [value]="i">
+            <p-step>
+              <span class="step-label-text">{{ i + 1 }}. {{ step.shortName || step.name }}</span>
+            </p-step>
+            <p-step-panel>
+              <ng-template #content>
+                @if (activeStepDetails.length > 0) {
+                  <div class="flow-container">
+                    <div class="flow-row">
+                      @for (detail of activeStepDetails; track detail.id; let i = $index) {
+                        <div class="flow-node"
+                             [class.active]="detail.id === currentStepDetailId">
+                          <div class="flow-node-inner">
+                            <div class="flow-node-badge">{{ currentStepIndex + 1 }}.{{ i + 1 }}</div>
+                            <div class="flow-node-name">{{ detail.name | truncate: 28 }}</div>
+                          </div>
+                        </div>
+                        @if (i < activeStepDetails.length - 1) {
+                          <i class="pi pi-arrow-right flow-arrow"></i>
+                        }
+                      }
+                    </div>
+                  </div>
+                } @else {
+                  <div class="text-center py-4 text-muted">
+                    <small>Không có chi tiết bước.</small>
+                  </div>
+                }
+              </ng-template>
+            </p-step-panel>
+          </p-step-item>
+        }
+      </p-stepper>
+    </div>
+  }
+
+  <div class="d-flex justify-content-end mt-3 pt-3 border-top">
+    <button cButton color="secondary" (click)="close()">Đóng</button>
+  </div>
+</div>

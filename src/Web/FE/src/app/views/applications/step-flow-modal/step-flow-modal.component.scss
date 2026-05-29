@@ -1,0 +1,95 @@
+.step-flow-modal {
+  display: flex;
+  flex-direction: column;
+  min-height: 450px;
+}
+
+.stepper-wrapper {
+  width: 100%;
+}
+
+.step-label-text {
+  font-weight: 500;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+.flow-container {
+  width: 100%;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.flow-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.flow-node {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+
+  &.active .flow-node-inner {
+    border-color: var(--cui-primary);
+    background: color-mix(in srgb, var(--cui-primary) 10%, white);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--cui-primary) 30%, transparent);
+  }
+}
+
+.flow-node-inner {
+  position: relative;
+  width: 140px;
+  height: 70px;
+  border: 2px solid var(--cui-border-color);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  text-align: center;
+  font-size: 0.8rem;
+  padding: 0.5rem;
+  transition: all 0.2s ease;
+  cursor: default;
+
+  .flow-node-name {
+    font-weight: 500;
+    line-height: 1.3;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    text-overflow: ellipsis;
+  }
+
+  .flow-node-badge {
+    position: absolute;
+    top: -10px;
+    left: 8px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: white;
+    background: var(--cui-primary);
+    border-radius: 4px;
+    padding: 1px 5px;
+    line-height: 1.4;
+  }
+}
+
+.flow-arrow {
+  font-size: 1.2rem;
+  color: var(--cui-secondary-color, #6c757d);
+  flex-shrink: 0;
+}
+
+@import "primeicons/primeicons.css";

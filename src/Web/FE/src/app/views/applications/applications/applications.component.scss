@@ -23,6 +23,16 @@ table tbody tr td button {
   }
 }
 
+table tbody tr td .step-detail-link {
+  cursor: pointer;
+  color: var(--cui-primary);
+  text-decoration: underline;
+}
+
+table tbody tr td .step-detail-link:hover {
+  opacity: 0.8;
+}
+
 table thead tr th {
   min-width: 120px;
 }

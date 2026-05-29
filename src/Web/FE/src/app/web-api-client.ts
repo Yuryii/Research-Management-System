@@ -875,10 +875,10 @@ export class ApplicationsClient implements IApplicationsClient {
 
 export interface IStepsClient {
     /**
-     * Get step and step details
+     * Get all steps and step details
      * @return OK
      */
-    getStepAndStepDetail(stepDetailId: string): Observable<StepDto>;
+    getStepAndStepDetail(): Observable<StepDto[]>;
     /**
      * Create a Step
      * @return Created
@@ -925,14 +925,11 @@ export class StepsClient implements IStepsClient {
     }
 
     /**
-     * Get step and step details
+     * Get all steps and step details
      * @return OK
      */
-    getStepAndStepDetail(stepDetailId: string): Observable<StepDto> {
-        let url_ = this.baseUrl + "/api/Steps/{stepDetailId}";
-        if (stepDetailId === undefined || stepDetailId === null)
-            throw new globalThis.Error("The parameter 'stepDetailId' must be defined.");
-        url_ = url_.replace("{stepDetailId}", encodeURIComponent("" + stepDetailId));
+    getStepAndStepDetail(): Observable<StepDto[]> {
+        let url_ = this.baseUrl + "/api/Steps";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_ : any = {
@@ -950,14 +947,14 @@ export class StepsClient implements IStepsClient {
                 try {
                     return this.processGetStepAndStepDetail(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<StepDto>;
+                    return _observableThrow(e) as any as Observable<StepDto[]>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<StepDto>;
+                return _observableThrow(response_) as any as Observable<StepDto[]>;
         }));
     }
 
-    protected processGetStepAndStepDetail(response: HttpResponseBase): Observable<StepDto> {
+    protected processGetStepAndStepDetail(response: HttpResponseBase): Observable<StepDto[]> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -968,7 +965,14 @@ export class StepsClient implements IStepsClient {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = StepDto.fromJS(resultData200);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(StepDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
             return _observableOf(result200);
             }));
         } else if (status === 400) {
@@ -982,10 +986,6 @@ export class StepsClient implements IStepsClient {
         } else if (status === 403) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             return throwException("Forbidden", status, _responseText, _headers);
-            }));
-        } else if (status === 404) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return throwException("Not Found", status, _responseText, _headers);
             }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
@@ -3406,9 +3406,10 @@ export interface IReturnApplicationCommand {
 }
 
 export class StepDetailDto implements IStepDetailDto {
+    id!: string;
+    stepId!: string;
     name!: string;
     order?: number;
-    isReturnStep?: boolean;
 
     [key: string]: any;
 
@@ -3427,9 +3428,10 @@ export class StepDetailDto implements IStepDetailDto {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
+            this.id = _data["id"];
+            this.stepId = _data["stepId"];
             this.name = _data["name"];
             this.order = _data["order"];
-            this.isReturnStep = _data["isReturnStep"];
         }
     }
 
@@ -3446,22 +3448,25 @@ export class StepDetailDto implements IStepDetailDto {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
+        data["id"] = this.id;
+        data["stepId"] = this.stepId;
         data["name"] = this.name;
         data["order"] = this.order;
-        data["isReturnStep"] = this.isReturnStep;
         return data;
     }
 }
 
 export interface IStepDetailDto {
+    id: string;
+    stepId: string;
     name: string;
     order?: number;
-    isReturnStep?: boolean;
 
     [key: string]: any;
 }
 
 export class StepDto implements IStepDto {
+    id!: string;
     name!: string;
     shortName?: string;
     order?: number;
@@ -3484,6 +3489,7 @@ export class StepDto implements IStepDto {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
+            this.id = _data["id"];
             this.name = _data["name"];
             this.shortName = _data["shortName"];
             this.order = _data["order"];
@@ -3508,6 +3514,7 @@ export class StepDto implements IStepDto {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
+        data["id"] = this.id;
         data["name"] = this.name;
         data["shortName"] = this.shortName;
         data["order"] = this.order;
@@ -3521,6 +3528,7 @@ export class StepDto implements IStepDto {
 }
 
 export interface IStepDto {
+    id: string;
     name: string;
     shortName?: string;
     order?: number;

@@ -1,8 +1,8 @@
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ToastModule } from 'primeng/toast';
 import { FileUploadModule } from 'primeng/fileupload';
-import { DynamicDialogRef, DynamicDialogConfig } from 'primeng/dynamicdialog';
+import { DynamicDialogRef, DynamicDialogConfig, DialogService } from 'primeng/dynamicdialog';
 import { FormControlDirective } from '@coreui/angular';
 import {
   FormGroup,
@@ -16,6 +16,7 @@ import {
 } from '../applications.component';
 import { ApplicationDto, FileDto, ApplicationFilesClient } from '../../../../web-api-client';
 import { MessageService } from 'primeng/api';
+import { StepFlowModalComponent } from '../../step-flow-modal/step-flow-modal.component';
 
 @Component({
   selector: 'app-application-modal',
@@ -43,6 +44,7 @@ export class ApplicationModalComponent implements OnInit {
     public config: DynamicDialogConfig,
     private applicationFilesClient: ApplicationFilesClient,
     private messageService: MessageService,
+    private readonly dialogService: DialogService,
   ) {}
 
   form = new FormGroup({
@@ -120,6 +122,18 @@ export class ApplicationModalComponent implements OnInit {
     };
     this.formSubmit.emit(formData);
     this.ref.close(formData);
+  }
+
+  openStepFlow(): void {
+    const stepDetailId = this.existingApplication?.stepDetailId ?? '';
+    this.dialogService.open(StepFlowModalComponent, {
+      header: 'Chi tiết trang thái',
+      width: '70%',
+      closable: true,
+      draggable: false,
+      dismissableMask: true,
+      data: { stepDetailId },
+    });
   }
 
   close(): void {

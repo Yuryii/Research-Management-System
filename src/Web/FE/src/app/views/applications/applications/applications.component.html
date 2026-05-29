@@ -85,7 +85,14 @@
           </c-badge>
         </div>
       </td>
-      <td>{{ application.stepDetailName || "Chưa có bước xử lý" }}</td>
+      <td>
+        <span
+          class="step-detail-link"
+          (click)="openStepFlowModal($event, application)"
+        >
+          {{ application.stepDetailName || "Chưa có bước xử lý" }}
+        </span>
+      </td>
       <td>
         <i
           class="pi pi-times-circle text-danger me-1"

@@ -1,22 +1,13 @@
 using RMS.Application.Common.Interfaces;
+using RMS.Application.Steps.Dtos;
 
 namespace RMS.Application.Steps.Queries.GetStepAndStepDetail;
 
-public record GetStepAndStepDetailQuery : IRequest<StepDto>
+public record GetStepAndStepDetailQuery : IRequest<IList<StepDto>>
 {
-    public Guid StepDetailId { get; init; }
 }
 
-public class GetStepAndStepDetailQueryValidator : AbstractValidator<GetStepAndStepDetailQuery>
-{
-    public GetStepAndStepDetailQueryValidator()
-    {
-        RuleFor(x => x.StepDetailId)
-            .NotEmpty();
-    }
-}
-
-public class GetStepAndStepDetailQueryHandler : IRequestHandler<GetStepAndStepDetailQuery, StepDto>
+public class GetStepAndStepDetailQueryHandler : IRequestHandler<GetStepAndStepDetailQuery, IList<StepDto>>
 {
     private readonly IApplicationDbContext _context;
     private readonly IMapper _mapper;
@@ -27,20 +18,14 @@ public class GetStepAndStepDetailQueryHandler : IRequestHandler<GetStepAndStepDe
         _mapper = mapper;
     }
 
-    public async Task<StepDto> Handle(GetStepAndStepDetailQuery request, CancellationToken cancellationToken)
+    public async Task<IList<StepDto>> Handle(GetStepAndStepDetailQuery request, CancellationToken cancellationToken)
     {
-        var stepDetail = await _context.StepDetails
-            .Include(sd => sd.Step)
-            .ThenInclude(s => s.StepDetails)
-            .SingleOrDefaultAsync(sd => sd.Id == request.StepDetailId, cancellationToken);
+        var steps = await _context.Steps
+            .Include(s => s.StepDetails.OrderBy(sd => sd.Order))
+            .ToListAsync(cancellationToken);
 
-        Guard.Against.NotFound(request.StepDetailId, stepDetail, "Step detail not found.");
-        Guard.Against.NotFound(request.StepDetailId, stepDetail.Step, "Step not found.");
+        steps = steps.OrderBy(s => s.Order).ToList();
 
-        stepDetail.Step.StepDetails = stepDetail.Step.StepDetails
-            .OrderBy(sd => sd.Order)
-            .ToList();
-
-        return _mapper.Map<StepDto>(stepDetail.Step);
+        return _mapper.Map<IList<StepDto>>(steps);
     }
 }
