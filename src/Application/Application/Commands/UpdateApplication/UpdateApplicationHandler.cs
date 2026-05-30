@@ -1,4 +1,5 @@
 using FluentValidation.Results;
+using RMS.Application.Application.Commands.ForwardNextToStep;
 using RMS.Application.Common.Interfaces;
 using RMS.Domain.Constants;
 using RMS.Domain.Entities.Models;
@@ -11,10 +12,12 @@ namespace RMS.Application.Application.Commands.UpdateApplication;
 public class UpdateApplicationCommandHandler : IRequestHandler<UpdateApplicationCommand>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ISender _sender;
 
-    public UpdateApplicationCommandHandler(IApplicationDbContext context)
+    public UpdateApplicationCommandHandler(IApplicationDbContext context, ISender sender)
     {
         _context = context;
+        _sender = sender;
     }
 
     public async Task Handle(UpdateApplicationCommand request, CancellationToken cancellationToken)
@@ -39,6 +42,15 @@ public class UpdateApplicationCommandHandler : IRequestHandler<UpdateApplication
 
         if (request.Status.HasValue)
             entity.Status = request.Status.Value;
+
+        if (request.Status == ApplicationStatus.Submitted)
+        {
+            await _sender.Send(
+                new ForwardNextToStepCommand { ApplicationId = entity.Id },
+                cancellationToken);
+            return;
+        }
+
         if (request.FileIds is not null)
         {
             var filesToRemove = entity.ApplicationFiles

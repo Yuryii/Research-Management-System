@@ -19,7 +19,9 @@ public class ForwardNextToStepCommandHandler : IRequestHandler<ForwardNextToStep
 
     public async Task<Guid> Handle(ForwardNextToStepCommand request, CancellationToken cancellationToken)
     { 
-        var application = await _context.Applications.FindAsync(new object[] { request.ApplicationId }, cancellationToken);
+        var application = await _context.Applications
+            .Include(a => a.StepDetail)
+            .FirstOrDefaultAsync(a => a.Id == request.ApplicationId, cancellationToken);
 
         Guard.Against.NotFound(request.ApplicationId, application, "Application not found.");
 

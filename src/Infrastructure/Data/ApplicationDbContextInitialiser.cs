@@ -130,7 +130,8 @@ public class ApplicationDbContextInitialiser
                         {
                             Id = Guid.Parse("343B1904-AB23-42D4-80DB-760E93F15B09"),
                             Name = "Giảng viên đang chuẩn bị hồ sơ",
-                            Order = 0
+                            Order = 0,
+                            NextStepDetailId = Guid.Parse("11111111-1111-1111-1111-111111111101")
                         }
                     }
                 },
@@ -144,6 +145,7 @@ public class ApplicationDbContextInitialiser
                     {
                         new StepDetail()
                         {
+                            Id = Guid.Parse("11111111-1111-1111-1111-111111111101"),
                             Name = "ĐVQLTT đang kiểm tra sơ lược",
                             Order = 1
                         },
@@ -325,7 +327,7 @@ public class ApplicationDbContextInitialiser
         if (!_context.Applications.Any())
         {
             var teacherStepDetailId = _context.StepDetails
-                .Where(sd => sd.Step.Order == 1)
+                .Where(sd => sd.Step.Order == 0)
                 .OrderBy(sd => sd.Step.Order)
                 .ThenBy(sd => sd.Order)
                 .Select(sd => sd.Id)

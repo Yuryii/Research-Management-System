@@ -10,7 +10,7 @@
     </div>
   } @else {
     <div class="stepper-wrapper">
-      <p-stepper [value]="currentStepIndex" [linear]="false">
+      <p-stepper [(value)]="currentStepIndex" [linear]="false">
         @for (step of allSteps; track step.id; let i = $index) {
           <p-step-item [value]="i">
             <p-step>

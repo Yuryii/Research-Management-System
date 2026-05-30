@@ -1,4 +1,5 @@
 using RMS.Application.Application.Commands.CreateApplication;
+using RMS.Application.Application.Commands.ForwardNextToStep;
 using RMS.Application.Common.Interfaces;
 using RMS.Domain.Constants;
 using RMS.Domain.Entities.Models;
@@ -13,13 +14,15 @@ public class CreateApplicationCommandHandler : IRequestHandler<CreateApplication
     private readonly IFileService _fileService;
     private readonly ICodeGeneratorService _codeGeneratorService;
     private readonly IStepResolver _stepResolver;
+    private readonly ISender _sender;
         
-    public CreateApplicationCommandHandler(IApplicationDbContext context, IFileService fileService, ICodeGeneratorService codeGeneratorService, IStepResolver stepResolver)
+    public CreateApplicationCommandHandler(IApplicationDbContext context, IFileService fileService, ICodeGeneratorService codeGeneratorService, IStepResolver stepResolver, ISender sender)
     {
         _context = context;
         _fileService = fileService;
         _codeGeneratorService = codeGeneratorService;
         _stepResolver = stepResolver;
+        _sender = sender;
     }
 
     public async Task<Guid> Handle(CreateApplicationCommand request, CancellationToken cancellationToken)
@@ -89,6 +92,13 @@ public class CreateApplicationCommandHandler : IRequestHandler<CreateApplication
             }
 
             throw;
+        }
+
+        if (request.Status == ApplicationStatus.Submitted)
+        {
+            await _sender.Send(
+                new ForwardNextToStepCommand { ApplicationId = application.Id },
+                cancellationToken);
         }
 
         return application.Id;
