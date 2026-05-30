@@ -5,23 +5,15 @@ description: Đọc và phân tích log từ .NET Aspire Dashboard đang chạy.
 
 # Aspire Logs
 
-## Đọc log
+## Đọc tất cả log
 
 ```bash
+# Tất cả log từ mọi service (backend + frontend + database + etc.)
 aspire logs --format Json
+
+# Realtime stream toàn bộ log
+aspire logs --follow --format Json
 ```
-
-Nếu `aspire` not found:
-```bash
-dotnet tool install -g Aspire.Cli
-```
-
-## Output format
-
-JSON với các trường:
-- `resourceName` - tên service (webfrontend, webapi, etc.)
-- `content` - nội dung log
-- `isError` - true = lỗi
 
 ## Lọc nhanh
 
@@ -29,11 +21,8 @@ JSON với các trường:
 # Chỉ lỗi
 aspire logs --format Json 2>&1 | Select-Object -ExpandProperty logs | Where-Object { $_.isError }
 
-# Theo service
+# Theo service cụ thể
 aspire logs webfrontend --format Json
-
-# Realtime stream
-aspire logs --follow --format Json
 ```
 
 ## Cách đọc
