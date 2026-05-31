@@ -23,6 +23,7 @@ import { PaginatorModule, PaginatorState } from 'primeng/paginator';
 import {
   ApplicationDto,
   ApplicationsClient,
+  StepsClient,
   UpdateApplicationCommand,
 } from '../../../web-api-client';
 import { HttpClient } from '@angular/common/http';
@@ -64,6 +65,7 @@ export class ApplicationsComponent implements OnInit {
   private readonly dialogService = inject(DialogService);
   private readonly messageService = inject(MessageService);
   private readonly applicationService = inject(ApplicationsClient);
+  private readonly stepsClient = inject(StepsClient);
   private readonly http = inject(HttpClient);
   applications: ApplicationDto[] = [];
   isLoading = false;
@@ -72,17 +74,33 @@ export class ApplicationsComponent implements OnInit {
   pageNumber = 1;
   pageSize = 10;
   totalCount = 0;
+  currentStepId: string | undefined = undefined;
   readonly rowsPerPageOptions = [5, 10, 20, 50];
   private ref: DynamicDialogRef | null = null;
 
   ngOnInit(): void {
-    this.loadApplications();
+    this.loadDefaultStepId();
+  }
+
+  private loadDefaultStepId(): void {
+    this.stepsClient.getDefaultStepIdForUser().subscribe({
+      next: (stepId) => {
+        if (stepId && stepId !== '00000000-0000-0000-0000-000000000000') {
+          this.currentStepId = stepId;
+        }
+        this.loadApplications();
+      },
+      error: () => {
+        this.currentStepId = undefined;
+        this.loadApplications();
+      },
+    });
   }
 
   loadApplications(): void {
     this.isLoading = true;
     this.applicationService
-      .getApplications(this.pageNumber, this.pageSize, undefined, this.selectedStatus ?? undefined, this.searchTerm || undefined)
+      .getApplications(this.pageNumber, this.pageSize, this.currentStepId, this.selectedStatus ?? undefined, this.searchTerm || undefined)
       .subscribe({
         next: (result) => {
           this.applications = result?.items ?? [];

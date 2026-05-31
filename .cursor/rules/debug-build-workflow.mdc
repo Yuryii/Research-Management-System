@@ -1,0 +1,23 @@
+---
+description: Auto-build apphost and use aspire-logs-fix to find bugs in the project
+alwaysApply: true
+---
+
+# Debug & Build Workflow
+
+When asked to check for bugs or errors across the project:
+
+1. **Check terminal first** — before building, read terminal files in `terminals/` to see if a build is currently running. If yes, kill it with `taskkill /PID <pid> /F`.
+2. **Build & run AppHost** — run `dotnet run` in `src/AppHost/`. Wait for the Aspire dashboard to be ready.
+3. **Use Aspire logs skill** — read `c:\Users\dungl\Downloads\Carrer\Projects\CA-RMS\.cursor\skills\aspire-logs-fix\SKILL.md` and follow it to fetch and analyze all logs for errors across all services.
+4. **Kill the AppHost process when done** — after reporting findings:
+   - Kill all AppHost-related processes: `taskkill /IM RMS.AppHost.exe /F`
+   - Also kill any processes on Aspire ports (22040, 21225): `Get-NetTCPConnection -LocalPort 22040,21225 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess | ForEach-Object { taskkill /PID $_ /F }`
+   - Verify no AppHost is running: `Get-Process -Name "*AppHost*" -ErrorAction SilentlyContinue`
+
+Read logs from top to bottom. Each error block typically has:
+1. A line with `X [ERROR]` - error code
+2. A description line
+3. A `file:line:` line pointing to the source location
+
+Map `file:line` to the actual source file, read it, and fix the bug.

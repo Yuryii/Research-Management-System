@@ -6,6 +6,7 @@ using RMS.Application.Steps.Commands.DeleteStepDetail;
 using RMS.Application.Steps.Commands.UpdateStep;
 using RMS.Application.Steps.Commands.UpdateStepDetail;
 using RMS.Application.Steps.Dtos;
+using RMS.Application.Steps.Queries;
 using RMS.Application.Steps.Queries.GetStepAndStepDetail;
 
 namespace RMS.Web.Endpoints;
@@ -17,6 +18,7 @@ public class Steps : IEndpointGroup
         groupBuilder.RequireAuthorization();
 
         groupBuilder.MapGet(GetStepAndStepDetail);
+        groupBuilder.MapGet(GetDefaultStepIdForUser, "default-step-id");
         groupBuilder.MapPost(CreateStep);
         groupBuilder.MapPut(UpdateStep, "{id:guid}");
         groupBuilder.MapDelete(DeleteStep, "{id:guid}");
@@ -33,6 +35,15 @@ public class Steps : IEndpointGroup
         var result = await sender.Send(new GetStepAndStepDetailQuery());
 
         return TypedResults.Ok(result);
+    }
+
+    [EndpointSummary("Get default step ID for the current user")]
+    [EndpointDescription("Returns the default StepId based on the current user's role from DefaultStepIds configuration.")]
+    public static async Task<Ok<Guid>> GetDefaultStepIdForUser(ISender sender)
+    {
+        var stepId = await sender.Send(new GetDefaultStepIdForUserQuery());
+
+        return TypedResults.Ok(stepId);
     }
 
     [EndpointSummary("Create a Step")]

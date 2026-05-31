@@ -50,12 +50,12 @@ export class ApplicationApprovalComponent implements OnInit {
   private readonly applicationService = inject(ApplicationsClient);
   private readonly stepsClient = inject(StepsClient);
   private readonly authService = inject(AuthService);
-
   applications: ApplicationDto[] = [];
   isLoading = false;
   pageNumber = 1;
   pageSize = 10;
   totalCount = 0;
+  currentStepId: string | undefined = undefined;
   readonly rowsPerPageOptions = [5, 10, 20, 50];
 
   allStepDetails: StepDetailDto[] = [];
@@ -63,7 +63,22 @@ export class ApplicationApprovalComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadStepDetails();
-    this.loadApplications();
+    this.loadDefaultStepId();
+  }
+
+  private loadDefaultStepId(): void {
+    this.stepsClient.getDefaultStepIdForUser().subscribe({
+      next: (stepId) => {
+        if (stepId && stepId !== '00000000-0000-0000-0000-000000000000') {
+          this.currentStepId = stepId;
+        }
+        this.loadApplications();
+      },
+      error: () => {
+        this.currentStepId = undefined;
+        this.loadApplications();
+      },
+    });
   }
 
   private loadStepDetails(): void {
@@ -77,7 +92,7 @@ export class ApplicationApprovalComponent implements OnInit {
   loadApplications(): void {
     this.isLoading = true;
     this.applicationService
-      .getApplications(this.pageNumber, this.pageSize, undefined, undefined, undefined)
+      .getApplications(this.pageNumber, this.pageSize, this.currentStepId, undefined, undefined)
       .subscribe({
         next: (result) => {
           this.applications = result?.items ?? [];

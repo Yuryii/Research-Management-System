@@ -58,24 +58,21 @@ public class ApplicationDbContextInitialiser
     {
         try
         {
-            // See https://jasontaylor.dev/ef-core-database-initialisation-strategies
-            //if (_environment.IsDevelopment())
-            //{
-            //    await _context.Database.EnsureDeletedAsync();
-            //    await _context.Database.EnsureCreatedAsync();
-            //    return;
-            //}
+            if (_environment.IsDevelopment())
+            {
+                await _context.Database.EnsureDeletedAsync();
+                await _context.Database.EnsureCreatedAsync();
+            }
+            else if (_environment.IsStaging())
+            {
+                await _context.Database.MigrateAsync();
+            }
+            else
+            {
+                await _context.Database.EnsureCreatedAsync();
+            }
 
-            //if (_environment.IsStaging())
-            //{
-            //    await _context.Database.MigrateAsync();
-            //    return;
-            //}
-            await _context.Database.EnsureCreatedAsync();
-            _logger.LogInformation("Database schema ensured.");
-            return;
-
-            //_logger.LogInformation("Skipping database initialisation for {EnvironmentName} environment.", _environment.EnvironmentName);
+            _logger.LogInformation("Database schema ensured for {EnvironmentName}.", _environment.EnvironmentName);
         }
         catch (Exception ex)
         {
@@ -308,14 +305,20 @@ public class ApplicationDbContextInitialiser
             [Roles.KhcnHtqt] = [khcnHtqtStepId]
         };
 
+        _logger.LogInformation("RoleStepPermissions seed: Found {StepCount} step IDs across all roles", roleStepMappings.Values.SelectMany(v => v).Distinct().Count());
+
         var rolesByName = await _roleManager.Roles
             .Where(role => role.Name != null && roleStepMappings.Keys.Contains(role.Name))
             .ToDictionaryAsync(role => role.Name!);
+
+        _logger.LogInformation("RoleStepPermissions seed: Found {RoleCount} matching roles: {Roles}", rolesByName.Count, string.Join(", ", rolesByName.Keys));
 
         var allStepIds = roleStepMappings.Values.SelectMany(ids => ids).Distinct().ToList();
         var stepsById = await _context.Steps
             .Where(s => allStepIds.Contains(s.Id))
             .ToDictionaryAsync(s => s.Id);
+
+        _logger.LogInformation("RoleStepPermissions seed: Found {StepDbCount} steps in DB matching expected IDs (expected {StepExpectedCount})", stepsById.Count, allStepIds.Count);
 
         var roleStepPermissions = roleStepMappings
             .Where(mapping => rolesByName.ContainsKey(mapping.Key))
@@ -329,6 +332,8 @@ public class ApplicationDbContextInitialiser
                 }))
             .ToList();
 
+        _logger.LogInformation("RoleStepPermissions seed: Generated {Count} permission records to insert", roleStepPermissions.Count);
+
         foreach (var roleStepPermission in roleStepPermissions)
         {
             if (!_context.RoleStepPermissions.Any(existingPermission =>
@@ -339,7 +344,9 @@ public class ApplicationDbContextInitialiser
             }
         }
 
+        _logger.LogInformation("RoleStepPermissions seed: ChangeTracker has {Count} pending additions before SaveChanges", _context.ChangeTracker.Entries<RoleStepPermission>().Count(e => e.State == EntityState.Added));
         await _context.SaveChangesAsync();
+        _logger.LogInformation("RoleStepPermissions seed: SaveChanges completed. Total RoleStepPermissions in DB now: {Total}", await _context.RoleStepPermissions.CountAsync());
 
         if (!_context.Applications.Any())
         {
