@@ -104,6 +104,7 @@ public class Applications : IEndpointGroup
 
     [EndpointSummary("Return an Application")]
     [EndpointDescription("Returns an application to the return step, saves notification and files.")]
+    [Consumes("multipart/form-data")]
     public static async Task<Results<Ok<Guid>, BadRequest<string>>> ReturnApplication(
         ISender sender,
         [FromForm] ReturnApplicationCommand command,

@@ -2,6 +2,7 @@ using RMS.Application.Application.Dtos;
 using RMS.Application.Common.Exceptions;
 using RMS.Application.Common.Interfaces;
 using RMS.Application.Common.Models;
+using RMS.Domain.Constants;
 using RMS.Domain.Entities.Models;
 using DomainApplication = RMS.Domain.Entities.Models.Application;
 
@@ -59,6 +60,11 @@ public class GetApplicationsQueryHandler : IRequestHandler<GetApplicationsQuery,
             {
                 throw new ForbiddenAccessException("No step is available for the current user roles.");
             }
+        }
+
+        if (_user.Roles?.Contains(Roles.Teacher) == true)
+        {
+            query = query.Where(x => x.CreatedBy == _user.Id);
         }
         // Get my attachments for current step
         var currentStepAttachments = await _context.ApplicationFiles
@@ -135,6 +141,11 @@ public class GetApplicationsQueryHandler : IRequestHandler<GetApplicationsQuery,
             if (currentStepAttachmentsByApplication.TryGetValue(item.Id, out var currentFiles))
             {
                 item.MyApplications.AddRange(currentFiles);
+            }
+
+            if (_user.Roles?.Contains(Roles.Teacher) == true && !string.IsNullOrEmpty(item.CreatedBy))
+            {
+                item.TeacherName = await _identityService.GetUserNameAsync(item.CreatedBy);
             }
         }
 

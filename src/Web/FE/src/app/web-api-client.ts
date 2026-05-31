@@ -313,7 +313,7 @@ export interface IApplicationsClient {
      * @param files (optional) 
      * @return OK
      */
-    returnApplication(applicationId: string | undefined, title: string | undefined, description: string | undefined, files: string[] | undefined): Observable<string>;
+    returnApplication(applicationId: string | undefined, title: string | undefined, description: string | undefined, files: FileParameter[] | undefined): Observable<string>;
 }
 
 @Injectable({
@@ -786,35 +786,33 @@ export class ApplicationsClient implements IApplicationsClient {
      * @param files (optional) 
      * @return OK
      */
-    returnApplication(applicationId: string | undefined, title: string | undefined, description: string | undefined, files: string[] | undefined): Observable<string> {
+    returnApplication(applicationId: string | undefined, title: string | undefined, description: string | undefined, files: FileParameter[] | undefined): Observable<string> {
         let url_ = this.baseUrl + "/api/Applications/ReturnApplication";
         url_ = url_.replace(/[?&]$/, "");
 
-        let content_ = "";
-        if (applicationId === null)
+        const content_ = new FormData();
+        if (applicationId === null || applicationId === undefined)
             throw new globalThis.Error("The parameter 'applicationId' cannot be null.");
-        else if (applicationId !== undefined)
-            content_ += encodeURIComponent("applicationId") + "=" + encodeURIComponent("" + applicationId) + "&";
-        if (title === null)
+        else
+            content_.append("applicationId", applicationId.toString());
+        if (title === null || title === undefined)
             throw new globalThis.Error("The parameter 'title' cannot be null.");
-        else if (title !== undefined)
-            content_ += encodeURIComponent("title") + "=" + encodeURIComponent("" + title) + "&";
-        if (description === null)
+        else
+            content_.append("title", title.toString());
+        if (description === null || description === undefined)
             throw new globalThis.Error("The parameter 'description' cannot be null.");
-        else if (description !== undefined)
-            content_ += encodeURIComponent("description") + "=" + encodeURIComponent("" + description) + "&";
-        if (files === null)
+        else
+            content_.append("description", description.toString());
+        if (files === null || files === undefined)
             throw new globalThis.Error("The parameter 'files' cannot be null.");
-        else if (files !== undefined)
-            files && files.forEach(item => { content_ += encodeURIComponent("files") + "=" + encodeURIComponent("" + item) + "&"; });
-        content_ = content_.replace(/&$/, "");
+        else
+            files.forEach(item_ => content_.append("files", item_.data, item_.fileName ? item_.fileName : "files") );
 
         let options_ : any = {
             body: content_,
             observe: "response",
             responseType: "blob",
             headers: new HttpHeaders({
-                "Content-Type": "multipart/form-data",
                 "Accept": "application/json"
             })
         };
@@ -2243,8 +2241,10 @@ export class ApplicationDto implements IApplicationDto {
     status!: number;
     stepDetailId!: string;
     stepDetailName!: string;
+    createdBy?: string | undefined;
     myApplications?: FileDto[];
     preAttachments?: FileDto[];
+    teacherName?: string | undefined;
 
     [key: string]: any;
 
@@ -2270,6 +2270,7 @@ export class ApplicationDto implements IApplicationDto {
             this.status = _data["status"];
             this.stepDetailId = _data["stepDetailId"];
             this.stepDetailName = _data["stepDetailName"];
+            this.createdBy = _data["createdBy"];
             if (Array.isArray(_data["myApplications"])) {
                 this.myApplications = [] as any;
                 for (let item of _data["myApplications"])
@@ -2280,6 +2281,7 @@ export class ApplicationDto implements IApplicationDto {
                 for (let item of _data["preAttachments"])
                     this.preAttachments!.push(FileDto.fromJS(item));
             }
+            this.teacherName = _data["teacherName"];
         }
     }
 
@@ -2303,6 +2305,7 @@ export class ApplicationDto implements IApplicationDto {
         data["status"] = this.status;
         data["stepDetailId"] = this.stepDetailId;
         data["stepDetailName"] = this.stepDetailName;
+        data["createdBy"] = this.createdBy;
         if (Array.isArray(this.myApplications)) {
             data["myApplications"] = [];
             for (let item of this.myApplications)
@@ -2313,6 +2316,7 @@ export class ApplicationDto implements IApplicationDto {
             for (let item of this.preAttachments)
                 data["preAttachments"].push(item ? item.toJSON() : undefined as any);
         }
+        data["teacherName"] = this.teacherName;
         return data;
     }
 }
@@ -2325,8 +2329,10 @@ export interface IApplicationDto {
     status: number;
     stepDetailId: string;
     stepDetailName: string;
+    createdBy?: string | undefined;
     myApplications?: FileDto[];
     preAttachments?: FileDto[];
+    teacherName?: string | undefined;
 
     [key: string]: any;
 }

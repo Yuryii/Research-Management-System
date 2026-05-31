@@ -14,15 +14,20 @@ public record ApplicationDto
     public required ApplicationStatus Status { get; init; }
     public required Guid StepDetailId { get; init; }
     public required string StepDetailName { get; set; }
+    public string? CreatedBy { get; init; }
     public List<FileDto> MyApplications { get; set; } = new List<FileDto>();
     public List<FileDto> PreAttachments { get; set; } = new List<FileDto>();
+    public string? TeacherName { get; set; }
 
     private class Mapping : Profile
     {
         public Mapping()
         {
             CreateMap<DomainApplication, ApplicationDto>()
-                .ForMember(dest => dest.StepDetailName, opt => opt.MapFrom(src => src.StepDetail.Name));
+                .ForMember(dest => dest.StepDetailName, opt => opt.MapFrom(src => src.StepDetail.Name))
+                .ForMember(dest => dest.TeacherName, opt => opt.Ignore())
+                .ForMember(dest => dest.MyApplications, opt => opt.Ignore())
+                .ForMember(dest => dest.PreAttachments, opt => opt.Ignore());
             CreateMap<DomainFile, FileDto>();
         }
     }
