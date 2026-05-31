@@ -1,0 +1,89 @@
+<p-toast></p-toast>
+<table [striped]="true" cTable>
+  <thead>
+    <tr>
+      <th scope="col">STT</th>
+      <th scope="col">Tiêu Đề</th>
+      <th scope="col">Nội dung</th>
+      <th scope="col">Tài liệu bước trước</th>
+      <th scope="col">Tài liệu của tôi</th>
+      <th scope="col">Giáo viên</th>
+      <th scope="col">Trạng thái</th>
+      <th scope="col">Hành động</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngIf="isLoading">
+      <td colspan="8" class="text-center py-4">Đang tải dữ liệu...</td>
+    </tr>
+    <tr *ngIf="!isLoading && applications.length === 0">
+      <td colspan="8" class="text-center py-4">Chưa có hồ sơ nào.</td>
+    </tr>
+    <tr *ngFor="let application of applications; let index = index">
+      <th scope="row">{{ (pageNumber - 1) * pageSize + index + 1 }}</th>
+      <td>{{ application.title }}</td>
+      <td>{{ application.description }}</td>
+      <td>
+        <c-badge
+          *ngIf="(application.preAttachments?.length ?? 0) > 0"
+          color="secondary"
+        >
+          {{ application.preAttachments?.length }}
+        </c-badge>
+        <span *ngIf="(application.preAttachments?.length ?? 0) === 0" class="text-muted">-</span>
+      </td>
+      <td>
+        <c-badge
+          *ngIf="(application.myApplications?.length ?? 0) > 0"
+          color="primary"
+        >
+          {{ application.myApplications?.length }}
+        </c-badge>
+        <span *ngIf="(application.myApplications?.length ?? 0) === 0" class="text-muted">-</span>
+      </td>
+      <td>{{ application.teacherName || '-' }}</td>
+      <td>
+        <select
+          cSelect
+          class="step-select"
+          [value]="application.stepDetailId"
+          (change)="onStepDetailChange(application.id, $any($event.target).value)"
+        >
+          <option *ngFor="let sd of allStepDetails" [value]="sd.id">
+            {{ sd.name }}
+          </option>
+        </select>
+      </td>
+      <td>
+        <button
+          cButton
+          color="success"
+          size="sm"
+          class="me-1"
+          (click)="onForward(application.id)"
+        >
+          Chuyển tiếp
+        </button>
+        <button
+          cButton
+          color="danger"
+          size="sm"
+          (click)="openReturnModal(application.id)"
+        >
+          Trả hồ sơ
+        </button>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<div class="pagination-wrapper">
+  <p-paginator
+    [first]="(pageNumber - 1) * pageSize"
+    [rows]="pageSize"
+    [totalRecords]="totalCount"
+    [rowsPerPageOptions]="rowsPerPageOptions"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="Trang {currentPage} / {totalPages}"
+    (onPageChange)="onPageChange($event)"
+  ></p-paginator>
+</div>

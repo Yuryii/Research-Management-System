@@ -11,7 +11,7 @@ export const navItems: NavItem[] = [
       color: 'info',
       text: 'NEW',
     },
-    roles: ['Admin', 'Teacher', 'Tttv', 'Dvqltt', 'KhcnHtqt'],
+    roles: ['Administrator', 'Teacher', 'Tttv', 'Dvqltt', 'KhcnHtqt'],
   },
   {
     title: true,
@@ -36,13 +36,19 @@ export const navItems: NavItem[] = [
     name: 'Quản lý hồ sơ & quy trình',
     url: '/workflow',
     iconComponent: { name: 'cil-calculator' },
-    roles: ['Admin', 'Teacher'],
+    roles: ['Administrator', 'Teacher', 'Tttv', 'Dvqltt', 'KhcnHtqt'],
     children: [
       {
         name: 'Hồ sơ',
         url: '/workflow/applications',
         icon: 'nav-icon-bullet',
-        roles: ['Admin', 'Teacher'],
+        roles: ['Administrator', 'Teacher', 'Tttv', 'Dvqltt', 'KhcnHtqt'],
+      },
+      {
+        name: 'Duyệt hồ sơ',
+        url: '/workflow/application-approval',
+        icon: 'nav-icon-bullet',
+        roles: ['Administrator', 'Tttv', 'Dvqltt', 'KhcnHtqt'],
       },
     ],
   },
@@ -403,7 +409,7 @@ export const navItems: NavItem[] = [
       color: 'info',
       text: 'NEW',
     },
-    roles: ['User', 'Admin'],
+    roles: ['Administrator'],
   },
   {
     title: true,

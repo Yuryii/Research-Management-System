@@ -23,7 +23,19 @@ export const routes: Routes = [
         canActivate: [AuthGuard],
         data: {
           title: 'Hồ sơ',
-          roles: [Roles.Administrator, Roles.Teacher],
+          roles: [Roles.Administrator, Roles.Teacher, Roles.Tttv, Roles.Dvqltt, Roles.KhcnHtqt],
+        },
+      },
+      {
+        path: 'application-approval',
+        loadComponent: () =>
+          import('./application-approval/application-approval.component').then(
+            (m) => m.ApplicationApprovalComponent,
+          ),
+        canActivate: [AuthGuard],
+        data: {
+          title: 'Duyệt hồ sơ',
+          roles: [Roles.Administrator, Roles.Tttv, Roles.Dvqltt, Roles.KhcnHtqt],
         },
       },
     ],

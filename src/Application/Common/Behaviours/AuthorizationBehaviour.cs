@@ -42,7 +42,7 @@ public class AuthorizationBehaviour<TRequest, TResponse> : IPipelineBehavior<TRe
                 {
                     foreach (var role in roles)
                     {
-                        var isInRole = _user.Roles?.Any(x => role == x) ?? false;
+                        var isInRole = _user.Roles?.Any(x => role.Trim() == x) ?? false;
                         if (isInRole)
                         {
                             authorized = true;
