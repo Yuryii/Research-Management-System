@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using RMS.Application.Common.Interfaces;
+using RMS.Application.Common.Options;
 using RMS.Domain.Interfaces;
 using RMS.Infrastructure.Data;
 using RMS.Infrastructure.Data.Interceptors;
@@ -73,5 +74,7 @@ public static class DependencyInjection
 
         builder.Services.AddScoped<ICodeGeneratorService, CodeGeneratorService>();
         builder.Services.AddScoped<IStepResolver, StepResolver>();
+
+        builder.Services.Configure<DefaultStepIdsOptions>(builder.Configuration.GetSection(DefaultStepIdsOptions.SectionName));
     }
 }

@@ -15,14 +15,16 @@ public class CreateApplicationCommandHandler : IRequestHandler<CreateApplication
     private readonly ICodeGeneratorService _codeGeneratorService;
     private readonly IStepResolver _stepResolver;
     private readonly ISender _sender;
+    private readonly IUser _user;
         
-    public CreateApplicationCommandHandler(IApplicationDbContext context, IFileService fileService, ICodeGeneratorService codeGeneratorService, IStepResolver stepResolver, ISender sender)
+    public CreateApplicationCommandHandler(IApplicationDbContext context, IFileService fileService, ICodeGeneratorService codeGeneratorService, IStepResolver stepResolver, ISender sender, IUser user)
     {
         _context = context;
         _fileService = fileService;
         _codeGeneratorService = codeGeneratorService;
         _stepResolver = stepResolver;
         _sender = sender;
+        _user = user;
     }
 
     public async Task<Guid> Handle(CreateApplicationCommand request, CancellationToken cancellationToken)
@@ -44,7 +46,8 @@ public class CreateApplicationCommandHandler : IRequestHandler<CreateApplication
             Title = request.Title,
             Description = request.Description,
             Status = request.Status,
-            StepDetailId = firstStepDetailId
+            StepDetailId = firstStepDetailId,
+            CreatedBy = _user.Id
         };
 
         _context.Applications.Add(application);

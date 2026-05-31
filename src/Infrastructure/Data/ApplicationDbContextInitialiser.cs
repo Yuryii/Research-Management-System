@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using RMS.Application.Common.Options;
 using RMS.Domain.Constants;
 using RMS.Domain.Entities;
 using RMS.Domain.Entities.Models;
@@ -34,14 +36,22 @@ public class ApplicationDbContextInitialiser
     private readonly IWebHostEnvironment _environment;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<ApplicationRole> _roleManager;
+    private readonly DefaultStepIdsOptions _stepIds;
 
-    public ApplicationDbContextInitialiser(ILogger<ApplicationDbContextInitialiser> logger, ApplicationDbContext context, IWebHostEnvironment environment, UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager)
+    public ApplicationDbContextInitialiser(
+        ILogger<ApplicationDbContextInitialiser> logger,
+        ApplicationDbContext context,
+        IWebHostEnvironment environment,
+        UserManager<ApplicationUser> userManager,
+        RoleManager<ApplicationRole> roleManager,
+        IOptions<DefaultStepIdsOptions> stepIds)
     {
         _logger = logger;
         _context = context;
         _environment = environment;
         _userManager = userManager;
         _roleManager = roleManager;
+        _stepIds = stepIds.Value;
     }
 
     public async Task InitialiseAsync()
@@ -61,8 +71,8 @@ public class ApplicationDbContextInitialiser
             //    await _context.Database.MigrateAsync();
             //    return;
             //}
-            await _context.Database.EnsureDeletedAsync();
             await _context.Database.EnsureCreatedAsync();
+            _logger.LogInformation("Database schema ensured.");
             return;
 
             //_logger.LogInformation("Skipping database initialisation for {EnvironmentName} environment.", _environment.EnvironmentName);
@@ -107,12 +117,12 @@ public class ApplicationDbContextInitialiser
             });
         }
         // Defauld Steps
-        var teacherInitialStepId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
-        var dvqlttInitialStepId = Guid.Parse("11111111-1111-1111-1111-111111111111");
-        var tttvStepId = Guid.Parse("22222222-2222-2222-2222-222222222222");
-        var dvqlttReviewStepId = Guid.Parse("33333333-3333-3333-3333-333333333333");
-        var khcnHtqtStepId = Guid.Parse("44444444-4444-4444-4444-444444444444");
-        var returnedStepId = Guid.Parse("55555555-5555-5555-5555-555555555555");
+        var teacherInitialStepId = _stepIds.TeacherStepId;
+        var dvqlttInitialStepId = _stepIds.DvqlttStepId;
+        var tttvStepId = _stepIds.TttvStepId;
+        var dvqlttReviewStepId = _stepIds.DvqlttReviewStepId;
+        var khcnHtqtStepId = _stepIds.KhcnHtqtStepId;
+        var returnedStepId = _stepIds.ReturnedStepId;
 
         if (!_context.Steps.Any())
         {
@@ -302,13 +312,20 @@ public class ApplicationDbContextInitialiser
             .Where(role => role.Name != null && roleStepMappings.Keys.Contains(role.Name))
             .ToDictionaryAsync(role => role.Name!);
 
+        var allStepIds = roleStepMappings.Values.SelectMany(ids => ids).Distinct().ToList();
+        var stepsById = await _context.Steps
+            .Where(s => allStepIds.Contains(s.Id))
+            .ToDictionaryAsync(s => s.Id);
+
         var roleStepPermissions = roleStepMappings
             .Where(mapping => rolesByName.ContainsKey(mapping.Key))
             .SelectMany(mapping => mapping.Value
+                .Where(stepId => stepsById.ContainsKey(stepId))
                 .Select(stepId => new RoleStepPermission
                 {
                     RoleId = rolesByName[mapping.Key].Id,
-                    StepId = stepId
+                    StepId = stepId,
+                    Step = stepsById[stepId]
                 }))
             .ToList();
 
@@ -422,25 +439,28 @@ public class ApplicationDbContextInitialiser
             _context.Files.AddRange(files);
             await _context.SaveChangesAsync();
 
+            var dvqlttStepIdForFile = _context.Steps.Where(s => s.Order == 1).Select(s => s.Id).First();
+            var tttvStepIdForFile = _context.Steps.Where(s => s.Order == 2).Select(s => s.Id).First();
+
             var applicationFiles = new List<ApplicationFile>
             {
                 new()
                 {
                     ApplicationId = tttvApplicationId,
                     FileId = files[0].Id,
-                    StepId = dvqlttInitialStepId
+                    StepId = dvqlttStepIdForFile
                 },
                 new()
                 {
                     ApplicationId = tttvApplicationId,
                     FileId = files[1].Id,
-                    StepId = tttvStepId
+                    StepId = tttvStepIdForFile
                 },
                 new()
                 {
                     ApplicationId = dvqlttApplicationId,
                     FileId = files[2].Id,
-                    StepId = dvqlttInitialStepId
+                    StepId = dvqlttStepIdForFile
                 }
             };
 
