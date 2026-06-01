@@ -5,7 +5,11 @@ import { FileUploadModule } from 'primeng/fileupload';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import {
+  BadgeComponent,
   ButtonDirective,
+  FormControlDirective,
+  FormSelectDirective,
+  TableDirective,
 } from '@coreui/angular';
 import {
   DynamicDialogModule,
@@ -53,7 +57,10 @@ export interface ApplicationFormData {
   imports: [
     CommonModule,
     FormsModule,
+    TableDirective,
     ButtonDirective,
+    FormSelectDirective,
+    FormControlDirective,
     FileUploadModule,
     ToastModule,
     DynamicDialogModule,
@@ -86,6 +93,7 @@ export class ApplicationApprovalComponent implements OnInit {
 
   userStepDetails: StepDetailWithStepName[] = [];
   activeTabIndex = 0;
+  searchTerm = '';
 
   private ref: DynamicDialogRef | null = null;
 
@@ -123,7 +131,7 @@ export class ApplicationApprovalComponent implements OnInit {
   loadApplications(): void {
     this.isLoading = true;
     this.applicationService
-      .getApplications(this.pageNumber, this.pageSize, this.currentStepDetailId, undefined, undefined)
+      .getApplications(this.pageNumber, this.pageSize, this.currentStepDetailId, undefined, this.searchTerm || undefined)
       .subscribe({
         next: (result) => {
           this.applications = result?.items ?? [];
@@ -147,6 +155,11 @@ export class ApplicationApprovalComponent implements OnInit {
     if (nextPageNumber === this.pageNumber && nextPageSize === this.pageSize) return;
     this.pageNumber = nextPageNumber;
     this.pageSize = nextPageSize;
+    this.loadApplications();
+  }
+
+  onSearch(): void {
+    this.pageNumber = 1;
     this.loadApplications();
   }
 
@@ -198,7 +211,13 @@ export class ApplicationApprovalComponent implements OnInit {
       closable: true,
       draggable: false,
       dismissableMask: true,
-      data: { stepDetailId: application.stepDetailId },
+      data: { stepDetailId: application.stepDetailId, applicationId: application.id },
+    });
+
+    this.ref?.onClose.subscribe((result: any) => {
+      if (result?.updated) {
+        this.loadApplications();
+      }
     });
   }
 

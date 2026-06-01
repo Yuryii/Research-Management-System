@@ -1,4 +1,21 @@
 <p-toast></p-toast>
+<div>
+  <form cForm class="header-filter" (ngSubmit)="onSearch()">
+    <div>
+      <div class="search-box">
+        <i class="pi pi-search search-input"></i>
+        <input
+          cFormControl
+          placeholder="Nhập tiêu đề, nội dung"
+          type="text"
+          [(ngModel)]="searchTerm"
+          name="searchTerm"
+        />
+      </div>
+    </div>
+    <button cButton type="submit">Tìm kiếm</button>
+  </form>
+</div>
 <p-tabs [(value)]="activeTabIndex" (valueChange)="onTabChange($event)">
   <p-tablist>
     <p-tab *ngFor="let stepDetail of userStepDetails; let i = index" [value]="i">
