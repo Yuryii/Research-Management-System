@@ -8,21 +8,6 @@ table tbody tr td button {
   cursor: auto;
 }
 
-.file-icon-wrapper {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px;
-  c-icon {
-    width: 28px;
-    height: 28px;
-  }
-  c-badge {
-    font-size: 0.6em;
-    transform: translate(-75%, -10%) !important;
-  }
-}
-
 table tbody tr td .step-detail-link {
   cursor: pointer;
   color: var(--cui-primary);
@@ -31,6 +16,10 @@ table tbody tr td .step-detail-link {
 
 table tbody tr td .step-detail-link:hover {
   opacity: 0.8;
+}
+
+.min-w-120 {
+  min-width: 120px;
 }
 
 table thead tr th {

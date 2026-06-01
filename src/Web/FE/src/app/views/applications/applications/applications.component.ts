@@ -19,6 +19,7 @@ import {
 import { IconComponent } from '@coreui/icons-angular';
 import { ApplicationModalComponent } from './application-modal/application-modal.component';
 import { StepFlowModalComponent } from '../step-flow-modal/step-flow-modal.component';
+import { DocumentCountBadgeComponent } from '../../../shared/components/document-count-badge/document-count-badge.component';
 import { PaginatorModule, PaginatorState } from 'primeng/paginator';
 import {
   ApplicationDto,
@@ -47,15 +48,13 @@ export interface ApplicationFormData {
     FormsModule,
     TableDirective,
     ButtonDirective,
-    IconComponent,
-    BadgeComponent,
-    ButtonDirective,
     FormSelectDirective,
     FormControlDirective,
     FileUploadModule,
     ToastModule,
     DynamicDialogModule,
     PaginatorModule,
+    DocumentCountBadgeComponent,
   ],
   providers: [MessageService, DialogService],
   templateUrl: './applications.component.html',

@@ -48,7 +48,7 @@
 
       <!-- Tài liệu của tôi -->
       <div *ngIf="myApplicationFiles.length > 0" class="d-flex flex-column gap-2 mt-2">
-        <div class="fw-semibold text-secondary small">Tài liệu của tôi</div>
+        <div class="fw-semibold text-secondary small">Tài liệu gửi</div>
         <div
           *ngFor="let file of myApplicationFiles; let i = index"
           class="card clickable-card"
@@ -80,9 +80,9 @@
         </div>
       </div>
 
-      <!-- Tài liệu được gửi -->
+      <!-- Tài liệu được nhận -->
       <div *ngIf="preAttachmentFiles.length > 0" class="d-flex flex-column gap-2 mt-2">
-        <div class="fw-semibold text-secondary small">Tài liệu được gửi</div>
+        <div class="fw-semibold text-secondary small">Tài liệu được nhận</div>
         <div
           *ngFor="let file of preAttachmentFiles; let i = index"
           class="card clickable-card"

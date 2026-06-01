@@ -40,12 +40,12 @@
 <table [striped]="true" cTable>
   <thead>
     <tr>
-      <th scope="col">STT</th>
-      <th scope="col">Tiêu Đề</th>
-      <th scope="col">Nội dung</th>
-      <th scope="col">Tài liệu</th>
-      <th scope="col">Bước Xử Lý</th>
-      <th scope="col">Trang thái</th>
+      <th class="min-w-120" scope="col">STT</th>
+      <th class="min-w-120" scope="col">Tiêu Đề</th>
+      <th class="min-w-120" scope="col">Nội dung</th>
+      <th class="min-w-120" scope="col">Tài liệu</th>
+      <th class="min-w-120" scope="col">Bước Xử Lý</th>
+      <th class="min-w-120" scope="col">Trang thái</th>
     </tr>
   </thead>
   <tbody>
@@ -66,24 +66,7 @@
       <td>{{ application.title }}</td>
       <td>{{ application.description }}</td>
       <td>
-        <div class="file-icon-wrapper position-relative m-1">
-          <c-icon name="cil-file" size="xl"></c-icon>
-          <c-badge
-            *ngIf="
-              (application.myApplications?.length || 0) +
-                (application.preAttachments?.length || 0) >
-              0
-            "
-            color="danger"
-            position="top-end"
-            shape="rounded-pill"
-          >
-            {{
-              (application.myApplications?.length || 0) +
-                (application.preAttachments?.length || 0)
-            }}
-          </c-badge>
-        </div>
+        <app-document-count-badge [count]="(application.myApplications?.length || 0) + (application.preAttachments?.length || 0)"></app-document-count-badge>
       </td>
       <td>
         <span
