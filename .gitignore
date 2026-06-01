@@ -490,3 +490,18 @@ $RECYCLE.BIN/
 *.db
 *.db-shm
 *.db-wal
+
+# Cursor IDE
+.cursor/plans/
+.cursor/mcp.json
+
+# Local build artifacts (CV/resume)
+build cv/
+"build cv/"
+
+# Uploaded files
+src/Web/Upload/
+src/Web/UploadApplication/
+
+# MCP scripts
+scripts/
