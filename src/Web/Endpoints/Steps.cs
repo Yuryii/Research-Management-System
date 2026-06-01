@@ -7,6 +7,7 @@ using RMS.Application.Steps.Commands.UpdateStep;
 using RMS.Application.Steps.Commands.UpdateStepDetail;
 using RMS.Application.Steps.Dtos;
 using RMS.Application.Steps.Queries;
+using RMS.Application.Steps.Queries.GetMySteps;
 using RMS.Application.Steps.Queries.GetStepAndStepDetail;
 
 namespace RMS.Web.Endpoints;
@@ -17,6 +18,7 @@ public class Steps : IEndpointGroup
     {
         groupBuilder.RequireAuthorization();
 
+        groupBuilder.MapGet(GetMySteps, "my-steps");
         groupBuilder.MapGet(GetStepAndStepDetail);
         groupBuilder.MapGet(GetDefaultStepIdForUser, "default-step-id");
         groupBuilder.MapPost(CreateStep);
@@ -44,6 +46,15 @@ public class Steps : IEndpointGroup
         var stepId = await sender.Send(new GetDefaultStepIdForUserQuery());
 
         return TypedResults.Ok(stepId);
+    }
+
+    [EndpointSummary("Get all steps accessible to the current user")]
+    [EndpointDescription("Returns all steps that the current user can access based on their role permissions, sorted by step order.")]
+    public static async Task<Ok<IList<StepDto>>> GetMySteps(ISender sender)
+    {
+        var result = await sender.Send(new GetMyStepsQuery());
+
+        return TypedResults.Ok(result);
     }
 
     [EndpointSummary("Create a Step")]
