@@ -1,0 +1,7 @@
+<div class="file-icon-wrapper position-relative" *ngIf="count > 0">
+  <c-icon name="cil-file" size="xl"></c-icon>
+  <c-badge color="danger" position="top-end" shape="rounded-pill">
+    {{ count }}
+  </c-badge>
+</div>
+<span *ngIf="count === 0" class="text-muted">-</span>
