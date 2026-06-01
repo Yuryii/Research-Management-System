@@ -1,7 +1,7 @@
 using RMS.Application.Application.Dtos;
-using RMS.Application.Common.Exceptions;
 using RMS.Application.Common.Interfaces;
 using RMS.Application.Common.Models;
+using RMS.Application.Common.Extensions;
 using RMS.Domain.Constants;
 using RMS.Domain.Entities.Models;
 using DomainApplication = RMS.Domain.Entities.Models.Application;
@@ -14,13 +14,20 @@ public class GetApplicationsQueryHandler : IRequestHandler<GetApplicationsQuery,
     private readonly IMapper _mapper;
     private readonly IUser _user;
     private readonly IIdentityService _identityService;
+    private readonly IApplicationQueryService _queryService;
 
-    public GetApplicationsQueryHandler(IApplicationDbContext context, IMapper mapper, IUser user, IIdentityService identityService)
+    public GetApplicationsQueryHandler(
+        IApplicationDbContext context,
+        IMapper mapper,
+        IUser user,
+        IIdentityService identityService,
+        IApplicationQueryService queryService)
     {
         _context = context;
         _mapper = mapper;
         _user = user;
         _identityService = identityService;
+        _queryService = queryService;
     }
 
     public async Task<PaginatedResult<ApplicationDto>> Handle(GetApplicationsQuery request, CancellationToken cancellationToken)
@@ -40,113 +47,38 @@ public class GetApplicationsQueryHandler : IRequestHandler<GetApplicationsQuery,
                 x.Description.ToLower().Contains(searchLower));
         }
 
-        var stepId = request.StepId ?? Guid.Empty;
+        bool isTeacher = _user.Roles?.Contains(Roles.Teacher) == true && !string.IsNullOrEmpty(_user.Id);
 
-        if (stepId == Guid.Empty)
+        var stepContext = await _queryService.ResolveStepContextAsync(
+            _user.Roles ?? new List<string>(),
+            request.StepDetailId,
+            cancellationToken);
+
+        // Teacher: lấy tất cả applications của mình, không filter theo StepDetailId
+        // Non-teacher: filter theo StepDetailId như bình thường
+        if (!isTeacher)
         {
-            if (_user.Roles is null || _user.Roles.Count == 0)
-            {
-                throw new ForbiddenAccessException("User does not have any roles assigned.");
-            }
-
-            var roleIds = await _identityService.GetRoleIdsAsync(_user.Roles, cancellationToken);
-            stepId = await _context.RoleStepPermissions
-                .Where(x => roleIds.Contains(x.RoleId))
-                .OrderBy(x => x.Step.Order)
-                .Select(x => x.StepId)
-                .FirstOrDefaultAsync(cancellationToken);
-
-            if (stepId == Guid.Empty)
-            {
-                throw new ForbiddenAccessException("No step is available for the current user roles.");
-            }
+            query = query.Where(x => x.StepDetailId == stepContext.StepDetailId);
         }
 
-        if (_user.Roles?.Contains(Roles.Teacher) == true)
+        if (isTeacher)
         {
             query = query.Where(x => x.CreatedBy == _user.Id);
         }
-        // Get my attachments for current step
-        var currentStepAttachments = await _context.ApplicationFiles
-            .Where(x => x.StepId == stepId)
-            .Select(x => new
-            {
-                x.ApplicationId,
-                File = new FileDto
-                {
-                    Id = x.File.Id,
-                    Name = x.File.Name,
-                    Path = x.File.Path,
-                    ContentType = x.File.ContentType,
-                    Length = x.File.Length
-                }
-            })
-            .ToListAsync(cancellationToken);
 
-        var currentStepAttachmentsByApplication = currentStepAttachments
-            .GroupBy(x => x.ApplicationId)
-            .ToDictionary(g => g.Key, g => g.Select(x => x.File).ToList());
-
-        // Get attachments for the previous step
-        var stepOrder = await _context.StepDetails
-            .Where(x => x.StepId == stepId).Select(x => x.Step.Order).FirstOrDefaultAsync(cancellationToken);
-
-        var preStep = await _context.Steps
-            .Where(x => x.Order == stepOrder - 1).FirstOrDefaultAsync(cancellationToken);
-
-        Dictionary<Guid, List<FileDto>> preStepAttachmentsByApplication = new();
-
-        if (preStep is not null)
-        {
-            var preStepAttachments = await _context.ApplicationFiles
-                .Where(x => x.StepId == preStep.Id)
-                .Select(x => new
-                {
-                    x.ApplicationId,
-                    File = new FileDto
-                    {
-                        Id = x.File.Id,
-                        Name = x.File.Name,
-                        Path = x.File.Path,
-                        ContentType = x.File.ContentType,
-                        Length = x.File.Length
-                    }
-                })
-                .ToListAsync(cancellationToken);
-
-            preStepAttachmentsByApplication = preStepAttachments
-                .GroupBy(x => x.ApplicationId)
-                .ToDictionary(g => g.Key, g => g.Select(x => x.File).ToList());
-        }
-
-        var totalCount = await query.CountAsync(cancellationToken);
-
-        var items = await query
-            .OrderBy(x => x.Id)
-            .Skip((request.PageNumber - 1) * request.PageSize)
-            .Take(request.PageSize)
-            .AsNoTracking()
-            .ProjectTo<ApplicationDto>(_mapper.ConfigurationProvider)
-            .ToListAsync(cancellationToken);
-
-        var result = new PaginatedResult<ApplicationDto>(items, totalCount, request.PageNumber, request.PageSize);
+        var result = await query.ToPaginatedResultAsync<DomainApplication, ApplicationDto, Guid>(
+            request, x => x.Id, _mapper.ConfigurationProvider, cancellationToken);
 
         foreach (var item in result.Items)
         {
-            if (preStepAttachmentsByApplication.TryGetValue(item.Id, out var preFiles))
-            {
+            if (stepContext.PreviousStepAttachments.TryGetValue(item.Id, out var preFiles))
                 item.PreAttachments.AddRange(preFiles);
-            }
 
-            if (currentStepAttachmentsByApplication.TryGetValue(item.Id, out var currentFiles))
-            {
+            if (stepContext.CurrentStepAttachments.TryGetValue(item.Id, out var currentFiles))
                 item.MyApplications.AddRange(currentFiles);
-            }
 
-            if (_user.Roles?.Contains(Roles.Teacher) == true && !string.IsNullOrEmpty(item.CreatedBy))
-            {
-                item.TeacherName = await _identityService.GetUserNameAsync(item.CreatedBy);
-            }
+            if (!string.IsNullOrEmpty(item.CreatedBy))
+                item.TeacherName = await _identityService.GetFullNameAsync(item.CreatedBy);
         }
 
         return result;
