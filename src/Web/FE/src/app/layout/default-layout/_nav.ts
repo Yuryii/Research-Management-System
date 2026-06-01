@@ -1,4 +1,5 @@
 import { INavData } from '@coreui/angular';
+import { Roles } from '../../../api-authorization/Roles';
 
 export type NavItem = INavData & { roles?: string[]; children?: NavItem[] };
 
@@ -42,7 +43,7 @@ export const navItems: NavItem[] = [
         name: 'Hồ sơ',
         url: '/workflow/applications',
         icon: 'nav-icon-bullet',
-        roles: ['Administrator', 'Teacher', 'Tttv', 'Dvqltt', 'KhcnHtqt'],
+        roles: [Roles.Teacher],
       },
       {
         name: 'Duyệt hồ sơ',
