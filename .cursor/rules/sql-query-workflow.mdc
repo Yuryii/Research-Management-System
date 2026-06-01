@@ -1,0 +1,12 @@
+---
+description: Query database using sqlcmd
+alwaysApply: true
+---
+
+# SQL Query Rule
+
+When asked about data, database contents, or anything that requires querying the database directly:
+
+1. **Use sqlcmd** — always query the database using `sqlcmd` command-line tool instead of reading code or searching for seed data.
+2. **Connection info** — database connection details are in `src/AppHost/Program.cs` or `appsettings.json` files in the AppHost/Web projects.
+3. **If sqlcmd is not available**, check `scripts/mssql-mcp-launcher/start.js` for a MCP-based SQL query approach.

@@ -1,0 +1,18 @@
+---
+description: Verify no errors after completing any task using Aspire logs
+alwaysApply: true
+---
+
+# Post-Task Verification Rule
+
+**After completing any task** (including but not limited to: bug fixes, features, refactoring, component creation, UI changes, API modifications, migrations, configs, etc.), **ALWAYS** run Aspire logs to verify no new errors have been introduced:
+
+1. **Check terminal first** — read terminal files in `terminals/` to see if a build is currently running. If yes, kill it.
+2. **Build & run AppHost** — run `dotnet run` in `src/AppHost/`. Wait for the Aspire dashboard to be ready.
+3. **Use Aspire logs skill** — read `c:\Users\dungl\Downloads\Carrer\Projects\CA-RMS\.cursor\skills\aspire-logs-fix\SKILL.md` and follow it to fetch and analyze all logs for errors across all services.
+4. **Report findings** — if there are errors, fix them before ending the task. If there are no errors, report "Task completed, no errors."
+5. **Kill the AppHost process when done** — after reporting findings:
+   - Kill all processes holding Aspire ports (22040, 21225, **17114**): `Get-NetTCPConnection -LocalPort 22040,21225,17114 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess | Sort-Object -Unique | ForEach-Object { taskkill /PID $_ /F }`
+   - Also kill any dotnet.exe that is running the AppHost: `Get-Process -Name "dotnet" -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowTitle -like "*AppHost*" -or $_.Arguments -like "*AppHost*" } | Select-Object -ExpandProperty Id | ForEach-Object { taskkill /PID $_ /F }`
+   - Kill the Angular dev server on port 4200 (if running): `Get-NetTCPConnection -LocalPort 4200 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess | Sort-Object -Unique | Where-Object { $_ -ne 0 } | ForEach-Object { taskkill /PID $_ /F }`
+   - Verify no AppHost is running: `Get-NetTCPConnection -LocalPort 22040,17114 -ErrorAction SilentlyContinue`
