@@ -270,12 +270,12 @@ export interface IApplicationsClient {
      * Get all Applications
      * @param pageNumber (optional) 
      * @param pageSize (optional) 
-     * @param stepId (optional) 
+     * @param stepDetailId (optional) 
      * @param status (optional) 
      * @param search (optional) 
      * @return OK
      */
-    getApplications(pageNumber: number | undefined, pageSize: number | undefined, stepId: string | undefined, status: number | undefined, search: string | undefined): Observable<PaginatedResultOfApplicationDto>;
+    getApplications(pageNumber: number | undefined, pageSize: number | undefined, stepDetailId: string | undefined, status: number | undefined, search: string | undefined): Observable<PaginatedResultOfApplicationDto>;
     /**
      * Create a new Application
      * @param title (optional) 
@@ -333,12 +333,12 @@ export class ApplicationsClient implements IApplicationsClient {
      * Get all Applications
      * @param pageNumber (optional) 
      * @param pageSize (optional) 
-     * @param stepId (optional) 
+     * @param stepDetailId (optional) 
      * @param status (optional) 
      * @param search (optional) 
      * @return OK
      */
-    getApplications(pageNumber: number | undefined, pageSize: number | undefined, stepId: string | undefined, status: number | undefined, search: string | undefined): Observable<PaginatedResultOfApplicationDto> {
+    getApplications(pageNumber: number | undefined, pageSize: number | undefined, stepDetailId: string | undefined, status: number | undefined, search: string | undefined): Observable<PaginatedResultOfApplicationDto> {
         let url_ = this.baseUrl + "/api/Applications?";
         if (pageNumber === null)
             throw new globalThis.Error("The parameter 'pageNumber' cannot be null.");
@@ -348,10 +348,10 @@ export class ApplicationsClient implements IApplicationsClient {
             throw new globalThis.Error("The parameter 'pageSize' cannot be null.");
         else if (pageSize !== undefined)
             url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
-        if (stepId === null)
-            throw new globalThis.Error("The parameter 'stepId' cannot be null.");
-        else if (stepId !== undefined)
-            url_ += "stepId=" + encodeURIComponent("" + stepId) + "&";
+        if (stepDetailId === null)
+            throw new globalThis.Error("The parameter 'stepDetailId' cannot be null.");
+        else if (stepDetailId !== undefined)
+            url_ += "stepDetailId=" + encodeURIComponent("" + stepDetailId) + "&";
         if (status === null)
             throw new globalThis.Error("The parameter 'status' cannot be null.");
         else if (status !== undefined)
@@ -873,6 +873,11 @@ export class ApplicationsClient implements IApplicationsClient {
 
 export interface IStepsClient {
     /**
+     * Get all steps accessible to the current user
+     * @return OK
+     */
+    getMySteps(): Observable<StepDto[]>;
+    /**
      * Get all steps and step details
      * @return OK
      */
@@ -925,6 +930,77 @@ export class StepsClient implements IStepsClient {
     constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
         this.http = http;
         this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * Get all steps accessible to the current user
+     * @return OK
+     */
+    getMySteps(): Observable<StepDto[]> {
+        let url_ = this.baseUrl + "/api/Steps/my-steps";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGetMySteps(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGetMySteps(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<StepDto[]>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<StepDto[]>;
+        }));
+    }
+
+    protected processGetMySteps(response: HttpResponseBase): Observable<StepDto[]> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(StepDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return _observableOf(result200);
+            }));
+        } else if (status === 400) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            }));
+        } else if (status === 401) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            }));
+        } else if (status === 403) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
     }
 
     /**
