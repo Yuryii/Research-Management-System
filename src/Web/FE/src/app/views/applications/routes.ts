@@ -23,7 +23,7 @@ export const routes: Routes = [
         canActivate: [AuthGuard],
         data: {
           title: 'Hồ sơ',
-          roles: [Roles.Administrator, Roles.Teacher, Roles.Tttv, Roles.Dvqltt, Roles.KhcnHtqt],
+          roles: [Roles.Teacher],
         },
       },
       {
