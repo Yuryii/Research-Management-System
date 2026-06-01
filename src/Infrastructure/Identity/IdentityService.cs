@@ -32,6 +32,18 @@ public class IdentityService : IIdentityService
         return user?.UserName;
     }
 
+    public async Task<string?> GetFullNameAsync(string userId)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null) return null;
+
+        var parts = new[] { user.FirstName, user.LastName }
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .ToList();
+
+        return parts.Count != 0 ? string.Join(" ", parts) : user.UserName;
+    }
+
     public async Task<(Result Result, string UserId)> CreateUserAsync(string userName, string password)
     {
         var user = new ApplicationUser

@@ -287,7 +287,16 @@ public class ApplicationDbContextInitialiser
             }
 
             var userName = $"{roleName.ToLowerInvariant()}@123";
-            var user = new ApplicationUser { UserName = userName, Email = userName };
+            var (firstName, lastName) = roleName switch
+            {
+                Roles.Administrator => ("Nguyen", "Van Admin"),
+                Roles.Teacher => ("Nguyen", "Giang Vien"),
+                Roles.Tttv => ("Tran", "Thu Truong"),
+                Roles.Dvqltt => ("Le", "Dao Vien"),
+                Roles.KhcnHtqt => ("Pham", "Quan Ly"),
+                _ => ("Ho", "Ten Mac Dinh")
+            };
+            var user = new ApplicationUser { UserName = userName, Email = userName, FirstName = firstName, LastName = lastName };
 
             if (_userManager.Users.All(u => u.UserName != user.UserName))
             {
@@ -373,6 +382,11 @@ public class ApplicationDbContextInitialiser
             var dvqlttApplicationId = Guid.Parse("3C8C8FE4-36F8-4D45-B46B-AC705D028770");
             var tttvApplicationId = Guid.Parse("ABC1743B-3DB7-4721-A859-1462572AC193");
 
+            // Look up user IDs for CreatedBy
+            var teacherUser = await _userManager.FindByNameAsync("teacher@123");
+            var tttvUser = await _userManager.FindByNameAsync("tttv@123");
+            var dvqlttUser = await _userManager.FindByNameAsync("dvqltt@123");
+
             var applications = new List<DomainApplication>
             {
                 new()
@@ -383,6 +397,7 @@ public class ApplicationDbContextInitialiser
                     Description = "Hồ sơ mẫu được tạo sẵn để kiểm thử luồng xử lý hồ sơ nghiên cứu khoa học.",
                     Status = ApplicationStatus.Submitted,
                     StepDetailId = tttvStepDetailId,
+                    CreatedBy = teacherUser?.Id,
                 },
                 new()
                 {
@@ -392,6 +407,7 @@ public class ApplicationDbContextInitialiser
                     Description = "Dữ liệu mẫu phục vụ kiểm tra luồng xử lý hồ sơ tại đơn vị quản lý trực tiếp.",
                     Status = ApplicationStatus.Submitted,
                     StepDetailId = dvqlttStepDetailId,
+                    CreatedBy = dvqlttUser?.Id,
                 },
                 new()
                 {
@@ -399,7 +415,8 @@ public class ApplicationDbContextInitialiser
                     Title = "Hồ sơ xác nhận giờ nghiên cứu khoa học",
                     Description = "Dữ liệu mẫu phục vụ kiểm tra chức năng danh sách, chi tiết và cập nhật trạng thái hồ sơ.",
                     Status = ApplicationStatus.Submitted,
-                    StepDetailId = tttvStepDetailId
+                    StepDetailId = tttvStepDetailId,
+                    CreatedBy = teacherUser?.Id,
                 },
                 new()
                 {
@@ -408,7 +425,8 @@ public class ApplicationDbContextInitialiser
                     Title = "Hồ sơ xác nhận Giảng viên",
                     Description = "Dữ liệu mẫu phục vụ kiểm tra Giảng viên",
                     Status = ApplicationStatus.Draft,
-                    StepDetailId = teacherStepDetailId
+                    StepDetailId = teacherStepDetailId,
+                    CreatedBy = teacherUser?.Id,
                 }
             };
 
