@@ -4,6 +4,9 @@ import { DynamicDialogRef, DynamicDialogConfig } from 'primeng/dynamicdialog';
 import { StepperModule } from 'primeng/stepper';
 import { ButtonDirective } from '@coreui/angular';
 import { MessageService } from 'primeng/api';
+import { take } from 'rxjs/operators';
+import { AuthService } from '../../../../api-authorization/auth.service';
+import { Roles } from '../../../../api-authorization/Roles';
 import {
   ApplicationDto,
   StepDto,
@@ -24,6 +27,7 @@ import { TruncatePipe } from '../../../pipes/truncate.pipe';
 export class StepFlowModalComponent implements OnInit {
   ref = inject(DynamicDialogRef);
   config = inject(DynamicDialogConfig);
+  private authService = inject(AuthService);
   private stepsClient = inject(StepsClient);
   private applicationsClient = inject(ApplicationsClient);
   private messageService = inject(MessageService);
@@ -35,6 +39,7 @@ export class StepFlowModalComponent implements OnInit {
   applicationId: string = '';
   selectedStepDetailId: string = '';
   isUpdating = false;
+  userRoles: string[] = [];
 
   get activeStepDetails(): StepDetailDto[] {
     return this.allSteps[this.currentStepIndex]?.stepDetails ?? [];
@@ -44,6 +49,9 @@ export class StepFlowModalComponent implements OnInit {
     this.currentStepDetailId = this.config.data?.stepDetailId ?? '';
     this.applicationId = this.config.data?.applicationId ?? '';
     this.selectedStepDetailId = this.currentStepDetailId;
+    this.authService.roles$.pipe(take(1)).subscribe((roles: string[] | null) => {
+      this.userRoles = roles ?? [];
+    });
     this.stepsClient.getStepAndStepDetail().subscribe({
       next: (steps: StepDto[]) => {
         this.allSteps = steps;
@@ -98,5 +106,9 @@ export class StepFlowModalComponent implements OnInit {
 
   close(): void {
     this.ref.close();
+  }
+
+  isTeacher(): boolean {
+    return this.userRoles.includes(Roles.Teacher);
   }
 }
