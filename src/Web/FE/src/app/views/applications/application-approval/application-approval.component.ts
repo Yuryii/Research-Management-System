@@ -23,6 +23,7 @@ import {
   StepDto,
   ApplicationsClient,
   StepsClient,
+  ApplicationFilesClient,
   ForwardNextToStepCommand,
   UpdateApplicationCommand,
 } from '../../../web-api-client';
@@ -31,7 +32,6 @@ import { ReturnApplicationModalComponent } from './return-application-modal/retu
 import { DocumentCountBadgeComponent } from '../../../shared/components/document-count-badge/document-count-badge.component';
 import { ApplicationModalComponent } from '../applications/application-modal/application-modal.component';
 import { StepFlowModalComponent } from '../step-flow-modal/step-flow-modal.component';
-import { HttpClient } from '@angular/common/http';
 
 export enum ApplicationStatus {
   Draft = 0,
@@ -77,7 +77,7 @@ export class ApplicationApprovalComponent implements OnInit {
   private readonly applicationService = inject(ApplicationsClient);
   private readonly stepsClient = inject(StepsClient);
   private readonly authService = inject(AuthService);
-  private readonly http = inject(HttpClient);
+  private readonly applicationFilesClient = inject(ApplicationFilesClient);
   applications: ApplicationDto[] = [];
   isLoading = false;
   pageNumber = 1;
@@ -240,15 +240,13 @@ export class ApplicationApprovalComponent implements OnInit {
           .subscribe({
             next: () => {
               if (data.files && data.files.length > 0) {
-                const formData = new FormData();
-                formData.append('applicationId', application.id);
-                formData.append('stepId', application.stepId);
-                data.files.forEach((file) => {
-                  formData.append('files', file, file.name);
-                });
+                const fileParameters = data.files.map((file) => ({
+                  data: file,
+                  fileName: file.name,
+                }));
 
-                this.http
-                  .post('/api/ApplicationFiles/CreateApplicationFiles', formData)
+                this.applicationFilesClient
+                  .create(application.id, fileParameters)
                   .subscribe({
                     next: () => {
                       void this.messageService.add({
