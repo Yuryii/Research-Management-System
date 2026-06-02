@@ -50,7 +50,12 @@ public class ForwardNextToStepCommandHandler : IRequestHandler<ForwardNextToStep
             throw new UnauthorizedAccessException("User does not have permission to update the application at the current step.");
         }
 
-        application.StepDetailId = application.StepDetail.NextStepDetailId ?? throw new InvalidOperationException("Next step detail ID is not defined.");
+        if (!application.StepDetail.NextStepDetailId.HasValue)
+        {
+            throw new InvalidOperationException("Không tìm thấy bước tiếp theo. Hồ sơ đã ở bước cuối cùng của quy trình.");
+        }
+
+        application.StepDetailId = application.StepDetail.NextStepDetailId.Value;
 
         await _context.SaveChangesAsync(cancellationToken);
 

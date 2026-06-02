@@ -73,7 +73,7 @@
                 color="success"
                 size="sm"
                 class="me-1"
-                (click)="onForward(application.id)"
+                (click)="onForward(application.id); $event.stopPropagation()"
               >
                 Chuyển tiếp
               </button>
@@ -81,7 +81,7 @@
                 cButton
                 color="danger"
                 size="sm"
-                (click)="openReturnModal(application.id)"
+                (click)="openReturnModal(application.id); $event.stopPropagation()"
               >
                 Trả hồ sơ
               </button>

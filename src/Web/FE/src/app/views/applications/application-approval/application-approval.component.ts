@@ -170,7 +170,7 @@ export class ApplicationApprovalComponent implements OnInit {
           this.loadApplications();
         },
         error: (err) => {
-          const msg = err?.error ?? 'Chuyển tiếp thất bại.';
+          const msg = err?.message ?? err?.error ?? 'Chuyển tiếp thất bại.';
           void this.messageService.add({
             severity: 'error',
             summary: 'Lỗi',
