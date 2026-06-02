@@ -194,8 +194,8 @@ public class ApplicationDbContextInitialiser
                 new Step
                 {
                     Id = dvqlttReviewStepId,
-                    Name = "Đang xử lý bởi đơn vị quản lý trực tiếp",
-                    ShortName = "Đang xử lý bởi DVQLTT",
+                    Name = "Đang xử lý bởi đơn vị quản lý trực tiếp 2",
+                    ShortName = "Đang xử lý bởi DVQLTT 2",
                     Order = 3,
                     StepDetails = new List<StepDetail>()
                     {

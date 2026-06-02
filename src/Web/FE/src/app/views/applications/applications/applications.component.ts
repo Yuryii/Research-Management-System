@@ -99,7 +99,7 @@ export class ApplicationsComponent implements OnInit {
   loadApplications(): void {
     this.isLoading = true;
     this.applicationService
-      .getApplications(this.pageNumber, this.pageSize, this.currentStepId, this.selectedStatus ?? undefined, this.searchTerm || undefined)
+      .getApplications(this.pageNumber, this.pageSize, this.currentStepId, undefined, this.selectedStatus ?? undefined, this.searchTerm || undefined)
       .subscribe({
         next: (result) => {
           this.applications = result?.items ?? [];
@@ -220,6 +220,7 @@ export class ApplicationsComponent implements OnInit {
               if (data.files && data.files.length > 0) {
                 const formData = new FormData();
                 formData.append('applicationId', application.id);
+                formData.append('stepId', application.stepId);
                 data.files.forEach((file) => {
                   formData.append('files', file, file.name);
                 });

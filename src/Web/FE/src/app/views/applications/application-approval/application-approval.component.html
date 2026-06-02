@@ -18,12 +18,12 @@
 </div>
 <p-tabs [(value)]="activeTabIndex" (valueChange)="onTabChange($event)">
   <p-tablist>
-    <p-tab *ngFor="let stepDetail of userStepDetails; let i = index" [value]="i">
-      {{ stepDetail.name }}
+    <p-tab *ngFor="let step of userSteps; let i = index" [value]="i">
+      {{ step.name }}
     </p-tab>
   </p-tablist>
   <p-tabpanels>
-    <p-tabpanel *ngFor="let stepDetail of userStepDetails; let i = index" [value]="i">
+    <p-tabpanel *ngFor="let step of userSteps; let i = index" [value]="i">
       <table class="table">
         <thead>
           <tr>

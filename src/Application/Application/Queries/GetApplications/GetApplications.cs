@@ -54,11 +54,20 @@ public class GetApplicationsQueryHandler : IRequestHandler<GetApplicationsQuery,
             request.StepDetailId,
             cancellationToken);
 
-        // Teacher: lấy tất cả applications của mình, không filter theo StepDetailId
-        // Non-teacher: filter theo StepDetailId như bình thường
         if (!isTeacher)
         {
-            query = query.Where(x => x.StepDetailId == stepContext.StepDetailId);
+            if (request.StepId.HasValue)
+            {
+                query = query.Where(x => x.StepDetail.StepId == request.StepId.Value);
+            }
+            else if (request.StepDetailId.HasValue)
+            {
+                query = query.Where(x => x.StepDetailId == request.StepDetailId);
+            }
+            else
+            {
+                query = query.Where(x => x.StepDetailId == stepContext.StepDetailId);
+            }
         }
 
         if (isTeacher)

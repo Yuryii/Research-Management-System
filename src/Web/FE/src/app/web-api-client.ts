@@ -271,11 +271,12 @@ export interface IApplicationsClient {
      * @param pageNumber (optional) 
      * @param pageSize (optional) 
      * @param stepDetailId (optional) 
+     * @param stepId (optional) 
      * @param status (optional) 
      * @param search (optional) 
      * @return OK
      */
-    getApplications(pageNumber: number | undefined, pageSize: number | undefined, stepDetailId: string | undefined, status: number | undefined, search: string | undefined): Observable<PaginatedResultOfApplicationDto>;
+    getApplications(pageNumber: number | undefined, pageSize: number | undefined, stepDetailId: string | undefined, stepId: string | undefined, status: number | undefined, search: string | undefined): Observable<PaginatedResultOfApplicationDto>;
     /**
      * Create a new Application
      * @param title (optional) 
@@ -334,11 +335,12 @@ export class ApplicationsClient implements IApplicationsClient {
      * @param pageNumber (optional) 
      * @param pageSize (optional) 
      * @param stepDetailId (optional) 
+     * @param stepId (optional) 
      * @param status (optional) 
      * @param search (optional) 
      * @return OK
      */
-    getApplications(pageNumber: number | undefined, pageSize: number | undefined, stepDetailId: string | undefined, status: number | undefined, search: string | undefined): Observable<PaginatedResultOfApplicationDto> {
+    getApplications(pageNumber: number | undefined, pageSize: number | undefined, stepDetailId: string | undefined, stepId: string | undefined, status: number | undefined, search: string | undefined): Observable<PaginatedResultOfApplicationDto> {
         let url_ = this.baseUrl + "/api/Applications?";
         if (pageNumber === null)
             throw new globalThis.Error("The parameter 'pageNumber' cannot be null.");
@@ -352,6 +354,10 @@ export class ApplicationsClient implements IApplicationsClient {
             throw new globalThis.Error("The parameter 'stepDetailId' cannot be null.");
         else if (stepDetailId !== undefined)
             url_ += "stepDetailId=" + encodeURIComponent("" + stepDetailId) + "&";
+        if (stepId === null)
+            throw new globalThis.Error("The parameter 'stepId' cannot be null.");
+        else if (stepId !== undefined)
+            url_ += "stepId=" + encodeURIComponent("" + stepId) + "&";
         if (status === null)
             throw new globalThis.Error("The parameter 'status' cannot be null.");
         else if (status !== undefined)
@@ -2386,6 +2392,7 @@ export class ApplicationDto implements IApplicationDto {
     description!: string;
     status!: number;
     stepDetailId!: string;
+    stepId!: string;
     stepDetailName!: string;
     createdBy?: string | undefined;
     myApplications?: FileDto[];
@@ -2415,6 +2422,7 @@ export class ApplicationDto implements IApplicationDto {
             this.description = _data["description"];
             this.status = _data["status"];
             this.stepDetailId = _data["stepDetailId"];
+            this.stepId = _data["stepId"];
             this.stepDetailName = _data["stepDetailName"];
             this.createdBy = _data["createdBy"];
             if (Array.isArray(_data["myApplications"])) {
@@ -2450,6 +2458,7 @@ export class ApplicationDto implements IApplicationDto {
         data["description"] = this.description;
         data["status"] = this.status;
         data["stepDetailId"] = this.stepDetailId;
+        data["stepId"] = this.stepId;
         data["stepDetailName"] = this.stepDetailName;
         data["createdBy"] = this.createdBy;
         if (Array.isArray(this.myApplications)) {
@@ -2474,6 +2483,7 @@ export interface IApplicationDto {
     description: string;
     status: number;
     stepDetailId: string;
+    stepId: string;
     stepDetailName: string;
     createdBy?: string | undefined;
     myApplications?: FileDto[];

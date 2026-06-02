@@ -21,7 +21,6 @@ import { Tabs, TabList, Tab, TabPanels, TabPanel } from 'primeng/tabs';
 import {
   ApplicationDto,
   StepDto,
-  IStepDetailDto,
   ApplicationsClient,
   StepsClient,
   ForwardNextToStepCommand,
@@ -33,10 +32,6 @@ import { DocumentCountBadgeComponent } from '../../../shared/components/document
 import { ApplicationModalComponent } from '../applications/application-modal/application-modal.component';
 import { StepFlowModalComponent } from '../step-flow-modal/step-flow-modal.component';
 import { HttpClient } from '@angular/common/http';
-
-export interface StepDetailWithStepName extends IStepDetailDto {
-  stepName: string;
-}
 
 export enum ApplicationStatus {
   Draft = 0,
@@ -88,10 +83,10 @@ export class ApplicationApprovalComponent implements OnInit {
   pageNumber = 1;
   pageSize = 10;
   totalCount = 0;
-  currentStepDetailId: string | undefined = undefined;
+  currentStepId: string | undefined = undefined;
   readonly rowsPerPageOptions = [5, 10, 20, 50];
 
-  userStepDetails: StepDetailWithStepName[] = [];
+  userSteps: StepDto[] = [];
   activeTabIndex = 0;
   searchTerm = '';
 
@@ -104,15 +99,14 @@ export class ApplicationApprovalComponent implements OnInit {
   private loadUserSteps(): void {
     this.stepsClient.getMySteps().subscribe({
       next: (steps) => {
-        this.userStepDetails = (steps ?? [])
-          .flatMap(step => (step.stepDetails ?? []).map(detail => ({ ...detail, stepName: step.name } as StepDetailWithStepName)));
-        if (this.userStepDetails.length > 0) {
-          this.currentStepDetailId = this.userStepDetails[0].id;
+        this.userSteps = steps ?? [];
+        if (this.userSteps.length > 0) {
+          this.currentStepId = this.userSteps[0].id;
           this.loadApplications();
         }
       },
       error: () => {
-        this.userStepDetails = [];
+        this.userSteps = [];
         this.loadApplications();
       },
     });
@@ -120,9 +114,9 @@ export class ApplicationApprovalComponent implements OnInit {
 
   onTabChange(index: string | number | undefined): void {
     const idx = typeof index === 'string' ? parseInt(index, 10) : (index ?? 0);
-    if (idx >= 0 && idx < this.userStepDetails.length) {
+    if (idx >= 0 && idx < this.userSteps.length) {
       this.activeTabIndex = idx;
-      this.currentStepDetailId = this.userStepDetails[idx].id;
+      this.currentStepId = this.userSteps[idx].id;
       this.pageNumber = 1;
       this.loadApplications();
     }
@@ -131,7 +125,7 @@ export class ApplicationApprovalComponent implements OnInit {
   loadApplications(): void {
     this.isLoading = true;
     this.applicationService
-      .getApplications(this.pageNumber, this.pageSize, this.currentStepDetailId, undefined, this.searchTerm || undefined)
+      .getApplications(this.pageNumber, this.pageSize, undefined, this.currentStepId, undefined, this.searchTerm || undefined)
       .subscribe({
         next: (result) => {
           this.applications = result?.items ?? [];
@@ -248,6 +242,7 @@ export class ApplicationApprovalComponent implements OnInit {
               if (data.files && data.files.length > 0) {
                 const formData = new FormData();
                 formData.append('applicationId', application.id);
+                formData.append('stepId', application.stepId);
                 data.files.forEach((file) => {
                   formData.append('files', file, file.name);
                 });

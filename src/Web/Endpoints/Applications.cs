@@ -31,13 +31,14 @@ public class Applications : IEndpointGroup
 
     [EndpointSummary("Get all Applications")]
     [EndpointDescription("Retrieves applications with pagination.")]
-    public static async Task<Results<Ok<PaginatedResult<ApplicationDto>>, BadRequest<string>>> GetApplications(ISender sender, int pageNumber = 1, int pageSize = 10, Guid? stepDetailId = null, ApplicationStatus? status = null, string? search = null)
+    public static async Task<Results<Ok<PaginatedResult<ApplicationDto>>, BadRequest<string>>> GetApplications(ISender sender, int pageNumber = 1, int pageSize = 10, Guid? stepDetailId = null, Guid? stepId = null, ApplicationStatus? status = null, string? search = null)
     {
         var applications = await sender.Send(new GetApplicationsQuery
         {
             PageNumber = pageNumber,
             PageSize = pageSize,
             StepDetailId = stepDetailId,
+            StepId = stepId,
             Status = status,
             Search = search
         });
