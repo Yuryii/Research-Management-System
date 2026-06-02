@@ -225,22 +225,27 @@ export class ApplicationApprovalComponent implements OnInit {
       data: { application },
     });
 
-    this.ref?.onClose.subscribe((data: ApplicationFormData) => {
-      if (data) {
+    this.ref?.onClose.subscribe((data: ApplicationFormData | { fileUploadSuccess?: boolean }) => {
+      if (!data) return;
+      if ('fileUploadSuccess' in data && data.fileUploadSuccess) {
+        this.loadApplications();
+        return;
+      }
+      const formData = data as ApplicationFormData;
         const command = new UpdateApplicationCommand({
-          id: data.id,
-          title: data.title,
-          description: data.description,
-          status: data.status,
-          fileIds: data.existingFileIds,
+          id: formData.id,
+          title: formData.title,
+          description: formData.description,
+          status: formData.status,
+          fileIds: formData.existingFileIds,
         });
 
         this.applicationService
           .updateApplication(application.id, command)
           .subscribe({
             next: () => {
-              if (data.files && data.files.length > 0) {
-                const fileParameters = data.files.map((file) => ({
+              if (formData.files && formData.files.length > 0) {
+                const fileParameters = formData.files.map((file) => ({
                   data: file,
                   fileName: file.name,
                 }));
@@ -282,7 +287,6 @@ export class ApplicationApprovalComponent implements OnInit {
               });
             },
           });
-      }
     });
   }
 }

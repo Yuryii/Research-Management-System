@@ -17,6 +17,9 @@ import {
 import { ApplicationDto, FileDto, ApplicationFilesClient } from '../../../../web-api-client';
 import { MessageService } from 'primeng/api';
 import { StepFlowModalComponent } from '../../step-flow-modal/step-flow-modal.component';
+import { AuthService } from '../../../../../api-authorization/auth.service';
+import { Roles } from '../../../../../api-authorization/Roles';
+import { take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-application-modal',
@@ -37,6 +40,8 @@ export class ApplicationModalComponent implements OnInit {
   preAttachmentFiles: FileDto[] = [];
   isEditMode = false;
   isReadOnly = false;
+  isUploadingFiles = false;
+  userRoles: string[] = [];
   private existingApplication: ApplicationDto | null = null;
 
   constructor(
@@ -45,6 +50,7 @@ export class ApplicationModalComponent implements OnInit {
     private applicationFilesClient: ApplicationFilesClient,
     private messageService: MessageService,
     private readonly dialogService: DialogService,
+    private readonly authService: AuthService,
   ) {}
 
   form = new FormGroup({
@@ -60,6 +66,10 @@ export class ApplicationModalComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.authService.roles$.pipe(take(1)).subscribe((roles) => {
+      this.userRoles = roles ?? [];
+    });
+
     this.existingApplication = this.config.data?.application ?? null;
     if (this.existingApplication) {
       this.isEditMode = true;
@@ -83,8 +93,43 @@ export class ApplicationModalComponent implements OnInit {
     this.uploadedFiles = [];
   }
 
+  isTeacher(): boolean {
+    return this.userRoles.includes(Roles.Teacher);
+  }
+
   onRemove(event: any): void {
     this.uploadedFiles = this.uploadedFiles.filter((f) => f !== event.file);
+  }
+
+  uploadFiles(): void {
+    if (!this.existingApplication?.id || this.uploadedFiles.length === 0) return;
+    this.isUploadingFiles = true;
+    const files: FileParameter[] = this.uploadedFiles.map((file) => ({
+      data: file,
+      fileName: file.name,
+    }));
+    this.applicationFilesClient
+      .create(this.existingApplication.id, files)
+      .subscribe({
+        next: () => {
+          this.isUploadingFiles = false;
+          this.uploadedFiles = [];
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Thành công',
+            detail: 'Tệp đã được cập nhật.',
+          });
+          this.ref.close({ fileUploadSuccess: true });
+        },
+        error: () => {
+          this.isUploadingFiles = false;
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Lỗi',
+            detail: 'Không thể tải tệp lên.',
+          });
+        },
+      });
   }
 
   onSelect(event: any): void {

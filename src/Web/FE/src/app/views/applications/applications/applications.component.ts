@@ -202,14 +202,20 @@ export class ApplicationsComponent implements OnInit {
       data: { application },
     });
 
-    this.ref?.onClose.subscribe((data: ApplicationFormData) => {
-      if (data) {
+    this.ref?.onClose.subscribe((data: ApplicationFormData | { fileUploadSuccess?: boolean } | undefined) => {
+      if (!data) return;
+      if ('fileUploadSuccess' in data && data.fileUploadSuccess) {
+        this.loadApplications();
+        return;
+      }
+      const formData = data as ApplicationFormData;
+
         const command = new UpdateApplicationCommand({
-          id: data.id,
-          title: data.title,
-          description: data.description,
-          status: data.status,
-          fileIds: data.existingFileIds,
+          id: formData.id,
+          title: formData.title,
+          description: formData.description,
+          status: formData.status,
+          fileIds: formData.existingFileIds,
         });
 
         this.applicationService
@@ -217,18 +223,18 @@ export class ApplicationsComponent implements OnInit {
           .subscribe({
             next: () => {
               // Upload files separately after text update succeeds
-              if (data.files && data.files.length > 0) {
-                const formData = new FormData();
-                formData.append('applicationId', application.id);
-                formData.append('stepId', application.stepId);
-                data.files.forEach((file) => {
-                  formData.append('files', file, file.name);
+              if (formData.files && formData.files.length > 0) {
+                const formDataObj = new FormData();
+                formDataObj.append('applicationId', application.id);
+                formDataObj.append('stepId', application.stepId);
+                formData.files.forEach((file) => {
+                  formDataObj.append('files', file, file.name);
                 });
 
                 this.http
                   .post(
                     '/api/ApplicationFiles/CreateApplicationFiles',
-                    formData,
+                    formDataObj,
                   )
                   .subscribe({
                     next: () => {
@@ -266,7 +272,6 @@ export class ApplicationsComponent implements OnInit {
               });
             },
           });
-      }
     });
   }
 }
