@@ -75,6 +75,7 @@ export class ReturnApplicationModalComponent implements OnInit {
 
     const { title, description } = this.form.getRawValue();
     const applicationId = this.config.data?.applicationId ?? '';
+    const createdBy = this.config.data?.createdBy ?? '';
 
     this.isSubmitting = true;
 
@@ -84,7 +85,7 @@ export class ReturnApplicationModalComponent implements OnInit {
     }));
 
     this.applicationsClient
-      .returnApplication(applicationId, title, description, files)
+      .returnApplication(applicationId, title, description, files, createdBy)
       .subscribe({
         next: () => {
           this.isSubmitting = false;

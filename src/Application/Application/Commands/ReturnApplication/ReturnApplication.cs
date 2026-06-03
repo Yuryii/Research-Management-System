@@ -13,6 +13,7 @@ public record ReturnApplicationCommand : IRequest<Guid>
     public required string Title { get; init; }
     public required string Description { get; init; }
     public IFormFileCollection Files { get; init; } = null!;
+    public string? RecipientId { get; init; }
 }
 
 public class ReturnApplicationCommandValidator : AbstractValidator<ReturnApplicationCommand>
@@ -59,7 +60,7 @@ public class ReturnApplicationCommandHandler : IRequestHandler<ReturnApplication
             Id = Guid.NewGuid(),
             Title = request.Title,
             Description = request.Description,
-            RecipientId = application.CreatedBy
+            RecipientId = request.RecipientId ?? application.CreatedBy
         };
 
         _context.Notifications.Add(notification);

@@ -81,7 +81,7 @@
                 cButton
                 color="danger"
                 size="sm"
-                (click)="openReturnModal(application.id); $event.stopPropagation()"
+                (click)="openReturnModal(application.id, application.createdBy); $event.stopPropagation()"
               >
                 Trả hồ sơ
               </button>

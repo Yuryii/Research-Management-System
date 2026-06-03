@@ -176,14 +176,14 @@ export class ApplicationApprovalComponent implements OnInit {
       });
   }
 
-  openReturnModal(applicationId: string): void {
+  openReturnModal(applicationId: string, createdBy?: string): void {
     this.ref = this.dialogService.open(ReturnApplicationModalComponent, {
       header: 'Trả hồ sơ',
       width: '50%',
       closable: true,
       draggable: false,
       dismissableMask: true,
-      data: { applicationId },
+      data: { applicationId, createdBy },
     });
 
     this.ref?.onClose.subscribe((submitted: boolean) => {

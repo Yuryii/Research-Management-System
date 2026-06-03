@@ -129,4 +129,57 @@ html[data-coreui-theme="dark"] {
     background: var(--cui-body-bg);
     color: var(--cui-body-color);
   }
+
+  // PrimeNG Tab dark mode (PrimeNG 21 decomposed Tabs architecture)
+  .p-tabs {
+    background: transparent;
+    color: var(--cui-body-color);
+  }
+
+  .p-tablist {
+    background: transparent;
+    border-color: var(--cui-border-color);
+
+    .p-tablist-tab-list {
+      background: transparent;
+      border-color: var(--cui-border-color);
+      border-bottom-color: var(--cui-border-color);
+    }
+
+    .p-tablist-active-bar {
+      background: var(--cui-primary);
+    }
+  }
+
+  .p-tab {
+    background: transparent;
+    color: var(--cui-body-color-secondary);
+    border-color: transparent;
+    transition: color 0.2s;
+
+    &:hover:not(.p-disabled):not(.p-tab-active) {
+      color: var(--cui-body-color);
+    }
+
+    &.p-tab-active {
+      color: var(--cui-primary);
+      border-color: var(--cui-primary);
+      border-bottom-color: transparent;
+    }
+
+    &.p-disabled {
+      opacity: 0.5;
+    }
+  }
+
+  .p-tabpanels {
+    background: var(--cui-body-bg);
+    color: var(--cui-body-color);
+    padding: 1rem 0;
+  }
+
+  .p-tabpanel {
+    background: var(--cui-body-bg);
+    color: var(--cui-body-color);
+  }
 }

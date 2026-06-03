@@ -312,9 +312,10 @@ export interface IApplicationsClient {
      * @param title (optional) 
      * @param description (optional) 
      * @param files (optional) 
+     * @param recipientId (optional) 
      * @return OK
      */
-    returnApplication(applicationId: string | undefined, title: string | undefined, description: string | undefined, files: FileParameter[] | undefined): Observable<string>;
+    returnApplication(applicationId: string | undefined, title: string | undefined, description: string | undefined, files: FileParameter[] | undefined, recipientId: string | null | undefined): Observable<string>;
 }
 
 @Injectable({
@@ -790,9 +791,10 @@ export class ApplicationsClient implements IApplicationsClient {
      * @param title (optional) 
      * @param description (optional) 
      * @param files (optional) 
+     * @param recipientId (optional) 
      * @return OK
      */
-    returnApplication(applicationId: string | undefined, title: string | undefined, description: string | undefined, files: FileParameter[] | undefined): Observable<string> {
+    returnApplication(applicationId: string | undefined, title: string | undefined, description: string | undefined, files: FileParameter[] | undefined, recipientId: string | null | undefined): Observable<string> {
         let url_ = this.baseUrl + "/api/Applications/ReturnApplication";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -813,6 +815,8 @@ export class ApplicationsClient implements IApplicationsClient {
             throw new globalThis.Error("The parameter 'files' cannot be null.");
         else
             files.forEach(item_ => content_.append("files", item_.data, item_.fileName ? item_.fileName : "files") );
+        if (recipientId !== null && recipientId !== undefined)
+            content_.append("recipientId", recipientId.toString());
 
         let options_ : any = {
             body: content_,
@@ -3504,6 +3508,7 @@ export class ReturnApplicationCommand implements IReturnApplicationCommand {
     title!: string;
     description!: string;
     files?: string[];
+    recipientId?: string | undefined;
 
     [key: string]: any;
 
@@ -3530,6 +3535,7 @@ export class ReturnApplicationCommand implements IReturnApplicationCommand {
                 for (let item of _data["files"])
                     this.files!.push(item);
             }
+            this.recipientId = _data["recipientId"];
         }
     }
 
@@ -3554,6 +3560,7 @@ export class ReturnApplicationCommand implements IReturnApplicationCommand {
             for (let item of this.files)
                 data["files"].push(item);
         }
+        data["recipientId"] = this.recipientId;
         return data;
     }
 }
@@ -3563,6 +3570,7 @@ export interface IReturnApplicationCommand {
     title: string;
     description: string;
     files?: string[];
+    recipientId?: string | undefined;
 
     [key: string]: any;
 }
