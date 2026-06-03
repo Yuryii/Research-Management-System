@@ -108,7 +108,7 @@ export const appConfig: ApplicationConfig = {
       theme: {
         preset: MyPreset,
         options: {
-          darkModeSelector: '[data-coreui-theme="dark"]',
+          darkModeSelector: 'html[data-coreui-theme="dark"]',
         },
       },
     }),

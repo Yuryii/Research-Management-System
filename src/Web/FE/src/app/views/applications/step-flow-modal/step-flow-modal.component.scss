@@ -44,13 +44,13 @@
 
   &.active .flow-node-inner {
     border-color: var(--cui-primary);
-    background: color-mix(in srgb, var(--cui-primary) 10%, white);
+    background: color-mix(in srgb, var(--cui-primary) 10%, var(--cui-body-bg));
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--cui-primary) 30%, transparent);
   }
 
   &.selected .flow-node-inner {
     border-color: var(--cui-info, #17a2b8);
-    background: color-mix(in srgb, var(--cui-info, #17a2b8) 8%, white);
+    background: color-mix(in srgb, var(--cui-info, #17a2b8) 8%, var(--cui-body-bg));
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--cui-info, #17a2b8) 25%, transparent);
   }
 }
@@ -64,7 +64,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: white;
+  background: var(--cui-body-bg);
   text-align: center;
   font-size: 0.8rem;
   padding: 0.5rem;
@@ -72,7 +72,7 @@
   cursor: pointer;
 
   &:hover {
-    background: color-mix(in srgb, var(--cui-primary) 5%, white);
+    background: color-mix(in srgb, var(--cui-primary) 5%, var(--cui-body-bg));
   }
 
   .flow-node-name {

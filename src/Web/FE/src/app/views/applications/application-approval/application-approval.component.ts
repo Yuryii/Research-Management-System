@@ -8,8 +8,6 @@ import {
   BadgeComponent,
   ButtonDirective,
   FormControlDirective,
-  FormSelectDirective,
-  TableDirective,
 } from '@coreui/angular';
 import {
   DynamicDialogModule,
@@ -52,9 +50,7 @@ export interface ApplicationFormData {
   imports: [
     CommonModule,
     FormsModule,
-    TableDirective,
     ButtonDirective,
-    FormSelectDirective,
     FormControlDirective,
     FileUploadModule,
     ToastModule,

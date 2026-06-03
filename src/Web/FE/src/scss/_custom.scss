@@ -16,7 +16,7 @@
   cursor: pointer;
 }
 
-[data-coreui-theme="dark"] {
+html[data-coreui-theme="dark"] {
   .p-dialog {
     background: var(--cui-body-bg);
     border: 1px solid var(--cui-border-color);
@@ -72,6 +72,61 @@
   }
 
   .p-fileupload-content .p-fileupload-empty {
+    color: var(--cui-body-color);
+  }
+
+  // PrimeNG Stepper dark mode
+  .p-stepper {
+    background: var(--cui-body-bg);
+    color: var(--cui-body-color);
+  }
+
+  .p-stepper-header {
+    background: var(--cui-body-bg);
+    border-color: var(--cui-border-color);
+    color: var(--cui-body-color);
+  }
+
+  .p-step-item {
+    .p-step-number {
+      background: var(--cui-secondary-bg);
+      color: var(--cui-body-color);
+      border-color: var(--cui-border-color);
+    }
+
+    &.p-active .p-step-number,
+    &.p-highlight .p-step-number {
+      background: var(--cui-primary);
+      color: var(--cui-primary-text-on-colors);
+    }
+
+    &.p-active .p-step-header,
+    &.p-highlight .p-step-header {
+      .p-step-title {
+        color: var(--cui-primary);
+      }
+    }
+
+    &:not(.p-disabled) .p-step-header:hover {
+      background: var(--cui-tertiary-bg);
+    }
+
+    .p-step-title {
+      color: var(--cui-body-color-secondary);
+    }
+  }
+
+  .p-step-separator {
+    background: var(--cui-border-color);
+  }
+
+  .p-steppanels {
+    background: var(--cui-body-bg);
+    color: var(--cui-body-color);
+  }
+
+  .p-steppanel {
+    background: var(--cui-body-bg);
     color: var(--cui-body-color);
   }
 }
