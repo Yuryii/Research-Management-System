@@ -29,11 +29,23 @@ public static class DependencyInjection
         builder.Services.AddDbContext<ApplicationDbContext>((sp, options) =>
         {
             options.AddInterceptors(sp.GetServices<ISaveChangesInterceptor>());
-            options.UseSqlServer(connectionString);
+
+            if (builder.Environment.IsDevelopment())
+            {
+                options.UseSqlite(connectionString);
+            }
+            else
+            {
+                options.UseSqlServer(connectionString);
+            }
+
             options.ConfigureWarnings(warnings => warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
         });
 
-        builder.EnrichSqlServerDbContext<ApplicationDbContext>();
+        if (!builder.Environment.IsDevelopment())
+        {
+            builder.EnrichSqlServerDbContext<ApplicationDbContext>();
+        }
 
         builder.Services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
 
