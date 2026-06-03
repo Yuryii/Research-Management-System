@@ -68,23 +68,26 @@
               </span>
             </td>
             <td>
-              <button
-                cButton
-                color="success"
-                size="sm"
-                class="me-1"
-                (click)="onForward(application.id); $event.stopPropagation()"
-              >
-                Chuyển tiếp
-              </button>
-              <button
-                cButton
-                color="danger"
-                size="sm"
-                (click)="openReturnModal(application.id, application.createdBy); $event.stopPropagation()"
-              >
-                Trả hồ sơ
-              </button>
+              <div class="d-flex flex-column gap-1 align-items-stretch">
+                <button
+                  cButton
+                  color="success"
+                  size="sm"
+                  class="w-100"
+                  (click)="onForward(application.id); $event.stopPropagation()"
+                >
+                  Chuyển tiếp
+                </button>
+                <button
+                  cButton
+                  color="danger"
+                  size="sm"
+                  class="w-100"
+                  (click)="openReturnModal(application.id, application.createdBy); $event.stopPropagation()"
+                >
+                  Trả hồ sơ
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>
