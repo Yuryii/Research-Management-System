@@ -123,145 +123,67 @@ public class ApplicationDbContextInitialiser
 
         if (!_context.Steps.Any())
         {
-            var steps = new List<Step>
+            // Derive StepDetail IDs deterministically from each Step's ID so the chain
+            // is always reproducible. We use the Step ID as the base and set the last
+            // byte(s) to distinguish sub-details within the same step.
+            static Guid StepDetailId(Guid stepId, int suffix) =>
+                new Guid(stepId.ToByteArray().Select((b, i) =>
+                    i == 15 ? (byte)(b ^ suffix) : b).ToArray());
+
+            // Teacher step is the entry point of the workflow
+            var teacherDetail = new StepDetail
             {
-                new Step
-                {
-                    Id = teacherInitialStepId,
-                    Name = "Đang xử lý bởi Giảng viên",
-                    ShortName = "Đang xử lý bởi GV",
-                    Order = 0,
-                    StepDetails = new List<StepDetail>
-                    {
-                        new StepDetail
-                        {
-                            Id = Guid.Parse("343B1904-AB23-42D4-80DB-760E93F15B09"),
-                            Name = "Giảng viên đang chuẩn bị hồ sơ",
-                            Order = 0,
-                            NextStepDetailId = Guid.Parse("11111111-1111-1111-1111-111111111101")
-                        }
-                    }
-                },
-                new Step
-                {
-                    Id = dvqlttInitialStepId,
-                    Name = "Đang xử lý bởi đơn vị quản lý trực tiếp",
-                    ShortName = "Đang xử lý bởi DVQLTT",
-                    Order = 1,
-                    StepDetails = new List<StepDetail>()
-                    {
-                        new StepDetail()
-                        {
-                            Id = Guid.Parse("11111111-1111-1111-1111-111111111101"),
-                            Name = "ĐVQLTT đang kiểm tra sơ lược",
-                            Order = 1
-                        },
-                        new StepDetail()
-                        {
-                            Name = "ĐVQLTT đang xác nhận phiếu đề nghị",
-                            Order = 2
-                        },
-                        new StepDetail()
-                        {
-                            Name = "ĐVQLTT chuyển bài báo công bố cho TTTV",
-                            Order = 3,
-                            NextStepDetailId = Guid.Parse("9454C8AC-B21D-4124-A0A0-201CF145E92A")
-                        }
-                    }
-                },
-                new Step
-                {
-                    Id = tttvStepId,
-                    Name = "Đang xử lý bởi Trung tâm thư viện",
-                    ShortName = "Đang xử lý bởi TTTV",
-                    Order = 2,
-                    StepDetails = new List<StepDetail>()
-                    {
-                        new StepDetail()
-                        {
-                            Id = Guid.Parse("9454C8AC-B21D-4124-A0A0-201CF145E92A"),
-                            Name = "TTTV đang kiểm tra trùng lặp",
-                            Order = 1
-                        },
-                        new StepDetail()
-                        {
-                            Name = "TTTV đang xác nhận nộp lưu chiểu",
-                            Order = 2,
-                            NextStepDetailId = Guid.Parse("993B42E9-2A46-445D-BDBA-9C4551353BE6")
-                        }
-                    }
-                },
-                new Step
-                {
-                    Id = dvqlttReviewStepId,
-                    Name = "Đang xử lý bởi đơn vị quản lý trực tiếp 2",
-                    ShortName = "Đang xử lý bởi DVQLTT 2",
-                    Order = 3,
-                    StepDetails = new List<StepDetail>()
-                    {
-                        new StepDetail()
-                        {
-                            Id = Guid.Parse("993B42E9-2A46-445D-BDBA-9C4551353BE6"),
-                            Name = "ĐVQLTT đã nhận biên bản trùng lặp và giấy xác nhận lưu chiểu",
-                            Order = 1
-                        },
-                        new StepDetail()
-                        {
-                            Name = "TTTV đang xác nhận nộp lưu chiểu",
-                            Order = 2,
-                            NextStepDetailId = Guid.Parse("C9B1F8A7-5B3B-4E5B-9C0D-1F2E3A4B5C6D")
-                        }
-                    }
-                },
-                new Step
-                {
-                    Id = khcnHtqtStepId,
-                    Name = "Đang xử lý bởi phòng khoa học công nghệ - hợp tác quốc tế",
-                    ShortName = "Đang xử lý bởi KHCN-HTQT",
-                    Order = 4,
-                     StepDetails = new List<StepDetail>()
-                    {
-                        new StepDetail()
-                        {
-                            Id = Guid.Parse("CF22AED9-0B93-4D2F-9D03-0A4C2485DABE"),
-                            Name = "KNCH-HTQT đã tiếp nhân hồ sơ",
-                            Order = 1
-                        },
-                        new StepDetail()
-                        {
-                            Name = "KNCH-HTQT đang kiểm tra chi tiết",
-                            Order = 2
-                        },
-                        new StepDetail()
-                        {
-                            Name = "KNCH-HTQT đã ra biên bản nghiệm thu",
-                            Order = 3
-                        },
-                        new StepDetail()
-                        {
-                            Name = "KNCH-HTQT đã tính số tiết NCKH",
-                            Order = 4
-                        }
-                    }
-                },
-                new Step
-                {
-                    Id = returnedStepId,
-                    Name = "Hồ sơ đã bị trả về",
-                    Order = 5,
-                    StepDetails = new List<StepDetail>()
-                    {
-                        new StepDetail()
-                        {
-                            Id = Guid.Parse("C9B1F8A7-5B3B-4E5B-9C0D-1F2E3A4B5C6D"),
-                            Name = "Hồ sơ đã bị trả về",
-                            Order = 1,
-                            IsReturnStep = true
-                        }
-                    }
-                }
+                Id = teacherInitialStepId,
+                Name = "Giảng viên đang chuẩn bị hồ sơ",
+                Order = 0
             };
-            _context.Steps.AddRange(steps);
+
+            // DVQLTT: 3 sub-steps
+            var dvqlttD1 = new StepDetail { Id = dvqlttInitialStepId, Name = "ĐVQLTT đang kiểm tra sơ lược", Order = 0 };
+            var dvqlttD2 = new StepDetail { Id = StepDetailId(dvqlttInitialStepId, 1), Name = "ĐVQLTT đang xác nhận phiếu đề nghị", Order = 1 };
+            var dvqlttD3 = new StepDetail { Id = StepDetailId(dvqlttInitialStepId, 2), Name = "ĐVQLTT chuyển bài báo công bố cho TTTV", Order = 2 };
+
+            // TTTV: 2 sub-steps
+            var tttvD1 = new StepDetail { Id = tttvStepId, Name = "TTTV đang kiểm tra trùng lặp", Order = 0 };
+            var tttvD2 = new StepDetail { Id = StepDetailId(tttvStepId, 1), Name = "TTTV đang xác nhận nộp lưu chiểu", Order = 1 };
+
+            // DVQLTT Review: 2 sub-steps
+            var dvqlttR1 = new StepDetail { Id = dvqlttReviewStepId, Name = "ĐVQLTT đã nhận biên bản trùng lặp và giấy xác nhận lưu chiểu", Order = 0 };
+            var dvqlttR2 = new StepDetail { Id = StepDetailId(dvqlttReviewStepId, 1), Name = "TTTV đang xác nhận nộp lưu chiểu", Order = 1 };
+
+            // KHCN-HTQT: 4 sub-steps
+            var khcnD1 = new StepDetail { Id = khcnHtqtStepId, Name = "KNCH-HTQT đã tiếp nhận hồ sơ", Order = 0 };
+            var khcnD2 = new StepDetail { Id = StepDetailId(khcnHtqtStepId, 1), Name = "KNCH-HTQT đang kiểm tra chi tiết", Order = 1 };
+            var khcnD3 = new StepDetail { Id = StepDetailId(khcnHtqtStepId, 2), Name = "KNCH-HTQT đã ra biên bản nghiệm thu", Order = 2 };
+            var khcnD4 = new StepDetail { Id = StepDetailId(khcnHtqtStepId, 3), Name = "KNCH-HTQT đã tính số tiết NCKH", Order = 3 };
+
+            // Returned step
+            var returnedDetail = new StepDetail
+            {
+                Id = returnedStepId,
+                Name = "Hồ sơ đã bị trả về",
+                Order = 0,
+                IsReturnStep = true
+            };
+
+            // Save all steps first (without NextStepId yet, since later steps aren't created yet)
+            var teacherStep = new Step { Id = teacherInitialStepId, Name = "Đang xử lý bởi Giảng viên", ShortName = "Đang xử lý bởi GV", Order = 0, StepDetails = new List<StepDetail> { teacherDetail } };
+            var dvqlttStep = new Step { Id = dvqlttInitialStepId, Name = "Đang xử lý bởi đơn vị quản lý trực tiếp", ShortName = "Đang xử lý bởi DVQLTT", Order = 1, StepDetails = new List<StepDetail> { dvqlttD1, dvqlttD2, dvqlttD3 } };
+            var tttvStep = new Step { Id = tttvStepId, Name = "Đang xử lý bởi Trung tâm thư viện", ShortName = "Đang xử lý bởi TTTV", Order = 2, StepDetails = new List<StepDetail> { tttvD1, tttvD2 } };
+            var dvqlttReviewStep = new Step { Id = dvqlttReviewStepId, Name = "Đang xử lý bởi đơn vị quản lý trực tiếp 2", ShortName = "Đang xử lý bởi DVQLTT 2", Order = 3, StepDetails = new List<StepDetail> { dvqlttR1, dvqlttR2 } };
+            var khcnStep = new Step { Id = khcnHtqtStepId, Name = "Đang xử lý bởi phòng khoa học công nghệ - hợp tác quốc tế", ShortName = "Đang xử lý bởi KHCN-HTQT", Order = 4, StepDetails = new List<StepDetail> { khcnD1, khcnD2, khcnD3, khcnD4 } };
+            var returnedStep = new Step { Id = returnedStepId, Name = "Hồ sơ đã bị trả về", ShortName = "Hồ sơ bị trả về", Order = 5, StepDetails = new List<StepDetail> { returnedDetail } };
+
+            _context.Steps.AddRange(teacherStep, dvqlttStep, tttvStep, dvqlttReviewStep, khcnStep, returnedStep);
+            await _context.SaveChangesAsync();
+
+            // Wire up Step-level chain via NextStepId
+            teacherStep.NextStepId = dvqlttInitialStepId;
+            dvqlttStep.NextStepId = tttvStepId;
+            tttvStep.NextStepId = dvqlttReviewStepId;
+            dvqlttReviewStep.NextStepId = khcnHtqtStepId;
+            khcnStep.NextStepId = null;
+            returnedStep.NextStepId = null;
             await _context.SaveChangesAsync();
         }
 

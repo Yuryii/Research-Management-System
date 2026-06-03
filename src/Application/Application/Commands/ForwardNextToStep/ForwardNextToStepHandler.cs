@@ -50,12 +50,26 @@ public class ForwardNextToStepCommandHandler : IRequestHandler<ForwardNextToStep
             throw new UnauthorizedAccessException("User does not have permission to update the application at the current step.");
         }
 
-        if (!application.StepDetail.NextStepDetailId.HasValue)
+        // Get current Step from Application's StepDetail
+        var currentStep = await _context.StepDetails
+            .AsNoTracking()
+            .Where(sd => sd.Id == application.StepDetailId)
+            .Select(sd => sd.Step)
+            .FirstAsync(cancellationToken);
+
+        if (!currentStep.NextStepId.HasValue)
         {
             throw new InvalidOperationException("Không tìm thấy bước tiếp theo. Hồ sơ đã ở bước cuối cùng của quy trình.");
         }
 
-        application.StepDetailId = application.StepDetail.NextStepDetailId.Value;
+        // Get first StepDetail (lowest Order) of next Step
+        var nextStepDetail = await _context.StepDetails
+            .AsNoTracking()
+            .Where(sd => sd.StepId == currentStep.NextStepId.Value)
+            .OrderBy(sd => sd.Order)
+            .FirstAsync(cancellationToken);
+
+        application.StepDetailId = nextStepDetail.Id;
 
         await _context.SaveChangesAsync(cancellationToken);
 

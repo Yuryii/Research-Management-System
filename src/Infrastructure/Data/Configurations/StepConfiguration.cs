@@ -17,5 +17,9 @@ public class StepConfiguration : IEntityTypeConfiguration<Step>
             .HasForeignKey(sd => sd.StepId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasOne(s => s.NextStep)
+            .WithMany()
+            .HasForeignKey(s => s.NextStepId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

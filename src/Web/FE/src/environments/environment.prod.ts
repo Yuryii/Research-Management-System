@@ -1,11 +1,11 @@
 export const environment = {
   production: true,
   defaultStepIds: {
-    teacherStepId: '11aedd99-339c-49ef-46af-08debee1df74',
-    dvqlttStepId: 'a2927efa-f0e7-4ffe-46b0-08debee1df74',
-    tttvStepId: 'e1deb1e8-462d-4182-46b1-08debee1df74',
-    dvqlttReviewStepId: 'e259f6f6-7d6b-4e3f-46b2-08debee1df74',
-    khcnHtqtStepId: '67916c4b-80ac-4cf1-46b3-08debee1df74',
-    returnedStepId: '3a358786-cbe8-44ed-46b4-08debee1df74',
+    teacherStepId: '343b1904-ab23-42d4-80db-760e93f15b09',
+    dvqlttStepId: 'e503d21a-d54d-40f9-c13f-08dec0f681f7',
+    tttvStepId: '3dbb966a-7de9-4ec3-c140-08dec0f681f7',
+    dvqlttReviewStepId: '766c36dc-334e-4839-c141-08dec0f681f7',
+    khcnHtqtStepId: 'fee21136-4974-4a9d-c142-08dec0f681f7',
+    returnedStepId: 'c71abb19-f993-43ba-c143-08dec0f681f7',
   },
 };
