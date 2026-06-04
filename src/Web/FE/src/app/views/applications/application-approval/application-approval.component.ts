@@ -64,7 +64,7 @@ export interface ApplicationFormData {
     TabPanels,
     TabPanel,
   ],
-  providers: [MessageService, DialogService],
+  providers: [DialogService],
   templateUrl: './application-approval.component.html',
   styleUrls: ['./application-approval.component.scss'],
 })

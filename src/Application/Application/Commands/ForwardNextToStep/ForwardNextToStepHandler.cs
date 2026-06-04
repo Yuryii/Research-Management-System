@@ -59,7 +59,7 @@ public class ForwardNextToStepCommandHandler : IRequestHandler<ForwardNextToStep
 
         if (!currentStep.NextStepId.HasValue)
         {
-            throw new InvalidOperationException("Không tìm thấy bước tiếp theo. Hồ sơ đã ở bước cuối cùng của quy trình.");
+            throw new InvalidOperationException("Hồ sơ đã ở bước cuối cùng của quy trình.");
         }
 
         // Get first StepDetail (lowest Order) of next Step
