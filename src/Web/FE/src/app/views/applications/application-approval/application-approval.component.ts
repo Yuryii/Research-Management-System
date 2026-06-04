@@ -31,6 +31,7 @@ import { DocumentCountBadgeComponent } from '../../../shared/components/document
 import { ApplicationModalComponent } from '../applications/application-modal/application-modal.component';
 import { StepFlowModalComponent } from '../step-flow-modal/step-flow-modal.component';
 import { ApiErrorService } from '../../../shared/services/api-error.service';
+import { TruncatePipe } from '../../../shared/pipes/truncate.pipe';
 
 export enum ApplicationStatus {
   Draft = 0,
@@ -63,6 +64,7 @@ export interface ApplicationFormData {
     Tab,
     TabPanels,
     TabPanel,
+    TruncatePipe,
   ],
   providers: [DialogService],
   templateUrl: './application-approval.component.html',

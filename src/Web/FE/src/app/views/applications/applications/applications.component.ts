@@ -25,10 +25,11 @@ import {
   ApplicationDto,
   ApplicationsClient,
   StepsClient,
+  ApplicationFilesClient,
   UpdateApplicationCommand,
 } from '../../../web-api-client';
 import { ApiErrorService } from '../../../shared/services/api-error.service';
-import { HttpClient } from '@angular/common/http';
+import { TruncatePipe } from '../../../shared/pipes/truncate.pipe';
 export enum ApplicationStatus {
   Draft = 0,
   Submitted = 1,
@@ -56,6 +57,7 @@ export interface ApplicationFormData {
     DynamicDialogModule,
     PaginatorModule,
     DocumentCountBadgeComponent,
+    TruncatePipe,
   ],
   providers: [MessageService, DialogService],
   templateUrl: './applications.component.html',
@@ -66,7 +68,7 @@ export class ApplicationsComponent implements OnInit {
   private readonly messageService = inject(MessageService);
   private readonly applicationService = inject(ApplicationsClient);
   private readonly stepsClient = inject(StepsClient);
-  private readonly http = inject(HttpClient);
+  private readonly applicationFilesClient = inject(ApplicationFilesClient);
   private readonly apiErrorService = inject(ApiErrorService);
   applications: ApplicationDto[] = [];
   isLoading = false;
@@ -228,18 +230,13 @@ export class ApplicationsComponent implements OnInit {
             next: () => {
               // Upload files separately after text update succeeds
               if (formData.files && formData.files.length > 0) {
-                const formDataObj = new FormData();
-                formDataObj.append('applicationId', application.id);
-                formDataObj.append('stepId', application.stepId);
-                formData.files.forEach((file) => {
-                  formDataObj.append('files', file, file.name);
-                });
+                const fileParameters = formData.files.map((file) => ({
+                  data: file,
+                  fileName: file.name,
+                }));
 
-                this.http
-                  .post(
-                    '/api/ApplicationFiles/CreateApplicationFiles',
-                    formDataObj,
-                  )
+                this.applicationFilesClient
+                  .create(application.id, fileParameters)
                   .subscribe({
                     next: () => {
                       this.messageService.add({

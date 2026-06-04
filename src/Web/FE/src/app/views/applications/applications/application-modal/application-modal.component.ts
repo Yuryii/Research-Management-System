@@ -21,6 +21,7 @@ import { AuthService } from '../../../../../api-authorization/auth.service';
 import { Roles } from '../../../../../api-authorization/Roles';
 import { take } from 'rxjs/operators';
 import { ApiErrorService } from '../../../../shared/services/api-error.service';
+import { TruncatePipe } from '../../../../shared/pipes/truncate.pipe';
 
 @Component({
   selector: 'app-application-modal',
@@ -31,6 +32,7 @@ import { ApiErrorService } from '../../../../shared/services/api-error.service';
     ToastModule,
     FileUploadModule,
     FormControlDirective,
+    TruncatePipe,
   ],
   templateUrl: './application-modal.component.html',
   styleUrls: ['./application-modal.component.scss'],

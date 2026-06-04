@@ -63,8 +63,8 @@
       <th scope="row" class="w-10">
         {{ (pageNumber - 1) * pageSize + index + 1 }}
       </th>
-      <td>{{ application.title }}</td>
-      <td>{{ application.description }}</td>
+      <td>{{ application.title | truncate: 50 }}</td>
+      <td>{{ application.description | truncate: 80 }}</td>
       <td>
         <app-document-count-badge [count]="(application.myApplications?.length || 0) + (application.preAttachments?.length || 0)"></app-document-count-badge>
       </td>

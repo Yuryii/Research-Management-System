@@ -6,3 +6,16 @@
     background-color: var(--cui-tertiary-bg, #f8f9fa);
   }
 }
+
+:host ::ng-deep .file-item {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+:host ::ng-deep .file-name {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
