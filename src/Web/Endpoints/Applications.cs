@@ -104,7 +104,7 @@ public class Applications : IEndpointGroup
     }
 
     [EndpointSummary("Return an Application")]
-    [EndpointDescription("Returns an application to the return step, saves notification and files.")]
+    [EndpointDescription("Returns an application to the return step, saves application return record and files.")]
     [Consumes("multipart/form-data")]
     public static async Task<Results<Ok<Guid>, BadRequest<string>>> ReturnApplication(
         ISender sender,
@@ -113,8 +113,8 @@ public class Applications : IEndpointGroup
     {
         try
         {
-            var notificationId = await sender.Send(command, cancellationToken);
-            return TypedResults.Ok(notificationId);
+            var applicationReturnId = await sender.Send(command, cancellationToken);
+            return TypedResults.Ok(applicationReturnId);
         }
         catch (InvalidOperationException ex)
         {

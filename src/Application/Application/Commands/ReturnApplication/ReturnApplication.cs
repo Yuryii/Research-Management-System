@@ -55,7 +55,7 @@ public class ReturnApplicationCommandHandler : IRequestHandler<ReturnApplication
 
         application.StepDetailId = returnStepDetail.Id;
 
-        var notification = new Notification
+        var applicationReturn = new ApplicationReturn
         {
             Id = Guid.NewGuid(),
             Title = request.Title,
@@ -63,7 +63,7 @@ public class ReturnApplicationCommandHandler : IRequestHandler<ReturnApplication
             RecipientId = request.RecipientId ?? application.CreatedBy
         };
 
-        _context.Notifications.Add(notification);
+        _context.ApplicationReturns.Add(applicationReturn);
 
         IReadOnlyList<string> savedFilePaths = [];
         if (request.Files.Count > 0)
@@ -80,9 +80,9 @@ public class ReturnApplicationCommandHandler : IRequestHandler<ReturnApplication
                 var file = request.Files[index];
                 var savedFilePath = savedFilePaths[index];
 
-                _context.NotificationFiles.Add(new NotificationFile
+                _context.ApplicationReturnFiles.Add(new ApplicationReturnFile
                 {
-                    NotificationId = notification.Id,
+                    ApplicationReturnId = applicationReturn.Id,
                     File = new RMS.Domain.Entities.Models.File
                     {
                         Name = file.FileName,
@@ -108,6 +108,6 @@ public class ReturnApplicationCommandHandler : IRequestHandler<ReturnApplication
             throw;
         }
 
-        return notification.Id;
+        return applicationReturn.Id;
     }
 }

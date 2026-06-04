@@ -11,5 +11,5 @@ public partial class File : BaseAuditableEntity<Guid>
     public required long Length { get; set; }
 
     public virtual IList<ApplicationFile> ApplicationFiles { get; set; } = new List<ApplicationFile>();
-    public virtual IList<NotificationFile> NotificationFiles { get; set; } = new List<NotificationFile>();
+    public virtual IList<ApplicationReturnFile> ApplicationReturnFiles { get; set; } = new List<ApplicationReturnFile>();
 }

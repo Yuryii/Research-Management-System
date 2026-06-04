@@ -25,8 +25,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     public DbSet<StepDetail> StepDetails => Set<StepDetail>();
     public DbSet<AcademicDegree> AcademicDegrees => Set<AcademicDegree>();
     public DbSet<ResearchHour> ResearchHours => Set<ResearchHour>();
-    public DbSet<Notification> Notifications => Set<Notification>();
-    public DbSet<NotificationFile> NotificationFiles => Set<NotificationFile>();
+    public DbSet<ApplicationReturn> ApplicationReturns => Set<ApplicationReturn>();
+    public DbSet<ApplicationReturnFile> ApplicationReturnFiles => Set<ApplicationReturnFile>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
