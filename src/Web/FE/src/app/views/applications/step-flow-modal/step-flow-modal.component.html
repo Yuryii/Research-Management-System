@@ -51,17 +51,15 @@
     </div>
   }
 
-  <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
-    <div>
-      @if (selectedStepDetailId && selectedStepDetailId !== currentStepDetailId && !isTeacher()) {
-        <button cButton color="primary" (click)="onUpdateStepDetail()" [disabled]="isUpdating">
-          @if (isUpdating) {
-            <i class="pi pi-spin pi-spinner me-1"></i>
-          }
-          Cập nhật bước
-        </button>
-      }
-    </div>
+  <div class="d-flex justify-content-end align-items-center gap-2 mt-3 pt-3 border-top">
     <button cButton color="secondary" (click)="close()">Đóng</button>
+    @if (selectedStepDetailId && selectedStepDetailId !== currentStepDetailId && !isTeacher()) {
+      <button cButton color="primary" (click)="onUpdateStepDetail()" [disabled]="isUpdating">
+        @if (isUpdating) {
+          <i class="pi pi-spin pi-spinner me-1"></i>
+        }
+        Cập nhật bước
+      </button>
+    }
   </div>
 </div>

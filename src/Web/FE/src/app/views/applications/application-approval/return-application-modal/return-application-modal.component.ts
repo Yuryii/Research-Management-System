@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ToastModule } from 'primeng/toast';
 import { FileUploadModule } from 'primeng/fileupload';
 import { DynamicDialogRef, DynamicDialogConfig } from 'primeng/dynamicdialog';
-import { FormControlDirective } from '@coreui/angular';
+import { FormControlDirective, ButtonDirective } from '@coreui/angular';
 import {
   FormGroup,
   FormControl,
@@ -28,6 +28,7 @@ export interface FileParameter {
     ToastModule,
     FileUploadModule,
     FormControlDirective,
+    ButtonDirective,
   ],
   templateUrl: './return-application-modal.component.html',
   styleUrls: ['./return-application-modal.component.scss'],
