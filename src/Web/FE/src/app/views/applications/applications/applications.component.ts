@@ -27,6 +27,7 @@ import {
   StepsClient,
   UpdateApplicationCommand,
 } from '../../../web-api-client';
+import { ApiErrorService } from '../../../shared/services/api-error.service';
 import { HttpClient } from '@angular/common/http';
 export enum ApplicationStatus {
   Draft = 0,
@@ -66,6 +67,7 @@ export class ApplicationsComponent implements OnInit {
   private readonly applicationService = inject(ApplicationsClient);
   private readonly stepsClient = inject(StepsClient);
   private readonly http = inject(HttpClient);
+  private readonly apiErrorService = inject(ApiErrorService);
   applications: ApplicationDto[] = [];
   isLoading = false;
   selectedStatus: ApplicationStatus | null | undefined = null;
@@ -89,9 +91,13 @@ export class ApplicationsComponent implements OnInit {
         }
         this.loadApplications();
       },
-      error: () => {
+      error: (err) => {
         this.currentStepId = undefined;
         this.loadApplications();
+        this.apiErrorService.showError(
+          this.apiErrorService.extractMessage(err),
+          'Lỗi',
+        );
       },
     });
   }
@@ -106,13 +112,12 @@ export class ApplicationsComponent implements OnInit {
           this.totalCount = result?.totalCount ?? 0;
           this.isLoading = false;
         },
-        error: () => {
+        error: (err) => {
           this.isLoading = false;
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Lỗi',
-            detail: 'Không thể tải danh sách hồ sơ đăng ký.',
-          });
+          this.apiErrorService.showError(
+            this.apiErrorService.extractMessage(err),
+            'Lỗi',
+          );
         },
       });
   }
@@ -169,11 +174,10 @@ export class ApplicationsComponent implements OnInit {
               this.loadApplications();
             },
             error: (err) => {
-              this.messageService.add({
-                severity: 'error',
-                summary: 'Lỗi',
-                detail: 'Đã có lỗi xảy ra khi tạo hồ sơ đăng ký.',
-              });
+              this.apiErrorService.showError(
+                this.apiErrorService.extractMessage(err),
+                'Lỗi',
+              );
             },
           });
       }
@@ -264,12 +268,11 @@ export class ApplicationsComponent implements OnInit {
                 this.loadApplications();
               }
             },
-            error: () => {
-              this.messageService.add({
-                severity: 'error',
-                summary: 'Lỗi',
-                detail: 'Đã có lỗi xảy ra khi cập nhật hồ sơ đăng ký.',
-              });
+            error: (err) => {
+              this.apiErrorService.showError(
+                this.apiErrorService.extractMessage(err),
+                'Lỗi',
+              );
             },
           });
     });

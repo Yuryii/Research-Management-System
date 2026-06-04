@@ -1,4 +1,5 @@
 import { AuthorizeInterceptor } from './../api-authorization/authorize.interceptor';
+import { ErrorHandlerInterceptor } from './../api-authorization/error-handler.interceptor';
 import {
   APP_ID,
   ApplicationConfig,
@@ -27,6 +28,7 @@ import { API_BASE_URL } from './web-api-client';
 import { AuthService } from '../api-authorization/auth.service';
 
 import { providePrimeNG } from 'primeng/config';
+import { MessageService } from 'primeng/api';
 
 import Aura from '@primeuix/themes/aura';
 import { definePreset } from '@primeuix/themes';
@@ -113,11 +115,19 @@ export const appConfig: ApplicationConfig = {
       },
     }),
 
+    MessageService,
+
     { provide: APP_ID, useValue: 'ng-cli-universal' },
 
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthorizeInterceptor,
+      multi: true,
+    },
+
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: ErrorHandlerInterceptor,
       multi: true,
     },
 

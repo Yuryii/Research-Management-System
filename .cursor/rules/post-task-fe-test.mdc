@@ -1,0 +1,101 @@
+---
+description: After completing any task, list the specific FE test steps for that task
+alwaysApply: true
+---
+
+# FE Business Logic Test Steps
+
+After completing **any task** (feature, bug fix, refactor, UI change, API change, etc.), immediately list the FE test steps for the task just completed. Do not include Aspire log verification steps (handled separately by `post-task-verification.mdc`).
+
+## System Roles
+
+| Role | Description |
+|------|-------------|
+| Teacher | Giang vien — submits applications |
+| Tttv | Ttv khoa — approves, forwards, returns applications |
+| Dvqltt | Don vi quan ly — approves, forwards, returns applications |
+| KhcnHtqt | Khoa hoc & HTQT — approves, forwards, returns applications |
+| Administrator | Full access |
+
+## Test Step Format
+
+After completing a task, output a markdown section:
+
+```markdown
+## FE Test Steps
+
+### Test Accounts
+- [Role]: [account description]
+
+### Steps
+1. [Step 1 — specific to the task completed]
+2. [Step 2]
+3. ...
+
+### Expected Results
+- [Result 1]
+- [Result 2]
+
+### Multi-role Verification (if feature spans multiple roles)
+1. Log in with [different Role]
+2. [Relevant step]
+```
+
+## Detailed Guidelines
+
+### Test Accounts
+- State which role(s) are needed
+- Provide specific account details if needed (e.g., `admin@test.com`)
+
+### Steps
+- Always start with the login step
+- Be specific, sequential, include example values for inputs
+- Note the URL or navigation path if switching screens/tabs
+
+### Expected Results
+- Precisely describe the UI/API result after each step
+- If there is an error message, state the exact message
+
+### Multi-role
+- If the feature involves interaction between roles (e.g., Teacher creates, Tttv approves), test all relevant roles
+- Start from the creator/actor role, end at the recipient role
+
+## Example
+
+### Task: Add return notification feature
+
+```markdown
+## FE Test Steps
+
+### Test Accounts
+- Administrator: returns application, creates notification
+- Teacher: receives notification
+
+### Steps
+1. Log in with Administrator account
+2. Navigate to /workflow/application-approval
+3. Select any application → Click "Tra ho so" (Return Application)
+4. Fill Title: "Ho so thieu tai lieu", Description: "Vui long bo sung ban scan CMND"
+5. Click "Tra ho so" to submit
+6. Verify toast message "Ho so da duoc tra ve." appears
+
+### Expected Results
+- Modal closes
+- Application list auto-refreshes
+- Notification created in database with correct RecipientId (application creator)
+
+### Multi-role Verification
+1. Log in with the Teacher account that created the application in step 3
+2. (Currently bell icon is a placeholder — verify via DB)
+3. Or log in as Administrator → verify via:
+   ```sql
+   SELECT * FROM Notifications WHERE RecipientId = '<teacher-user-id>';
+   ```
+```
+
+## Key URLs
+
+- App: `https://rms.dev.localhost:17114`
+- Login: `/login`
+- Application approval: `/workflow/application-approval`
+- Application submission: `/workflow/applications`

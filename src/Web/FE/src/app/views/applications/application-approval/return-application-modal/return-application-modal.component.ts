@@ -12,6 +12,7 @@ import {
 } from '@angular/forms';
 import { MessageService } from 'primeng/api';
 import { ApplicationsClient } from '../../../../web-api-client';
+import { ApiErrorService } from '../../../../shared/services/api-error.service';
 
 export interface FileParameter {
   data: File;
@@ -36,6 +37,7 @@ export class ReturnApplicationModalComponent implements OnInit {
   public config = inject(DynamicDialogConfig);
   private readonly applicationsClient = inject(ApplicationsClient);
   private readonly messageService = inject(MessageService);
+  private readonly apiErrorService = inject(ApiErrorService);
 
   uploadedFiles: File[] = [];
   isSubmitting = false;
@@ -98,12 +100,10 @@ export class ReturnApplicationModalComponent implements OnInit {
         },
         error: (err) => {
           this.isSubmitting = false;
-          const msg = err?.error ?? 'Có lỗi xảy ra khi trả hồ sơ.';
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Lỗi',
-            detail: msg,
-          });
+          this.apiErrorService.showError(
+            this.apiErrorService.extractMessage(err),
+            'Lỗi',
+          );
         },
       });
   }

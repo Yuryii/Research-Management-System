@@ -30,6 +30,7 @@ import { ReturnApplicationModalComponent } from './return-application-modal/retu
 import { DocumentCountBadgeComponent } from '../../../shared/components/document-count-badge/document-count-badge.component';
 import { ApplicationModalComponent } from '../applications/application-modal/application-modal.component';
 import { StepFlowModalComponent } from '../step-flow-modal/step-flow-modal.component';
+import { ApiErrorService } from '../../../shared/services/api-error.service';
 
 export enum ApplicationStatus {
   Draft = 0,
@@ -74,6 +75,7 @@ export class ApplicationApprovalComponent implements OnInit {
   private readonly stepsClient = inject(StepsClient);
   private readonly authService = inject(AuthService);
   private readonly applicationFilesClient = inject(ApplicationFilesClient);
+  private readonly apiErrorService = inject(ApiErrorService);
   applications: ApplicationDto[] = [];
   isLoading = false;
   pageNumber = 1;
@@ -128,13 +130,12 @@ export class ApplicationApprovalComponent implements OnInit {
           this.totalCount = result?.totalCount ?? 0;
           this.isLoading = false;
         },
-        error: () => {
+        error: (err) => {
           this.isLoading = false;
-          void this.messageService.add({
-            severity: 'error',
-            summary: 'Lỗi',
-            detail: 'Không thể tải danh sách hồ sơ.',
-          });
+          this.apiErrorService.showError(
+            this.apiErrorService.extractMessage(err),
+            'Lỗi',
+          );
         },
       });
   }
@@ -166,12 +167,7 @@ export class ApplicationApprovalComponent implements OnInit {
           this.loadApplications();
         },
         error: (err) => {
-          const msg = err?.message ?? err?.error ?? 'Chuyển tiếp thất bại.';
-          void this.messageService.add({
-            severity: 'error',
-            summary: 'Lỗi',
-            detail: msg,
-          });
+          this.apiErrorService.showError(this.apiErrorService.extractMessage(err), 'Lỗi');
         },
       });
   }
@@ -275,12 +271,11 @@ export class ApplicationApprovalComponent implements OnInit {
                 this.loadApplications();
               }
             },
-            error: () => {
-              void this.messageService.add({
-                severity: 'error',
-                summary: 'Lỗi',
-                detail: 'Đã có lỗi xảy ra khi cập nhật hồ sơ đăng ký.',
-              });
+            error: (err) => {
+              this.apiErrorService.showError(
+                this.apiErrorService.extractMessage(err),
+                'Lỗi',
+              );
             },
           });
     });

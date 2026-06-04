@@ -16,6 +16,7 @@ import {
   UpdateApplicationStepDetailCommand,
 } from '../../../web-api-client';
 import { TruncatePipe } from '../../../pipes/truncate.pipe';
+import { ApiErrorService } from '../../../shared/services/api-error.service';
 
 @Component({
   selector: 'app-step-flow-modal',
@@ -31,6 +32,7 @@ export class StepFlowModalComponent implements OnInit {
   private stepsClient = inject(StepsClient);
   private applicationsClient = inject(ApplicationsClient);
   private messageService = inject(MessageService);
+  private apiErrorService = inject(ApiErrorService);
 
   allSteps: StepDto[] = [];
   currentStepDetailId: string = '';
@@ -58,8 +60,12 @@ export class StepFlowModalComponent implements OnInit {
         this.setCurrentStep();
         this.isLoading = false;
       },
-      error: () => {
+      error: (err) => {
         this.isLoading = false;
+        this.apiErrorService.showError(
+          this.apiErrorService.extractMessage(err),
+          'Lỗi',
+        );
       },
     });
   }
@@ -94,12 +100,10 @@ export class StepFlowModalComponent implements OnInit {
       },
       error: (err) => {
         this.isUpdating = false;
-        const msg = err?.error ?? 'Cập nhật thất bại.';
-        void this.messageService.add({
-          severity: 'error',
-          summary: 'Lỗi',
-          detail: msg,
-        });
+        this.apiErrorService.showError(
+          this.apiErrorService.extractMessage(err),
+          'Lỗi',
+        );
       },
     });
   }

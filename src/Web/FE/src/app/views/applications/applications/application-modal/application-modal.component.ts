@@ -20,6 +20,7 @@ import { StepFlowModalComponent } from '../../step-flow-modal/step-flow-modal.co
 import { AuthService } from '../../../../../api-authorization/auth.service';
 import { Roles } from '../../../../../api-authorization/Roles';
 import { take } from 'rxjs/operators';
+import { ApiErrorService } from '../../../../shared/services/api-error.service';
 
 @Component({
   selector: 'app-application-modal',
@@ -51,6 +52,7 @@ export class ApplicationModalComponent implements OnInit {
     private messageService: MessageService,
     private readonly dialogService: DialogService,
     private readonly authService: AuthService,
+    private readonly apiErrorService: ApiErrorService,
   ) {}
 
   form = new FormGroup({
@@ -121,13 +123,12 @@ export class ApplicationModalComponent implements OnInit {
           });
           this.ref.close({ fileUploadSuccess: true });
         },
-        error: () => {
+        error: (err) => {
           this.isUploadingFiles = false;
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Lỗi',
-            detail: 'Không thể tải tệp lên.',
-          });
+          this.apiErrorService.showError(
+            this.apiErrorService.extractMessage(err),
+            'Lỗi',
+          );
         },
       });
   }
@@ -208,12 +209,11 @@ export class ApplicationModalComponent implements OnInit {
           document.body.removeChild(a);
           URL.revokeObjectURL(url);
         },
-        error: () => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Lỗi',
-            detail: 'Không thể tải tệp.',
-          });
+        error: (err) => {
+          this.apiErrorService.showError(
+            this.apiErrorService.extractMessage(err),
+            'Lỗi',
+          );
         },
       });
   }
