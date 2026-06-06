@@ -9,7 +9,7 @@ public class ForwardNextToStepCommandValidator : AbstractValidator<ForwardNextTo
     public ForwardNextToStepCommandValidator()
     {
         RuleFor(x => x.ApplicationId)
-            .NotEmpty().WithMessage("Application ID is required.")
-            .Must(id => id != Guid.Empty).WithMessage("Application ID cannot be an empty GUID.");
+            .NotEmpty().WithMessage("Application ID is required.");
+
     }
 }

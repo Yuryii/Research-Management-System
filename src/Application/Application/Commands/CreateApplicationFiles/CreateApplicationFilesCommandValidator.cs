@@ -11,7 +11,7 @@ public class CreateApplicationFilesCommandValidator : AbstractValidator<CreateAp
         RuleFor(x => x.Files)
             .NotNull()
             .WithMessage("Files are required.")
-            .Must(files => files.Count > 0)
+            .NotEmpty()
             .WithMessage("At least one file is required.");
     }
 }

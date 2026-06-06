@@ -7,22 +7,20 @@
   visible
 >
   <c-sidebar-header class="border-bottom">
-    <c-sidebar-brand [routerLink]="[]">
-      <svg
-        [class]="{ icon: false }"
-        cIcon
-        class="sidebar-brand-full"
-        height="32"
-        name="logo"
-        title="CoreUI Logo"
-      ></svg>
-      <svg
-        cIcon
-        class="sidebar-brand-narrow"
-        height="32"
-        name="signet"
-        title="CoreUI Logo"
-      ></svg>
+    <c-sidebar-brand [routerLink]="[]" class="sidebar-brand-custom">
+      <div class="sidebar-brand-full sidebar-brand-full-custom">
+        <img
+          class="sidebar-brand-full-logo"
+          src="assets/brand/dntu-logo.png"
+          alt="DNTU Logo"
+        />
+        <span class="sidebar-brand-full-text">dntu</span>
+      </div>
+      <img
+        class="sidebar-brand-narrow sidebar-brand-narrow-logo"
+        src="assets/brand/dntu-logo.png"
+        alt="DNTU Logo"
+      />
     </c-sidebar-brand>
   </c-sidebar-header>
 

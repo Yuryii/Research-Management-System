@@ -56,4 +56,26 @@ public class ColourTests
         (color1 == color2).ShouldBe(true);
         (color1 == color3).ShouldBe(false);
     }
+
+    [Test]
+    public void ShouldReturnDefaultBlackForNullOrEmptyCode()
+    {
+        var colourNull = new Colour(null!);
+        var colourEmpty = new Colour(string.Empty);
+
+        colourNull.Code.ShouldBe("#000000");
+        colourEmpty.Code.ShouldBe("#000000");
+    }
+
+    [Test]
+    public void ShouldSupportAllStaticColours()
+    {
+        Colour.Red.Code.ShouldBe("#E05C4D");
+        Colour.Orange.Code.ShouldBe("#D98B2B");
+        Colour.Green.Code.ShouldBe("#4CAF50");
+        Colour.Teal.Code.ShouldBe("#26A69A");
+        Colour.Blue.Code.ShouldBe("#5C6BC0");
+        Colour.Purple.Code.ShouldBe("#AB47BC");
+        Colour.Grey.Code.ShouldBe("#78909C");
+    }
 }

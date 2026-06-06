@@ -1,6 +1,6 @@
 ﻿using RMS.Application.Application.Commands.CreateApplication;
 
-namespace RMS.Application.Application.Commands.CreatApplication;
+namespace RMS.Application.Application.Commands.CreateApplication;
 
 public class CreateApplicationCommandValidator : AbstractValidator<CreateApplicationCommand>
 {

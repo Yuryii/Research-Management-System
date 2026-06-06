@@ -30,6 +30,11 @@
     <ItemGroup>
       <Folder Include="Common\Behaviours\" />
       <Folder Include="Common\Mappings\" />
+      <Folder Include="Common\Models\" />
+      <Folder Include="Common\Extensions\" />
+      <Folder Include="Security\" />
+      <Folder Include="Application\Commands\" />
+      <Folder Include="Steps\Commands\" />
     </ItemGroup>
 
 </Project>

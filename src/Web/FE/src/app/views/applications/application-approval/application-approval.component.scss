@@ -66,6 +66,37 @@
 
 .pagination-wrapper {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   margin-top: 1rem;
+}
+
+.pagination-wrapper .p-paginator {
+  background: var(--cui-body-bg);
+  border: 1px solid var(--cui-border-color);
+  border-radius: var(--cui-border-radius);
+  color: var(--cui-body-color);
+  padding: 0.25rem 0.5rem;
+}
+
+.pagination-wrapper .p-paginator .p-paginator-page,
+.pagination-wrapper .p-paginator .p-paginator-first,
+.pagination-wrapper .p-paginator .p-paginator-prev,
+.pagination-wrapper .p-paginator .p-paginator-next,
+.pagination-wrapper .p-paginator .p-paginator-last {
+  border-radius: var(--cui-border-radius-sm);
+  color: var(--cui-body-color);
+}
+
+.pagination-wrapper .p-paginator .p-paginator-page:not(.p-highlight):hover,
+.pagination-wrapper .p-paginator .p-paginator-first:not(.p-disabled):hover,
+.pagination-wrapper .p-paginator .p-paginator-prev:not(.p-disabled):hover,
+.pagination-wrapper .p-paginator .p-paginator-next:not(.p-disabled):hover,
+.pagination-wrapper .p-paginator .p-paginator-last:not(.p-disabled):hover {
+  background: var(--cui-tertiary-bg);
+  color: var(--cui-body-color);
+}
+
+.pagination-wrapper .p-paginator .p-paginator-page.p-highlight {
+  background: var(--cui-primary);
+  color: var(--cui-white, #fff);
 }

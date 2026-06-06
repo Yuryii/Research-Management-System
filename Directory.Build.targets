@@ -1,0 +1,12 @@
+<Project>
+  <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
+    <CollectCoverage>true</CollectCoverage>
+    <CoverletOutput>$(ArtifactsPath)/coverage</CoverletOutput>
+    <CoverletOutputFormat>cobertura;json</CoverletOutputFormat>
+    <MergeCoverletReports>true</MergeCoverletReports>
+    <Include>[RMS.*]</Include>
+    <Exclude>[RMS.*]Tests</Exclude>
+    <Exclude>[RMS.*]TestAssets</Exclude>
+    <ExcludeByFile>*Migrations*</ExcludeByFile>
+  </PropertyGroup>
+</Project>

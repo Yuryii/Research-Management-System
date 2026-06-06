@@ -53,10 +53,10 @@
             <td>{{ application.title | truncate: 50 }}</td>
             <td>{{ application.description | truncate: 80 }}</td>
             <td>
-              <app-document-count-badge [count]="application.preAttachments?.length || 0"></app-document-count-badge>
+              <app-document-count-badge [count]="application.myApplications?.length || 0"></app-document-count-badge>
             </td>
             <td>
-              <app-document-count-badge [count]="application.myApplications?.length || 0"></app-document-count-badge>
+              <app-document-count-badge [count]="application.preAttachments?.length || 0"></app-document-count-badge>
             </td>
             <td>{{ application.teacherName || '-' }}</td>
             <td>
