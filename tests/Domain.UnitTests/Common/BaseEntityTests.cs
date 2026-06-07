@@ -12,79 +12,99 @@ public class BaseEntityTests
     [Test]
     public void DomainEvents_ShouldBeEmpty_WhenCreated()
     {
+        // Arrange
         var entity = new TestEntity();
 
+        // Act & Assert
         entity.DomainEvents.ShouldBeEmpty();
     }
 
     [Test]
     public void ShouldAddDomainEvent_WhenAddDomainEventCalled()
     {
+        // Arrange
         var entity = new TestEntity();
         var domainEvent = new TodoItemCompletedEvent(new TodoItem { Id = 1, ListId = 1 });
 
+        // Act
         entity.AddDomainEvent(domainEvent);
 
+        // Assert
         entity.DomainEvents.ShouldContain(domainEvent);
     }
 
     [Test]
     public void ShouldRemoveDomainEvent_WhenRemoveDomainEventCalled()
     {
+        // Arrange
         var entity = new TestEntity();
         var domainEvent = new TodoItemCompletedEvent(new TodoItem { Id = 1, ListId = 1 });
         entity.AddDomainEvent(domainEvent);
 
+        // Act
         entity.RemoveDomainEvent(domainEvent);
 
+        // Assert
         entity.DomainEvents.ShouldBeEmpty();
     }
 
     [Test]
     public void ShouldClearDomainEvents_WhenClearDomainEventsCalled()
     {
+        // Arrange
         var entity = new TestEntity();
         entity.AddDomainEvent(new TodoItemCompletedEvent(new TodoItem { Id = 1, ListId = 1 }));
         entity.AddDomainEvent(new TodoItemCompletedEvent(new TodoItem { Id = 2, ListId = 1 }));
 
+        // Act
         entity.ClearDomainEvents();
 
+        // Assert
         entity.DomainEvents.ShouldBeEmpty();
     }
 
     [Test]
     public void DomainEvents_ShouldBeReadOnly()
     {
+        // Arrange
         var entity = new TestEntity();
 
+        // Act
         var domainEvents = entity.DomainEvents;
 
+        // Assert
         domainEvents.ShouldBeAssignableTo<IReadOnlyCollection<BaseEvent>>();
     }
 
     [Test]
     public void ShouldTrackMultipleDomainEvents()
     {
+        // Arrange
         var entity = new TestEntity();
         entity.AddDomainEvent(new TodoItemCompletedEvent(new TodoItem { Id = 1, ListId = 1 }));
         entity.AddDomainEvent(new TodoItemCompletedEvent(new TodoItem { Id = 2, ListId = 1 }));
 
+        // Act & Assert
         entity.DomainEvents.Count.ShouldBe(2);
     }
 
     [Test]
     public void Id_ShouldBeNullable()
     {
+        // Arrange
         var entity = new TestEntity();
 
+        // Act & Assert
         entity.Id.ShouldBe(default(int));
     }
 
     [Test]
     public void ShouldSupportGuidGeneric()
     {
+        // Arrange
         var entity = new GuidTestEntity();
 
+        // Act & Assert
         entity.Id.ShouldBe(default(Guid));
         entity.Id = Guid.NewGuid();
         entity.Id.ShouldNotBe(default(Guid));
@@ -93,8 +113,10 @@ public class BaseEntityTests
     [Test]
     public void ShouldSupportIntGeneric()
     {
+        // Arrange
         var entity = new IntTestEntity();
 
+        // Act & Assert
         entity.Id.ShouldBe(default(int));
         entity.Id = 42;
         entity.Id.ShouldBe(42);
@@ -103,11 +125,14 @@ public class BaseEntityTests
     [Test]
     public void SameReference_ShouldBeEqual()
     {
+        // Arrange
         var entity = new TestEntity();
         entity.Id = 1;
 
+        // Act
         var sameEntity = entity;
 
+        // Assert
         sameEntity.ShouldBeSameAs(entity);
     }
 

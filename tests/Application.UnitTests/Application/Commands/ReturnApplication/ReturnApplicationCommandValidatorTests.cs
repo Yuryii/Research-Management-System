@@ -12,6 +12,7 @@ public class ReturnApplicationCommandValidatorTests
     [Test]
     public void Validate_ShouldFail_WhenApplicationIdIsEmpty()
     {
+        // Arrange
         var command = new ReturnApplicationCommand
         {
             ApplicationId = Guid.Empty,
@@ -19,14 +20,17 @@ public class ReturnApplicationCommandValidatorTests
             Description = "Return Description"
         };
 
+        // Act
         var result = _validator.TestValidate(command);
 
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.ApplicationId);
     }
 
     [Test]
     public void Validate_ShouldFail_WhenTitleIsEmpty()
     {
+        // Arrange
         var command = new ReturnApplicationCommand
         {
             ApplicationId = Guid.NewGuid(),
@@ -34,14 +38,17 @@ public class ReturnApplicationCommandValidatorTests
             Description = "Return Description"
         };
 
+        // Act
         var result = _validator.TestValidate(command);
 
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.Title);
     }
 
     [Test]
     public void Validate_ShouldFail_WhenDescriptionIsEmpty()
     {
+        // Arrange
         var command = new ReturnApplicationCommand
         {
             ApplicationId = Guid.NewGuid(),
@@ -49,8 +56,10 @@ public class ReturnApplicationCommandValidatorTests
             Description = ""
         };
 
+        // Act
         var result = _validator.TestValidate(command);
 
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.Description);
     }
 }

@@ -112,6 +112,7 @@ public class CreateApplicationCommandHandlerTests : IDisposable
     [Test]
     public async Task Handle_ShouldCreateApplication_WhenStatusIsDraftWithoutFiles()
     {
+        // Arrange
         AddStepDetail();
 
         var command = new CreateApplicationCommand
@@ -130,8 +131,10 @@ public class CreateApplicationCommandHandlerTests : IDisposable
             _senderMock.Object,
             _userMock.Object);
 
+        // Act
         var result = await handler.Handle(command, CancellationToken.None);
 
+        // Assert
         result.ShouldNotBe(Guid.Empty);
 
         var application = await _dbContext.Applications.FindAsync(result);
@@ -159,6 +162,7 @@ public class CreateApplicationCommandHandlerTests : IDisposable
     [Test]
     public async Task Handle_ShouldCallSend_WhenStatusIsSubmitted()
     {
+        // Arrange
         AddStepDetail();
 
         var command = new CreateApplicationCommand
@@ -177,8 +181,10 @@ public class CreateApplicationCommandHandlerTests : IDisposable
             _senderMock.Object,
             _userMock.Object);
 
+        // Act
         var result = await handler.Handle(command, CancellationToken.None);
 
+        // Assert
         result.ShouldNotBe(Guid.Empty);
 
         _senderMock.Verify(
@@ -191,6 +197,7 @@ public class CreateApplicationCommandHandlerTests : IDisposable
     [Test]
     public async Task Handle_ShouldCallAddFilesToApplicationAsync_WhenFilesProvided()
     {
+        // Arrange
         AddStepDetail();
 
         var mockFile = new Mock<IFormFile>();
@@ -221,8 +228,10 @@ public class CreateApplicationCommandHandlerTests : IDisposable
             _senderMock.Object,
             _userMock.Object);
 
+        // Act
         var result = await handler.Handle(command, CancellationToken.None);
 
+        // Assert
         _applicationFileServiceMock.Verify(
             f => f.AddFilesToApplicationAsync(
                 result,
@@ -235,6 +244,7 @@ public class CreateApplicationCommandHandlerTests : IDisposable
     [Test]
     public async Task Handle_ShouldRethrow_WhenApplicationFileServiceThrows()
     {
+        // Arrange
         AddStepDetail();
 
         var mockFile = new Mock<IFormFile>();
@@ -269,6 +279,7 @@ public class CreateApplicationCommandHandlerTests : IDisposable
             _senderMock.Object,
             _userMock.Object);
 
+        // Act & Assert
         await Should.ThrowAsync<DbUpdateException>(() =>
             handler.Handle(command, CancellationToken.None));
     }

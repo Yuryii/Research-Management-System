@@ -172,17 +172,20 @@ public class DeleteApplicationFilesCommandHandlerTests : IDisposable
     [Test]
     public async Task Handle_ShouldThrowNotFoundException_WhenApplicationFileNotFound()
     {
+        // Arrange
         var appId = Guid.NewGuid();
         var fileId = Guid.NewGuid();
         var command = new DeleteApplicationFilesCommand { ApplicationId = appId, FileId = fileId };
         var handler = CreateHandler();
 
+        // Act & Assert
         await Should.ThrowAsync<NotFoundException>(() => handler.Handle(command, CancellationToken.None));
     }
 
     [Test]
     public async Task Handle_ShouldThrowForbiddenAccessException_WhenTeacherDeletesNonDraft()
     {
+        // Arrange
         var step = CreateStep(Guid.NewGuid(), order: 1);
         var stepDetail = CreateStepDetail(Guid.NewGuid(), step.Id, order: 1, step);
         var app = CreateApplication(Guid.NewGuid(), ApplicationStatus.Submitted, stepDetail);
@@ -197,6 +200,7 @@ public class DeleteApplicationFilesCommandHandlerTests : IDisposable
         var command = new DeleteApplicationFilesCommand { ApplicationId = app.Id, FileId = file.Id };
         var handler = CreateHandler();
 
+        // Act & Assert
         var ex = await Should.ThrowAsync<ForbiddenAccessException>(() => handler.Handle(command, CancellationToken.None));
         ex.Message.ShouldContain("Teacher can only delete files when application is in Draft status");
     }
@@ -204,6 +208,7 @@ public class DeleteApplicationFilesCommandHandlerTests : IDisposable
     [Test]
     public async Task Handle_ShouldThrowForbiddenAccessException_WhenRoleNotPermitted()
     {
+        // Arrange
         var step = CreateStep(Guid.NewGuid(), order: 1);
         var stepDetail = CreateStepDetail(Guid.NewGuid(), step.Id, order: 1, step);
         var app = CreateApplication(Guid.NewGuid(), ApplicationStatus.Draft, stepDetail);
@@ -217,6 +222,7 @@ public class DeleteApplicationFilesCommandHandlerTests : IDisposable
         var command = new DeleteApplicationFilesCommand { ApplicationId = app.Id, FileId = file.Id };
         var handler = CreateHandler();
 
+        // Act & Assert
         var ex = await Should.ThrowAsync<ForbiddenAccessException>(() => handler.Handle(command, CancellationToken.None));
         ex.Message.ShouldContain("Current role is not permitted to delete files for this step");
     }
@@ -224,6 +230,7 @@ public class DeleteApplicationFilesCommandHandlerTests : IDisposable
     [Test]
     public async Task Handle_ShouldThrowForbiddenAccessException_WhenAppStepOrderGreaterThanTarget()
     {
+        // Arrange
         var fileStep = CreateStep(Guid.NewGuid(), order: 1);
         var appStep = CreateStep(Guid.NewGuid(), order: 2);
         var fileStepDetail = CreateStepDetail(Guid.NewGuid(), fileStep.Id, order: 1, fileStep);
@@ -241,6 +248,7 @@ public class DeleteApplicationFilesCommandHandlerTests : IDisposable
         var command = new DeleteApplicationFilesCommand { ApplicationId = app.Id, FileId = file.Id };
         var handler = CreateHandler();
 
+        // Act & Assert
         var ex = await Should.ThrowAsync<ForbiddenAccessException>(() => handler.Handle(command, CancellationToken.None));
         ex.Message.ShouldContain("Cannot delete files from a previous step after the application has advanced");
     }
@@ -248,6 +256,7 @@ public class DeleteApplicationFilesCommandHandlerTests : IDisposable
     [Test]
     public async Task Handle_ShouldDeleteApplicationFile_WhenValidRequest()
     {
+        // Arrange
         var step = CreateStep(Guid.NewGuid(), order: 1);
         var stepDetail = CreateStepDetail(Guid.NewGuid(), step.Id, order: 1, step);
         var app = CreateApplication(Guid.NewGuid(), ApplicationStatus.Draft, stepDetail);
@@ -262,8 +271,10 @@ public class DeleteApplicationFilesCommandHandlerTests : IDisposable
         var command = new DeleteApplicationFilesCommand { ApplicationId = app.Id, FileId = file.Id };
         var handler = CreateHandler();
 
+        // Act
         await handler.Handle(command, CancellationToken.None);
 
+        // Assert
         var deletedAppFile = await _dbContext.ApplicationFiles
             .FindAsync(app.Id, file.Id);
         deletedAppFile.ShouldBeNull();

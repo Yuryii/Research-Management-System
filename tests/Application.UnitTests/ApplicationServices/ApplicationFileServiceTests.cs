@@ -72,6 +72,7 @@ public class ApplicationFileServiceTests : IDisposable
     [Test]
     public async Task AddFilesToApplicationAsync_ShouldSaveFilesAndCreateApplicationFileRecords()
     {
+        // Arrange
         var files = CreateFormFileCollection(
             ("document1.pdf", "application/pdf", 1024),
             ("document2.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", 2048));
@@ -85,8 +86,10 @@ public class ApplicationFileServiceTests : IDisposable
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(savedPaths);
 
+        // Act
         await _service.AddFilesToApplicationAsync(_applicationId, _stepId, files, CancellationToken.None);
 
+        // Assert
         var appFiles = await _dbContext.ApplicationFiles
             .Include(af => af.File)
             .ToListAsync();
@@ -109,6 +112,7 @@ public class ApplicationFileServiceTests : IDisposable
     [Test]
     public async Task AddFilesToApplicationAsync_ShouldCallSaveFilesAsync_WithCorrectParameters()
     {
+        // Arrange
         var files = CreateFormFileCollection(("test.pdf", "application/pdf", 1024));
         var savedPaths = new List<string> { "files/applications/test.pdf" };
 
@@ -120,8 +124,10 @@ public class ApplicationFileServiceTests : IDisposable
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(savedPaths);
 
+        // Act
         await _service.AddFilesToApplicationAsync(_applicationId, _stepId, files, CancellationToken.None);
 
+        // Assert
         _fileServiceMock.Verify(
             f => f.SaveFilesAsync(
                 It.Is<IReadOnlyList<IFormFile>>(list => list.Count == 1),
@@ -134,6 +140,7 @@ public class ApplicationFileServiceTests : IDisposable
     [Test]
     public async Task AddFilesToApplicationAsync_ShouldDeleteFiles_WhenSaveChangesThrows()
     {
+        // Arrange
         var files = CreateFormFileCollection(("test.pdf", "application/pdf", 1024));
         var savedPaths = new List<string> { "files/applications/test.pdf" };
 
@@ -154,6 +161,7 @@ public class ApplicationFileServiceTests : IDisposable
 
         var failingService = new ApplicationFileService(failingContextMock.Object, _fileServiceMock.Object);
 
+        // Act & Assert
         await Should.ThrowAsync<DbUpdateException>(() =>
             failingService.AddFilesToApplicationAsync(_applicationId, _stepId, files, CancellationToken.None));
 
@@ -165,6 +173,7 @@ public class ApplicationFileServiceTests : IDisposable
     [Test]
     public async Task AddFilesToApplicationAsync_ShouldDeleteAllSavedFiles_WhenSaveChangesThrowsWithMultipleFiles()
     {
+        // Arrange
         var files = CreateFormFileCollection(
             ("doc1.pdf", "application/pdf", 1024),
             ("doc2.pdf", "application/pdf", 2048));
@@ -187,6 +196,7 @@ public class ApplicationFileServiceTests : IDisposable
 
         var failingService = new ApplicationFileService(failingContextMock.Object, _fileServiceMock.Object);
 
+        // Act & Assert
         await Should.ThrowAsync<DbUpdateException>(() =>
             failingService.AddFilesToApplicationAsync(_applicationId, _stepId, files, CancellationToken.None));
 

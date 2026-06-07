@@ -12,6 +12,7 @@ public class CreateStepDetailCommandValidatorTests
     [Test]
     public void Validate_ShouldFail_WhenStepIdIsEmpty()
     {
+        // Arrange
         var command = new CreateStepDetailCommand
         {
             StepId = Guid.Empty,
@@ -19,14 +20,17 @@ public class CreateStepDetailCommandValidatorTests
             Order = 0
         };
 
+        // Act
         var result = _validator.TestValidate(command);
 
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.StepId);
     }
 
     [Test]
     public void Validate_ShouldFail_WhenNameIsEmpty()
     {
+        // Arrange
         var command = new CreateStepDetailCommand
         {
             StepId = Guid.NewGuid(),
@@ -34,14 +38,17 @@ public class CreateStepDetailCommandValidatorTests
             Order = 0
         };
 
+        // Act
         var result = _validator.TestValidate(command);
 
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.Name);
     }
 
     [Test]
     public void Validate_ShouldFail_WhenOrderIsNegative()
     {
+        // Arrange
         var command = new CreateStepDetailCommand
         {
             StepId = Guid.NewGuid(),
@@ -49,14 +56,17 @@ public class CreateStepDetailCommandValidatorTests
             Order = -1
         };
 
+        // Act
         var result = _validator.TestValidate(command);
 
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.Order);
     }
 
     [Test]
     public void Validate_ShouldFail_WhenNextStepDetailIdEqualsStepId()
     {
+        // Arrange
         var stepId = Guid.NewGuid();
         var command = new CreateStepDetailCommand
         {
@@ -66,14 +76,17 @@ public class CreateStepDetailCommandValidatorTests
             NextStepDetailId = stepId
         };
 
+        // Act
         var result = _validator.TestValidate(command);
 
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.NextStepDetailId);
     }
 
     [Test]
     public void Validate_ShouldFail_WhenIsReturnStepAndHasNextStepDetail()
     {
+        // Arrange
         var command = new CreateStepDetailCommand
         {
             StepId = Guid.NewGuid(),
@@ -83,8 +96,10 @@ public class CreateStepDetailCommandValidatorTests
             NextStepDetailId = Guid.NewGuid()
         };
 
+        // Act
         var result = _validator.TestValidate(command);
 
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.IsReturnStep);
     }
 }

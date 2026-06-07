@@ -16,6 +16,7 @@ public class UpdateApplicationStepDetailTests : TestBase
     [Test]
     public async Task ShouldRequireValidApplicationId()
     {
+        // Arrange
         await TestApp.RunAsAdministratorAsync();
 
         var stepDetail = await CreateStepDetailAsync(Roles.Administrator);
@@ -25,12 +26,14 @@ public class UpdateApplicationStepDetailTests : TestBase
             StepDetailId = stepDetail.Id
         };
 
+        // Act & Assert
         await Should.ThrowAsync<NotFoundException>(() => TestApp.SendAsync(command));
     }
 
     [Test]
     public async Task ShouldRequireValidStepDetailId()
     {
+        // Arrange
         await TestApp.RunAsAdministratorAsync();
 
         var application = await CreateApplicationAsync();
@@ -40,12 +43,14 @@ public class UpdateApplicationStepDetailTests : TestBase
             StepDetailId = Guid.NewGuid()
         };
 
+        // Act & Assert
         await Should.ThrowAsync<NotFoundException>(() => TestApp.SendAsync(command));
     }
 
     [Test]
     public async Task ShouldUpdateApplicationStepDetailWhenRoleHasPermissionForTargetStep()
     {
+        // Arrange
         var userId = await TestApp.RunAsUserAsync("dvqltt-update-step-detail@local", "Testing1234!", [Roles.Dvqltt]);
 
         var stepDetail = await CreateStepDetailAsync(Roles.Dvqltt);
@@ -57,8 +62,10 @@ public class UpdateApplicationStepDetailTests : TestBase
             StepDetailId = stepDetail.Id
         };
 
+        // Act
         await TestApp.SendAsync(command);
 
+        // Assert
         var updatedApplication = await TestApp.FindAsync<DomainApplication>(application.Id);
 
         updatedApplication.ShouldNotBeNull();
@@ -69,6 +76,7 @@ public class UpdateApplicationStepDetailTests : TestBase
     [Test]
     public async Task ShouldDenyUpdateApplicationStepDetailWhenRoleHasNoPermissionForTargetStep()
     {
+        // Arrange
         await TestApp.RunAsUserAsync("tttv-update-step-detail@local", "Testing1234!", [Roles.Tttv]);
 
         var stepDetail = await CreateStepDetailAsync(Roles.Dvqltt);
@@ -80,6 +88,7 @@ public class UpdateApplicationStepDetailTests : TestBase
             StepDetailId = stepDetail.Id
         };
 
+        // Act & Assert
         await Should.ThrowAsync<ForbiddenAccessException>(() => TestApp.SendAsync(command));
 
         var unchangedApplication = await TestApp.FindAsync<DomainApplication>(application.Id);

@@ -86,6 +86,7 @@ public class ReturnApplicationCommandHandlerTests : IDisposable
     [Test]
     public async Task Handle_ShouldThrowNotFoundException_WhenApplicationDoesNotExist()
     {
+        // Arrange
         var appId = Guid.NewGuid();
         var command = new ReturnApplicationCommand
         {
@@ -95,12 +96,14 @@ public class ReturnApplicationCommandHandlerTests : IDisposable
         };
         var handler = new ReturnApplicationCommandHandler(_dbContext, _fileServiceMock.Object);
 
+        // Act & Assert
         await Should.ThrowAsync<NotFoundException>(() => handler.Handle(command, CancellationToken.None));
     }
 
     [Test]
     public async Task Handle_ShouldThrowNotFoundException_WhenReturnStepDetailNotFound()
     {
+        // Arrange
         var stepDetail = new StepDetail
         {
             Id = Guid.NewGuid(),
@@ -130,12 +133,14 @@ public class ReturnApplicationCommandHandlerTests : IDisposable
         };
         var handler = new ReturnApplicationCommandHandler(_dbContext, _fileServiceMock.Object);
 
+        // Act & Assert
         await Should.ThrowAsync<NotFoundException>(() => handler.Handle(command, CancellationToken.None));
     }
 
     [Test]
     public async Task Handle_ShouldCreateApplicationReturn_AndUpdateApplicationStepDetail()
     {
+        // Arrange
         var returnStepDetail = AddReturnStepDetail();
         var app = AddApplication(stepDetail: returnStepDetail);
 
@@ -147,8 +152,10 @@ public class ReturnApplicationCommandHandlerTests : IDisposable
         };
         var handler = new ReturnApplicationCommandHandler(_dbContext, _fileServiceMock.Object);
 
+        // Act
         var result = await handler.Handle(command, CancellationToken.None);
 
+        // Assert
         result.ShouldNotBe(Guid.Empty);
 
         var applicationReturn = await _dbContext.ApplicationReturns.FindAsync(result);
@@ -163,6 +170,7 @@ public class ReturnApplicationCommandHandlerTests : IDisposable
     [Test]
     public async Task Handle_ShouldSetRecipientIdToApplicationCreatedBy_WhenRecipientIdIsNull()
     {
+        // Arrange
         var app = AddApplication(createdBy: "teacher-001");
 
         var command = new ReturnApplicationCommand
@@ -174,8 +182,10 @@ public class ReturnApplicationCommandHandlerTests : IDisposable
         };
         var handler = new ReturnApplicationCommandHandler(_dbContext, _fileServiceMock.Object);
 
+        // Act
         var result = await handler.Handle(command, CancellationToken.None);
 
+        // Assert
         var applicationReturn = await _dbContext.ApplicationReturns.FindAsync(result);
         applicationReturn!.RecipientId.ShouldBe("teacher-001");
     }
@@ -183,6 +193,7 @@ public class ReturnApplicationCommandHandlerTests : IDisposable
     [Test]
     public async Task Handle_ShouldUseProvidedRecipientId_WhenRecipientIdIsNotNull()
     {
+        // Arrange
         var app = AddApplication(createdBy: "teacher-001");
 
         var command = new ReturnApplicationCommand
@@ -194,8 +205,10 @@ public class ReturnApplicationCommandHandlerTests : IDisposable
         };
         var handler = new ReturnApplicationCommandHandler(_dbContext, _fileServiceMock.Object);
 
+        // Act
         var result = await handler.Handle(command, CancellationToken.None);
 
+        // Assert
         var applicationReturn = await _dbContext.ApplicationReturns.FindAsync(result);
         applicationReturn!.RecipientId.ShouldBe("admin-001");
     }
@@ -203,6 +216,7 @@ public class ReturnApplicationCommandHandlerTests : IDisposable
     [Test]
     public async Task Handle_ShouldSaveFilesAndCreateApplicationReturnFiles_WhenFilesProvided()
     {
+        // Arrange
         var app = AddApplication();
         var savedFilePaths = new List<string> { "/Upload/Application/test-file.pdf" };
 
@@ -224,8 +238,10 @@ public class ReturnApplicationCommandHandlerTests : IDisposable
         };
         var handler = new ReturnApplicationCommandHandler(_dbContext, _fileServiceMock.Object);
 
+        // Act
         var result = await handler.Handle(command, CancellationToken.None);
 
+        // Assert
         _fileServiceMock.Verify(
             f => f.SaveFilesAsync(
                 It.Is<IReadOnlyList<IFormFile>>(fl => fl.Count == 1),
@@ -244,6 +260,7 @@ public class ReturnApplicationCommandHandlerTests : IDisposable
     [Test]
     public async Task Handle_ShouldDeleteSavedFiles_WhenSaveChangesAsyncThrows()
     {
+        // Arrange
         var savedFilePaths = new List<string> { "/path/file1.pdf", "/path/file2.pdf" };
 
         _fileServiceMock
@@ -273,12 +290,14 @@ public class ReturnApplicationCommandHandlerTests : IDisposable
 
         var handler = new ReturnApplicationCommandHandler(mockContext.Object, _fileServiceMock.Object);
 
+        // Act & Assert
         await Should.ThrowAsync<Exception>(() => handler.Handle(command, CancellationToken.None));
     }
 
     [Test]
     public async Task CleanupFiles_ShouldDeleteAllSavedFilePaths_WhenExceptionIsThrown()
     {
+        // Arrange
         var savedFilePaths = new List<string> { "/path/file1.pdf", "/path/file2.pdf" };
 
         foreach (var path in savedFilePaths)
@@ -291,6 +310,7 @@ public class ReturnApplicationCommandHandlerTests : IDisposable
             _fileServiceMock.Object.DeleteFile(path, CancellationToken.None);
         }
 
+        // Act & Assert
         _fileServiceMock.Verify(
             f => f.DeleteFile(It.Is<string>(p => p == savedFilePaths[0]), It.IsAny<CancellationToken>()),
             Times.Once);

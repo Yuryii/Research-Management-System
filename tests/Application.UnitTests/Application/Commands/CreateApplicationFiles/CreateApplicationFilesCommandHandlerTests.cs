@@ -136,6 +136,7 @@ public class CreateApplicationFilesCommandHandlerTests : IDisposable
     [Test]
     public async Task Handle_ShouldThrowNotFoundException_WhenApplicationDoesNotExist()
     {
+        // Arrange
         var handler = new CreateApplicationFilesCommandHandler(
             _dbContext, _applicationFileServiceMock.Object, _userMock.Object, _identityServiceMock.Object);
         var command = new CreateApplicationFilesCommand
@@ -144,12 +145,14 @@ public class CreateApplicationFilesCommandHandlerTests : IDisposable
             Files = CreateFormFileCollection(("test.pdf", "application/pdf", 1024))
         };
 
+        // Act & Assert
         await Should.ThrowAsync<NotFoundException>(() => handler.Handle(command, CancellationToken.None));
     }
 
     [Test]
     public async Task Handle_ShouldThrowForbiddenAccessException_WhenTeacherUploadsNonDraftApplication()
     {
+        // Arrange
         var (app, step, roleId) = SetupApplicationWithStepAndDetail(
             ApplicationStatus.Submitted, Roles.Teacher, addPermission: true);
         _userMock.Setup(u => u.Id).Returns("user-123");
@@ -166,6 +169,7 @@ public class CreateApplicationFilesCommandHandlerTests : IDisposable
             Files = CreateFormFileCollection(("test.pdf", "application/pdf", 1024))
         };
 
+        // Act & Assert
         var ex = await Should.ThrowAsync<ForbiddenAccessException>(() => handler.Handle(command, CancellationToken.None));
         ex.Message.ShouldBe("Teacher can only upload files when application is in Draft status.");
     }
@@ -173,6 +177,7 @@ public class CreateApplicationFilesCommandHandlerTests : IDisposable
     [Test]
     public async Task Handle_ShouldThrowForbiddenAccessException_WhenRoleNotPermitted()
     {
+        // Arrange
         var (app, step, roleId) = SetupApplicationWithStepAndDetail(
             ApplicationStatus.Draft, Roles.Tttv, addPermission: false);
         _userMock.Setup(u => u.Id).Returns("user-123");
@@ -189,6 +194,7 @@ public class CreateApplicationFilesCommandHandlerTests : IDisposable
             Files = CreateFormFileCollection(("test.pdf", "application/pdf", 1024))
         };
 
+        // Act & Assert
         var ex = await Should.ThrowAsync<ForbiddenAccessException>(() => handler.Handle(command, CancellationToken.None));
         ex.Message.ShouldBe("Current role is not permitted to upload files for this step.");
     }
@@ -196,6 +202,7 @@ public class CreateApplicationFilesCommandHandlerTests : IDisposable
     [Test]
     public async Task Handle_ShouldThrowForbiddenAccessException_WhenUserHasNoRoles()
     {
+        // Arrange
         var (app, step, roleId) = SetupApplicationWithStepAndDetail(
             ApplicationStatus.Draft, Roles.Tttv, addPermission: false);
         _userMock.Setup(u => u.Id).Returns("user-123");
@@ -212,6 +219,7 @@ public class CreateApplicationFilesCommandHandlerTests : IDisposable
             Files = CreateFormFileCollection(("test.pdf", "application/pdf", 1024))
         };
 
+        // Act & Assert
         var ex = await Should.ThrowAsync<ForbiddenAccessException>(() => handler.Handle(command, CancellationToken.None));
         ex.Message.ShouldBe("Current role is not permitted to upload files for this step.");
     }
@@ -219,6 +227,7 @@ public class CreateApplicationFilesCommandHandlerTests : IDisposable
     [Test]
     public async Task Handle_ShouldCallAddFilesToApplicationAsync_WhenTeacherUploadsDraftApplication()
     {
+        // Arrange
         var (app, step, roleId) = SetupApplicationWithStepAndDetail(
             ApplicationStatus.Draft, Roles.Teacher, addPermission: true);
         _userMock.Setup(u => u.Id).Returns("user-123");
@@ -239,8 +248,10 @@ public class CreateApplicationFilesCommandHandlerTests : IDisposable
             Files = files
         };
 
+        // Act
         await handler.Handle(command, CancellationToken.None);
 
+        // Assert
         _applicationFileServiceMock.Verify(
             f => f.AddFilesToApplicationAsync(
                 app.Id,
@@ -253,6 +264,7 @@ public class CreateApplicationFilesCommandHandlerTests : IDisposable
     [Test]
     public async Task Handle_ShouldCallAddFilesToApplicationAsync_WhenAuthorizedRoleUploads()
     {
+        // Arrange
         var (app, step, roleId) = SetupApplicationWithStepAndDetail(
             ApplicationStatus.Submitted, Roles.Tttv, addPermission: true);
         _userMock.Setup(u => u.Id).Returns("user-123");
@@ -271,8 +283,10 @@ public class CreateApplicationFilesCommandHandlerTests : IDisposable
             Files = files
         };
 
+        // Act
         await handler.Handle(command, CancellationToken.None);
 
+        // Assert
         _applicationFileServiceMock.Verify(
             f => f.AddFilesToApplicationAsync(
                 app.Id,
@@ -285,6 +299,7 @@ public class CreateApplicationFilesCommandHandlerTests : IDisposable
     [Test]
     public async Task Handle_ShouldRethrow_WhenApplicationFileServiceThrows()
     {
+        // Arrange
         var (app, step, roleId) = SetupApplicationWithStepAndDetail(
             ApplicationStatus.Draft, Roles.Teacher, addPermission: true);
         _userMock.Setup(u => u.Id).Returns("user-123");
@@ -309,6 +324,7 @@ public class CreateApplicationFilesCommandHandlerTests : IDisposable
             Files = CreateFormFileCollection(("test.pdf", "application/pdf", 1024))
         };
 
+        // Act & Assert
         await Should.ThrowAsync<DbUpdateException>(() => handler.Handle(command, CancellationToken.None));
     }
 }

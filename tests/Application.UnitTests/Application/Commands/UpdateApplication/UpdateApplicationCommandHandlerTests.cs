@@ -109,32 +109,39 @@ public class UpdateApplicationCommandHandlerTests : IDisposable
     [Test]
     public async Task Handle_ShouldThrowNotFoundException_WhenApplicationDoesNotExist()
     {
+        // Arrange
         var appId = Guid.NewGuid();
         var command = new UpdateApplicationCommand { Id = appId, Title = "Updated Title" };
         var handler = new UpdateApplicationCommandHandler(_dbContext, _senderMock.Object);
 
+        // Act & Assert
         await Should.ThrowAsync<NotFoundException>(() => handler.Handle(command, CancellationToken.None));
     }
 
     [Test]
     public async Task Handle_ShouldThrowValidationException_WhenApplicationIsNotDraft()
     {
+        // Arrange
         var app = AddApplication(ApplicationStatus.Submitted);
         var command = new UpdateApplicationCommand { Id = app.Id, Title = "Updated Title" };
         var handler = new UpdateApplicationCommandHandler(_dbContext, _senderMock.Object);
 
+        // Act & Assert
         await Should.ThrowAsync<ValidationException>(() => handler.Handle(command, CancellationToken.None));
     }
 
     [Test]
     public async Task Handle_ShouldUpdateTitle_WhenApplicationIsDraft()
     {
+        // Arrange
         var app = AddApplication(ApplicationStatus.Draft);
         var command = new UpdateApplicationCommand { Id = app.Id, Title = "Updated Title" };
         var handler = new UpdateApplicationCommandHandler(_dbContext, _senderMock.Object);
 
+        // Act
         await handler.Handle(command, CancellationToken.None);
 
+        // Assert
         var updated = await _dbContext.Applications.FindAsync(app.Id);
         updated!.Title.ShouldBe("Updated Title");
     }
@@ -142,12 +149,15 @@ public class UpdateApplicationCommandHandlerTests : IDisposable
     [Test]
     public async Task Handle_ShouldUpdateDescription_WhenApplicationIsDraft()
     {
+        // Arrange
         var app = AddApplication(ApplicationStatus.Draft);
         var command = new UpdateApplicationCommand { Id = app.Id, Description = "Updated Description" };
         var handler = new UpdateApplicationCommandHandler(_dbContext, _senderMock.Object);
 
+        // Act
         await handler.Handle(command, CancellationToken.None);
 
+        // Assert
         var updated = await _dbContext.Applications.FindAsync(app.Id);
         updated!.Description.ShouldBe("Updated Description");
     }
@@ -155,12 +165,15 @@ public class UpdateApplicationCommandHandlerTests : IDisposable
     [Test]
     public async Task Handle_ShouldSendForwardNextToStepCommand_WhenStatusIsSubmitted()
     {
+        // Arrange
         var app = AddApplication(ApplicationStatus.Draft);
         var command = new UpdateApplicationCommand { Id = app.Id, Status = ApplicationStatus.Submitted };
         var handler = new UpdateApplicationCommandHandler(_dbContext, _senderMock.Object);
 
+        // Act
         await handler.Handle(command, CancellationToken.None);
 
+        // Assert
         _senderMock.Verify(
             s => s.Send(It.Is<ForwardNextToStepCommand>(c => c.ApplicationId == app.Id), It.IsAny<CancellationToken>()),
             Times.Once);
@@ -169,6 +182,7 @@ public class UpdateApplicationCommandHandlerTests : IDisposable
     [Test]
     public async Task Handle_ShouldRemoveFiles_WhenFileIdsProvided()
     {
+        // Arrange
         var app = AddApplication(ApplicationStatus.Draft);
         AddFilesToApplication(app, 3);
 
@@ -176,8 +190,10 @@ public class UpdateApplicationCommandHandlerTests : IDisposable
         var command = new UpdateApplicationCommand { Id = app.Id, FileIds = new List<Guid> { remainingFileId } };
         var handler = new UpdateApplicationCommandHandler(_dbContext, _senderMock.Object);
 
+        // Act
         await handler.Handle(command, CancellationToken.None);
 
+        // Assert
         var remainingFiles = await _dbContext.ApplicationFiles.Where(af => af.ApplicationId == app.Id).ToListAsync();
         remainingFiles.Count.ShouldBe(1);
         remainingFiles[0].FileId.ShouldBe(remainingFileId);
@@ -186,12 +202,15 @@ public class UpdateApplicationCommandHandlerTests : IDisposable
     [Test]
     public async Task Handle_ShouldSaveChanges_WhenUpdatingDraftApplication()
     {
+        // Arrange
         var app = AddApplication(ApplicationStatus.Draft);
         var command = new UpdateApplicationCommand { Id = app.Id, Title = "New Title", Description = "New Description" };
         var handler = new UpdateApplicationCommandHandler(_dbContext, _senderMock.Object);
 
+        // Act
         await handler.Handle(command, CancellationToken.None);
 
+        // Assert
         var updated = await _dbContext.Applications.FindAsync(app.Id);
         updated!.Title.ShouldBe("New Title");
         updated.Description.ShouldBe("New Description");

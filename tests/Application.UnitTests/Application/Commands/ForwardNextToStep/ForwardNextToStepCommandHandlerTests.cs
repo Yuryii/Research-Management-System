@@ -79,18 +79,21 @@ public class ForwardNextToStepCommandHandlerTests : IDisposable
     [Test]
     public async Task Handle_ShouldThrowNotFoundException_WhenApplicationDoesNotExist()
     {
+        // Arrange
         var (step1, _, stepDetail1, _, roleId) = SeedBaseData();
         SetupUserAndIdentityMocks(new List<string> { roleId }, roleId);
 
         var handler = new ForwardNextToStepCommandHandler(_dbContext, _userMock.Object, _identityServiceMock.Object);
         var command = new ForwardNextToStepCommand { ApplicationId = Guid.NewGuid() };
 
+        // Act & Assert
         await Should.ThrowAsync<NotFoundException>(() => handler.Handle(command, CancellationToken.None));
     }
 
     [Test]
     public async Task Handle_ShouldThrowInvalidOperationException_WhenStepDetailIsReturnStep()
     {
+        // Arrange
         var (step1, _, stepDetail1, _, roleId) = SeedBaseData();
 
         var stepDetailReturn = new StepDetail
@@ -119,6 +122,7 @@ public class ForwardNextToStepCommandHandlerTests : IDisposable
         var handler = new ForwardNextToStepCommandHandler(_dbContext, _userMock.Object, _identityServiceMock.Object);
         var command = new ForwardNextToStepCommand { ApplicationId = app.Id };
 
+        // Act & Assert
         var ex = await Should.ThrowAsync<InvalidOperationException>(() => handler.Handle(command, CancellationToken.None));
         ex.Message.ShouldBe("Cannot update step detail for application in return step.");
     }
@@ -126,6 +130,7 @@ public class ForwardNextToStepCommandHandlerTests : IDisposable
     [Test]
     public async Task Handle_ShouldThrowUnauthorizedAccessException_WhenUserRoleHasNoPermission()
     {
+        // Arrange
         var (_, _, stepDetail1, _, _) = SeedBaseData();
 
         var app = new DomainApplication
@@ -147,6 +152,7 @@ public class ForwardNextToStepCommandHandlerTests : IDisposable
         var handler = new ForwardNextToStepCommandHandler(_dbContext, _userMock.Object, _identityServiceMock.Object);
         var command = new ForwardNextToStepCommand { ApplicationId = app.Id };
 
+        // Act & Assert
         var ex = await Should.ThrowAsync<UnauthorizedAccessException>(() => handler.Handle(command, CancellationToken.None));
         ex.Message.ShouldBe("User does not have permission to update the application at the current step.");
     }
@@ -154,6 +160,7 @@ public class ForwardNextToStepCommandHandlerTests : IDisposable
     [Test]
     public async Task Handle_ShouldThrowInvalidOperationException_WhenCurrentStepIsLastStep()
     {
+        // Arrange
         var (_, step2, stepDetail2, _, roleId) = SeedBaseData();
 
         var lastStep = new Step { Id = Guid.NewGuid(), Name = "Last Step", Order = 99, NextStepId = null };
@@ -179,6 +186,7 @@ public class ForwardNextToStepCommandHandlerTests : IDisposable
         var handler = new ForwardNextToStepCommandHandler(_dbContext, _userMock.Object, _identityServiceMock.Object);
         var command = new ForwardNextToStepCommand { ApplicationId = app.Id };
 
+        // Act & Assert
         var ex = await Should.ThrowAsync<InvalidOperationException>(() => handler.Handle(command, CancellationToken.None));
         ex.Message.ShouldBe("Hồ sơ đã ở bước cuối cùng của quy trình.");
     }
@@ -186,6 +194,7 @@ public class ForwardNextToStepCommandHandlerTests : IDisposable
     [Test]
     public async Task Handle_ShouldForwardToNextStep_WhenAllConditionsMet()
     {
+        // Arrange
         var (_, _, stepDetail1, stepDetail2, roleId) = SeedBaseData();
 
         var app = new DomainApplication
@@ -204,8 +213,10 @@ public class ForwardNextToStepCommandHandlerTests : IDisposable
         var handler = new ForwardNextToStepCommandHandler(_dbContext, _userMock.Object, _identityServiceMock.Object);
         var command = new ForwardNextToStepCommand { ApplicationId = app.Id };
 
+        // Act
         var result = await handler.Handle(command, CancellationToken.None);
 
+        // Assert
         result.ShouldBe(app.Id);
 
         var updatedApp = await _dbContext.Applications.FindAsync(app.Id);

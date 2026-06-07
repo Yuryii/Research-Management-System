@@ -10,21 +10,26 @@ public class ValidationExceptionTests
     [Test]
     public void DefaultConstructorCreatesAnEmptyErrorDictionary()
     {
+        // Arrange & Act
         var actual = new ValidationException().Errors;
 
+        // Assert
         actual.Keys.ShouldBeEmpty();
     }
 
     [Test]
     public void SingleValidationFailureCreatesASingleElementErrorDictionary()
     {
+        // Arrange
         var failures = new List<ValidationFailure>
             {
                 new ValidationFailure("Age", "must be over 18"),
             };
 
+        // Act
         var actual = new ValidationException(failures).Errors;
 
+        // Assert
         actual.Keys.ShouldBe(new string[] { "Age" });
         actual["Age"].ShouldBe(new string[] { "must be over 18" });
     }
@@ -32,6 +37,7 @@ public class ValidationExceptionTests
     [Test]
     public void MulitpleValidationFailureForMultiplePropertiesCreatesAMultipleElementErrorDictionaryEachWithMultipleValues()
     {
+        // Arrange
         var failures = new List<ValidationFailure>
             {
                 new ValidationFailure("Age", "must be 18 or older"),
@@ -42,8 +48,10 @@ public class ValidationExceptionTests
                 new ValidationFailure("Password", "must contain lower case letter"),
             };
 
+        // Act
         var actual = new ValidationException(failures).Errors;
 
+        // Assert
         actual.Keys.ShouldBe(new string[] { "Password", "Age" }, ignoreOrder: true);
 
         actual["Age"].ShouldBe(new string[]

@@ -113,6 +113,7 @@ public class UpdateApplicationStepDetailCommandHandlerTests : IDisposable
     [Test]
     public async Task Handle_ShouldThrowNotFoundException_WhenApplicationDoesNotExist()
     {
+        // Arrange
         var step = AddStep();
         var stepDetail = AddStepDetail(step);
         var command = new UpdateApplicationStepDetailCommand
@@ -122,12 +123,14 @@ public class UpdateApplicationStepDetailCommandHandlerTests : IDisposable
         };
         var handler = CreateHandler();
 
+        // Act & Assert
         await Should.ThrowAsync<NotFoundException>(() => handler.Handle(command, CancellationToken.None));
     }
 
     [Test]
     public async Task Handle_ShouldThrowInvalidOperationException_WhenApplicationIsInReturnStep()
     {
+        // Arrange
         var step = AddStep();
         var returnStepDetail = AddStepDetail(step, isReturnStep: true);
         var app = AddApplication(returnStepDetail);
@@ -139,6 +142,7 @@ public class UpdateApplicationStepDetailCommandHandlerTests : IDisposable
         };
         var handler = CreateHandler();
 
+        // Act & Assert
         await Should.ThrowAsync<InvalidOperationException>(() =>
             handler.Handle(command, CancellationToken.None));
     }
@@ -146,6 +150,7 @@ public class UpdateApplicationStepDetailCommandHandlerTests : IDisposable
     [Test]
     public async Task Handle_ShouldThrowNotFoundException_WhenStepDetailDoesNotExist()
     {
+        // Arrange
         var step = AddStep();
         var stepDetail = AddStepDetail(step);
         var app = AddApplication(stepDetail);
@@ -156,12 +161,14 @@ public class UpdateApplicationStepDetailCommandHandlerTests : IDisposable
         };
         var handler = CreateHandler();
 
+        // Act & Assert
         await Should.ThrowAsync<NotFoundException>(() => handler.Handle(command, CancellationToken.None));
     }
 
     [Test]
     public async Task Handle_ShouldThrowForbiddenAccessException_WhenUserHasNoPermission()
     {
+        // Arrange
         var step = AddStep();
         var currentStepDetail = AddStepDetail(step);
         var newStepDetail = AddStepDetail(step);
@@ -179,12 +186,14 @@ public class UpdateApplicationStepDetailCommandHandlerTests : IDisposable
         };
         var handler = CreateHandler();
 
+        // Act & Assert
         await Should.ThrowAsync<ForbiddenAccessException>(() => handler.Handle(command, CancellationToken.None));
     }
 
     [Test]
     public async Task Handle_ShouldUpdateStepDetailId_WhenUserHasPermission()
     {
+        // Arrange
         var step = AddStep();
         var currentStepDetail = AddStepDetail(step);
         var newStepDetail = AddStepDetail(step);
@@ -205,8 +214,10 @@ public class UpdateApplicationStepDetailCommandHandlerTests : IDisposable
         };
         var handler = CreateHandler();
 
+        // Act
         await handler.Handle(command, CancellationToken.None);
 
+        // Assert
         var updatedApp = await _dbContext.Applications.FindAsync(app.Id);
         updatedApp!.StepDetailId.ShouldBe(newStepDetail.Id);
     }
