@@ -7,7 +7,7 @@ using RMS.Domain.Enums;
 using RMS.Domain.Interfaces;
 using DomainApplication = RMS.Domain.Entities.Models.Application;
 
-namespace RMS.Application.Application.Commands.CreatApplication;
+namespace RMS.Application.Application.Commands.CreateApplication;
 public class CreateApplicationCommandHandler : IRequestHandler<CreateApplicationCommand, Guid>
 {
     private readonly IApplicationDbContext _context;

@@ -42,7 +42,7 @@ public class ReturnApplicationCommandHandler : IRequestHandler<ReturnApplication
         _context.ApplicationReturns.Add(applicationReturn);
 
         IReadOnlyList<string> savedFilePaths = [];
-        if (request.Files.Count > 0)
+        if (request.Files?.Count > 0)
         {
             var folders = $"{Config.Store.ROOT_PATH}/{Config.Store.APPLICATION_PATH}";
             savedFilePaths = await _fileService.SaveFilesAsync(
@@ -51,7 +51,7 @@ public class ReturnApplicationCommandHandler : IRequestHandler<ReturnApplication
                 folders,
                 cancellationToken);
 
-            for (var index = 0; index < request.Files.Count; index++)
+            for (var index = 0; index < request.Files!.Count; index++)
             {
                 var file = request.Files[index];
                 var savedFilePath = savedFilePaths[index];

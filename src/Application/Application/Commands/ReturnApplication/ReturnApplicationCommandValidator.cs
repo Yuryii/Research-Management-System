@@ -11,6 +11,7 @@ public class ReturnApplicationCommandValidator : AbstractValidator<ReturnApplica
         RuleFor(x => x.Title)
             .NotEmpty().WithMessage("Title is required.");
         RuleFor(x => x.Description)
-            .NotEmpty().WithMessage("Description is required.");
+            .NotEmpty()
+            .WithMessage("Description is required.");
     }
 }

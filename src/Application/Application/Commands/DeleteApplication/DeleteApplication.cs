@@ -1,4 +1,7 @@
+using Microsoft.EntityFrameworkCore;
+using RMS.Application.Common.Exceptions;
 using RMS.Application.Common.Interfaces;
+using RMS.Domain.Enums;
 
 namespace RMS.Application.Application.Commands.DeleteApplication;
 
@@ -22,8 +25,15 @@ public class DeleteApplicationCommandHandler : IRequestHandler<DeleteApplication
 
         Guard.Against.NotFound(request.Id, entity, "Application not found.");
 
+        if (entity.Status != ApplicationStatus.Draft)
+            throw new ForbiddenAccessException("Only applications in Draft status can be deleted.");
+
         foreach (var item in entity.ApplicationFiles)
         {
             _fileService.DeleteFile(item.File.Path);
         }
-    }}
+
+        _context.Applications.Remove(entity);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+}

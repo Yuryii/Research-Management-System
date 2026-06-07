@@ -39,19 +39,43 @@ public class UpdateApplicationCommandValidatorTests
     }
 
     [Test]
-    public void Validate_ShouldFail_WhenTitleExceeds100Characters()
+    public void Validate_ShouldFail_WhenTitleExceeds200Characters()
     {
         var command = new UpdateApplicationCommand
         {
             Id = Guid.NewGuid(),
-            Title = new string('A', 101)
+            Title = new string('A', 202)
         };
 
         var result = _validator.TestValidate(command);
 
         result.ShouldHaveValidationErrorFor(x => x.Title);
     }
+    [Test]
+    public void Validate_ShouldPass_WhenTitleIsAtMaxLength()
+    {
+        var command = new UpdateApplicationCommand
+        {
+            Id = Guid.NewGuid(),
+            Title = new string('A', 200)
+        };
 
+        var result = _validator.TestValidate(command);
+
+        result.ShouldNotHaveValidationErrorFor(x => x.Title);
+    }
+
+    [Test]
+    public void Validate_ShouldPass_WhenDescriptionIsAtMaxLength()
+    {
+        var command = new UpdateApplicationCommand
+        {
+            Id = Guid.NewGuid(),
+            Description = new string('A', 500)
+        };
+        var result = _validator.TestValidate(command);
+        result.ShouldNotHaveValidationErrorFor(x => x.Description);
+    }
     [Test]
     public void Validate_ShouldFail_WhenDescriptionExceeds500Characters()
     {
