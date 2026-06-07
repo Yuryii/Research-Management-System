@@ -1,10 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Microsoft.AspNetCore.Http;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace RMS.Application.Common.Interfaces;
 
-internal interface IApplicationFileService
+public interface IApplicationFileService
 {
-
+    Task AddFilesToApplicationAsync(
+        Guid applicationId,
+        Guid stepId,
+        IFormFileCollection files,
+        CancellationToken cancellationToken = default);
 }

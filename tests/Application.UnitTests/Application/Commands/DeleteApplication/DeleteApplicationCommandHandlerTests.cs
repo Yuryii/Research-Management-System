@@ -40,7 +40,7 @@ public class DeleteApplicationCommandHandlerTests : IDisposable
     [TearDown]
     public void TearDown()
     {
-        _dbContext.Dispose();
+        Dispose();
     }
 
     public void Dispose()

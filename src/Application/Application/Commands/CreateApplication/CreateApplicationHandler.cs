@@ -1,7 +1,6 @@
 using RMS.Application.Application.Commands.CreateApplication;
 using RMS.Application.Application.Commands.ForwardNextToStep;
 using RMS.Application.Common.Interfaces;
-using RMS.Domain.Constants;
 using RMS.Domain.Entities.Models;
 using RMS.Domain.Enums;
 using RMS.Domain.Interfaces;
@@ -11,16 +10,22 @@ namespace RMS.Application.Application.Commands.CreateApplication;
 public class CreateApplicationCommandHandler : IRequestHandler<CreateApplicationCommand, Guid>
 {
     private readonly IApplicationDbContext _context;
-    private readonly IFileService _fileService;
+    private readonly IApplicationFileService _applicationFileService;
     private readonly ICodeGeneratorService _codeGeneratorService;
     private readonly IStepResolver _stepResolver;
     private readonly ISender _sender;
     private readonly IUser _user;
-        
-    public CreateApplicationCommandHandler(IApplicationDbContext context, IFileService fileService, ICodeGeneratorService codeGeneratorService, IStepResolver stepResolver, ISender sender, IUser user)
+
+    public CreateApplicationCommandHandler(
+        IApplicationDbContext context,
+        IApplicationFileService applicationFileService,
+        ICodeGeneratorService codeGeneratorService,
+        IStepResolver stepResolver,
+        ISender sender,
+        IUser user)
     {
         _context = context;
-        _fileService = fileService;
+        _applicationFileService = applicationFileService;
         _codeGeneratorService = codeGeneratorService;
         _stepResolver = stepResolver;
         _sender = sender;
@@ -29,7 +34,6 @@ public class CreateApplicationCommandHandler : IRequestHandler<CreateApplication
 
     public async Task<Guid> Handle(CreateApplicationCommand request, CancellationToken cancellationToken)
     {
-        // Add Application
         var firstStepDetailId = await _stepResolver.ResolveAsync(cancellationToken);
 
         var stepId = await _context.StepDetails
@@ -52,49 +56,17 @@ public class CreateApplicationCommandHandler : IRequestHandler<CreateApplication
 
         _context.Applications.Add(application);
 
-        // Add ApplicationFiles and Save Files
-        IReadOnlyList<string> savedFilePaths = [];
         if (request.Files.Count > 0)
         {
-            var folders = $"{Config.Store.ROOT_PATH}/{Config.Store.APPLICATION_PATH}";
-            savedFilePaths = await _fileService.SaveFilesAsync(
+            await _applicationFileService.AddFilesToApplicationAsync(
+                application.Id,
+                stepId,
                 request.Files,
-                Config.Store.AllowedMimeTypes,
-                folders,
                 cancellationToken);
-
-            for (var index = 0; index < request.Files.Count; index++)
-            {
-                var file = request.Files[index];
-                var savedFilePath = savedFilePaths[index];
-
-                _context.ApplicationFiles.Add(new ApplicationFile
-                {
-                    ApplicationId = application.Id,
-                    File = new RMS.Domain.Entities.Models.File
-                    {
-                        Name = file.FileName,
-                        ContentType = file.ContentType,
-                        Length = file.Length,
-                        Path = savedFilePath
-                    },
-                    StepId = stepId
-                });
-            }
         }
-
-        try
+        else
         {
             await _context.SaveChangesAsync(cancellationToken);
-        }
-        catch
-        {
-            foreach (var filePath in savedFilePaths)
-            {
-                _fileService.DeleteFile(filePath, cancellationToken);
-            }
-
-            throw;
         }
 
         if (request.Status == ApplicationStatus.Submitted)

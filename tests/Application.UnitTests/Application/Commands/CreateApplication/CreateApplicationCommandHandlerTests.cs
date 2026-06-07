@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.IO;
 using System.Threading;
 using MediatR;
 using Microsoft.AspNetCore.Http;
@@ -16,14 +15,13 @@ using RMS.Domain.Interfaces;
 using RMS.Infrastructure.Data;
 using Shouldly;
 using DomainApplication = RMS.Domain.Entities.Models.Application;
-using DomainFile = RMS.Domain.Entities.Models.File;
 
 namespace RMS.Application.UnitTests.Application.Commands;
 
 public class CreateApplicationCommandHandlerTests : IDisposable
 {
     private ApplicationDbContext _dbContext = null!;
-    private Mock<IFileService> _fileServiceMock = null!;
+    private Mock<IApplicationFileService> _applicationFileServiceMock = null!;
     private Mock<ICodeGeneratorService> _codeGeneratorServiceMock = null!;
     private Mock<IStepResolver> _stepResolverMock = null!;
     private Mock<ISender> _senderMock = null!;
@@ -47,7 +45,7 @@ public class CreateApplicationCommandHandlerTests : IDisposable
     public void SetUp()
     {
         _dbContext = CreateInMemoryContext();
-        _fileServiceMock = new Mock<IFileService>();
+        _applicationFileServiceMock = new Mock<IApplicationFileService>();
         _codeGeneratorServiceMock = new Mock<ICodeGeneratorService>();
         _stepResolverMock = new Mock<IStepResolver>();
         _senderMock = new Mock<ISender>();
@@ -104,49 +102,11 @@ public class CreateApplicationCommandHandlerTests : IDisposable
         _dbContext.SaveChanges();
     }
 
-    private static Mock<IFormFile> CreateMockFormFile(string fileName = "test.pdf", string contentType = "application/pdf", long length = 1024)
-    {
-        var mockFile = new Mock<IFormFile>();
-        mockFile.Setup(f => f.FileName).Returns(fileName);
-        mockFile.Setup(f => f.ContentType).Returns(contentType);
-        mockFile.Setup(f => f.Length).Returns(length);
-        mockFile.Setup(f => f.OpenReadStream()).Returns(new MemoryStream());
-        return mockFile;
-    }
-
-    private static Mock<IFormFileCollection> CreateMockFormFileCollection(params IFormFile[] files)
+    private static Mock<IFormFileCollection> CreateMockFormFileCollection()
     {
         var mockCollection = new Mock<IFormFileCollection>();
-        var list = new List<IFormFile>(files);
-        mockCollection.Setup(c => c.Count).Returns(list.Count);
-        mockCollection.Setup(c => c.GetEnumerator()).Returns(list.GetEnumerator());
-        mockCollection.Setup(c => c[It.IsAny<int>()]).Returns((int i) => list[i]);
+        mockCollection.Setup(c => c.Count).Returns(0);
         return mockCollection;
-    }
-
-    private class FailingDbContextWrapper : IApplicationDbContext
-    {
-        private readonly ApplicationDbContext _inner;
-
-        public FailingDbContextWrapper(ApplicationDbContext inner) => _inner = inner;
-
-        public DbSet<DomainApplication> Applications => _inner.Applications;
-        public DbSet<ApplicationFile> ApplicationFiles => _inner.ApplicationFiles;
-        public DbSet<DomainFile> Files => _inner.Files;
-        public DbSet<StepDetail> StepDetails => _inner.StepDetails;
-        public DbSet<Step> Steps => _inner.Steps;
-        public DbSet<TodoList> TodoLists => _inner.TodoLists;
-        public DbSet<TodoItem> TodoItems => _inner.TodoItems;
-        public DbSet<ApplicationReturn> ApplicationReturns => _inner.ApplicationReturns;
-        public DbSet<ApplicationReturnFile> ApplicationReturnFiles => _inner.ApplicationReturnFiles;
-        public DbSet<RoleStepPermission> RoleStepPermissions => _inner.RoleStepPermissions;
-        public DbSet<AcademicDegree> AcademicDegrees => _inner.AcademicDegrees;
-        public DbSet<ResearchHour> ResearchHours => _inner.ResearchHours;
-
-        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-        {
-            throw new DbUpdateException("Simulated save failure");
-        }
     }
 
     [Test]
@@ -164,7 +124,7 @@ public class CreateApplicationCommandHandlerTests : IDisposable
 
         var handler = new CreateApplicationCommandHandler(
             _dbContext,
-            _fileServiceMock.Object,
+            _applicationFileServiceMock.Object,
             _codeGeneratorServiceMock.Object,
             _stepResolverMock.Object,
             _senderMock.Object,
@@ -183,11 +143,11 @@ public class CreateApplicationCommandHandlerTests : IDisposable
         application.StepDetailId.ShouldBe(_stepDetailId);
         application.CreatedBy.ShouldBe(_userId);
 
-        _fileServiceMock.Verify(
-            f => f.SaveFilesAsync(
-                It.IsAny<IReadOnlyList<IFormFile>>(),
-                It.IsAny<HashSet<string>>(),
-                It.IsAny<string>(),
+        _applicationFileServiceMock.Verify(
+            f => f.AddFilesToApplicationAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<Guid>(),
+                It.IsAny<IFormFileCollection>(),
                 It.IsAny<CancellationToken>()),
             Times.Never);
 
@@ -211,7 +171,7 @@ public class CreateApplicationCommandHandlerTests : IDisposable
 
         var handler = new CreateApplicationCommandHandler(
             _dbContext,
-            _fileServiceMock.Object,
+            _applicationFileServiceMock.Object,
             _codeGeneratorServiceMock.Object,
             _stepResolverMock.Object,
             _senderMock.Object,
@@ -229,32 +189,33 @@ public class CreateApplicationCommandHandlerTests : IDisposable
     }
 
     [Test]
-    public async Task Handle_ShouldSaveFilesAndCreateApplicationFiles_WhenFilesProvided()
+    public async Task Handle_ShouldCallAddFilesToApplicationAsync_WhenFilesProvided()
     {
         AddStepDetail();
 
-        var mockFile = CreateMockFormFile("document.pdf", "application/pdf", 2048);
-        var fileCollection = CreateMockFormFileCollection(mockFile.Object);
+        var mockFile = new Mock<IFormFile>();
+        mockFile.Setup(f => f.FileName).Returns("document.pdf");
+        mockFile.Setup(f => f.ContentType).Returns("application/pdf");
+        mockFile.Setup(f => f.Length).Returns(2048);
+        mockFile.Setup(f => f.OpenReadStream()).Returns(new MemoryStream());
 
-        _fileServiceMock
-            .Setup(f => f.SaveFilesAsync(
-                It.IsAny<IReadOnlyList<IFormFile>>(),
-                It.IsAny<HashSet<string>>(),
-                It.IsAny<string>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { "/files/applications/document.pdf" });
+        var mockCollection = new Mock<IFormFileCollection>();
+        var files = new List<IFormFile> { mockFile.Object };
+        mockCollection.Setup(c => c.Count).Returns(1);
+        mockCollection.Setup(c => c.GetEnumerator()).Returns(files.GetEnumerator());
+        mockCollection.Setup(c => c[0]).Returns(mockFile.Object);
 
         var command = new CreateApplicationCommand
         {
             Title = "Test Application",
             Description = "Test Description",
             Status = ApplicationStatus.Draft,
-            Files = fileCollection.Object
+            Files = mockCollection.Object
         };
 
         var handler = new CreateApplicationCommandHandler(
             _dbContext,
-            _fileServiceMock.Object,
+            _applicationFileServiceMock.Object,
             _codeGeneratorServiceMock.Object,
             _stepResolverMock.Object,
             _senderMock.Object,
@@ -262,57 +223,47 @@ public class CreateApplicationCommandHandlerTests : IDisposable
 
         var result = await handler.Handle(command, CancellationToken.None);
 
-        var applicationFiles = await _dbContext.ApplicationFiles
-            .Include(af => af.File)
-            .Where(af => af.ApplicationId == result)
-            .ToListAsync();
-
-        applicationFiles.ShouldHaveSingleItem();
-        applicationFiles[0].StepId.ShouldBe(_stepId);
-        applicationFiles[0].File.Name.ShouldBe("document.pdf");
-        applicationFiles[0].File.ContentType.ShouldBe("application/pdf");
-        applicationFiles[0].File.Path.ShouldBe("/files/applications/document.pdf");
-
-        _fileServiceMock.Verify(
-            f => f.SaveFilesAsync(
-                It.IsAny<IReadOnlyList<IFormFile>>(),
-                It.IsAny<HashSet<string>>(),
-                It.IsAny<string>(),
+        _applicationFileServiceMock.Verify(
+            f => f.AddFilesToApplicationAsync(
+                result,
+                _stepId,
+                mockCollection.Object,
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
     [Test]
-    public async Task Handle_ShouldDeleteSavedFilesAndRethrow_WhenSaveChangesFails()
+    public async Task Handle_ShouldRethrow_WhenApplicationFileServiceThrows()
     {
         AddStepDetail();
 
-        var mockFile = CreateMockFormFile("document.pdf", "application/pdf", 2048);
-        var fileCollection = CreateMockFormFileCollection(mockFile.Object);
+        var mockFile = new Mock<IFormFile>();
+        mockFile.Setup(f => f.FileName).Returns("document.pdf");
 
-        var savedPaths = new[] { "/files/applications/document.pdf" };
+        var mockCollection = new Mock<IFormFileCollection>();
+        var files = new List<IFormFile> { mockFile.Object };
+        mockCollection.Setup(c => c.Count).Returns(1);
+        mockCollection.Setup(c => c.GetEnumerator()).Returns(files.GetEnumerator());
 
-        _fileServiceMock
-            .Setup(f => f.SaveFilesAsync(
-                It.IsAny<IReadOnlyList<IFormFile>>(),
-                It.IsAny<HashSet<string>>(),
-                It.IsAny<string>(),
+        _applicationFileServiceMock
+            .Setup(f => f.AddFilesToApplicationAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<Guid>(),
+                It.IsAny<IFormFileCollection>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(savedPaths);
-
-        var failingContext = new FailingDbContextWrapper(_dbContext);
+            .ThrowsAsync(new DbUpdateException("Simulated failure"));
 
         var command = new CreateApplicationCommand
         {
             Title = "Test Application",
             Description = "Test Description",
             Status = ApplicationStatus.Draft,
-            Files = fileCollection.Object
+            Files = mockCollection.Object
         };
 
         var handler = new CreateApplicationCommandHandler(
-            failingContext,
-            _fileServiceMock.Object,
+            _dbContext,
+            _applicationFileServiceMock.Object,
             _codeGeneratorServiceMock.Object,
             _stepResolverMock.Object,
             _senderMock.Object,
@@ -320,12 +271,5 @@ public class CreateApplicationCommandHandlerTests : IDisposable
 
         await Should.ThrowAsync<DbUpdateException>(() =>
             handler.Handle(command, CancellationToken.None));
-
-        _fileServiceMock.Verify(
-            f => f.DeleteFile(It.Is<string>(p => p == savedPaths[0]), It.IsAny<CancellationToken>()),
-            Times.Once);
-
-        var applicationCount = await _dbContext.Applications.CountAsync();
-        applicationCount.ShouldBe(0);
     }
 }

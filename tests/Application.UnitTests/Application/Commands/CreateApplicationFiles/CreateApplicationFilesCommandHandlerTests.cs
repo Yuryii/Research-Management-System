@@ -25,7 +25,7 @@ namespace RMS.Application.UnitTests.Application.Commands;
 public class CreateApplicationFilesCommandHandlerTests : IDisposable
 {
     private ApplicationDbContext _dbContext = null!;
-    private Mock<IFileService> _fileServiceMock = null!;
+    private Mock<IApplicationFileService> _applicationFileServiceMock = null!;
     private Mock<IUser> _userMock = null!;
     private Mock<IIdentityService> _identityServiceMock = null!;
 
@@ -42,7 +42,7 @@ public class CreateApplicationFilesCommandHandlerTests : IDisposable
     public void SetUp()
     {
         _dbContext = CreateInMemoryContext();
-        _fileServiceMock = new Mock<IFileService>();
+        _applicationFileServiceMock = new Mock<IApplicationFileService>();
         _userMock = new Mock<IUser>();
         _identityServiceMock = new Mock<IIdentityService>();
     }
@@ -137,7 +137,7 @@ public class CreateApplicationFilesCommandHandlerTests : IDisposable
     public async Task Handle_ShouldThrowNotFoundException_WhenApplicationDoesNotExist()
     {
         var handler = new CreateApplicationFilesCommandHandler(
-            _dbContext, _fileServiceMock.Object, _userMock.Object, _identityServiceMock.Object);
+            _dbContext, _applicationFileServiceMock.Object, _userMock.Object, _identityServiceMock.Object);
         var command = new CreateApplicationFilesCommand
         {
             ApplicationId = Guid.NewGuid(),
@@ -159,7 +159,7 @@ public class CreateApplicationFilesCommandHandlerTests : IDisposable
             .ReturnsAsync(new List<string> { roleId });
 
         var handler = new CreateApplicationFilesCommandHandler(
-            _dbContext, _fileServiceMock.Object, _userMock.Object, _identityServiceMock.Object);
+            _dbContext, _applicationFileServiceMock.Object, _userMock.Object, _identityServiceMock.Object);
         var command = new CreateApplicationFilesCommand
         {
             ApplicationId = app.Id,
@@ -182,7 +182,7 @@ public class CreateApplicationFilesCommandHandlerTests : IDisposable
             .ReturnsAsync(new List<string> { roleId });
 
         var handler = new CreateApplicationFilesCommandHandler(
-            _dbContext, _fileServiceMock.Object, _userMock.Object, _identityServiceMock.Object);
+            _dbContext, _applicationFileServiceMock.Object, _userMock.Object, _identityServiceMock.Object);
         var command = new CreateApplicationFilesCommand
         {
             ApplicationId = app.Id,
@@ -205,7 +205,7 @@ public class CreateApplicationFilesCommandHandlerTests : IDisposable
             .ReturnsAsync(new List<string>());
 
         var handler = new CreateApplicationFilesCommandHandler(
-            _dbContext, _fileServiceMock.Object, _userMock.Object, _identityServiceMock.Object);
+            _dbContext, _applicationFileServiceMock.Object, _userMock.Object, _identityServiceMock.Object);
         var command = new CreateApplicationFilesCommand
         {
             ApplicationId = app.Id,
@@ -217,7 +217,7 @@ public class CreateApplicationFilesCommandHandlerTests : IDisposable
     }
 
     [Test]
-    public async Task Handle_ShouldSaveFiles_WhenTeacherUploadsDraftApplication()
+    public async Task Handle_ShouldCallAddFilesToApplicationAsync_WhenTeacherUploadsDraftApplication()
     {
         var (app, step, roleId) = SetupApplicationWithStepAndDetail(
             ApplicationStatus.Draft, Roles.Teacher, addPermission: true);
@@ -227,21 +227,12 @@ public class CreateApplicationFilesCommandHandlerTests : IDisposable
             .Setup(s => s.GetRoleIdsAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<string> { roleId });
 
-        var savedPaths = new List<string> { "path/file1.pdf", "path/file2.pdf" };
-        _fileServiceMock
-            .Setup(f => f.SaveFilesAsync(
-                It.IsAny<IReadOnlyList<IFormFile>>(),
-                It.IsAny<HashSet<string>>(),
-                It.IsAny<string>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(savedPaths);
-
         var files = CreateFormFileCollection(
             ("test1.pdf", "application/pdf", 1024),
             ("test2.pdf", "application/pdf", 2048));
 
         var handler = new CreateApplicationFilesCommandHandler(
-            _dbContext, _fileServiceMock.Object, _userMock.Object, _identityServiceMock.Object);
+            _dbContext, _applicationFileServiceMock.Object, _userMock.Object, _identityServiceMock.Object);
         var command = new CreateApplicationFilesCommand
         {
             ApplicationId = app.Id,
@@ -250,26 +241,17 @@ public class CreateApplicationFilesCommandHandlerTests : IDisposable
 
         await handler.Handle(command, CancellationToken.None);
 
-        var appFiles = await _dbContext.ApplicationFiles.ToListAsync();
-        var dbFiles = await _dbContext.Files.ToListAsync();
-
-        appFiles.Count.ShouldBe(2);
-        dbFiles.Count.ShouldBe(2);
-
-        foreach (var appFile in appFiles)
-        {
-            appFile.ApplicationId.ShouldBe(app.Id);
-            appFile.StepId.ShouldBe(step.Id);
-        }
-
-        foreach (var dbFile in dbFiles)
-        {
-            dbFile.Path.ShouldBeOneOf(savedPaths.ToArray());
-        }
+        _applicationFileServiceMock.Verify(
+            f => f.AddFilesToApplicationAsync(
+                app.Id,
+                step.Id,
+                files,
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Test]
-    public async Task Handle_ShouldSaveFiles_WhenAuthorizedRoleUploads()
+    public async Task Handle_ShouldCallAddFilesToApplicationAsync_WhenAuthorizedRoleUploads()
     {
         var (app, step, roleId) = SetupApplicationWithStepAndDetail(
             ApplicationStatus.Submitted, Roles.Tttv, addPermission: true);
@@ -279,33 +261,29 @@ public class CreateApplicationFilesCommandHandlerTests : IDisposable
             .Setup(s => s.GetRoleIdsAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<string> { roleId });
 
-        var savedPaths = new List<string> { "path/file.pdf" };
-        _fileServiceMock
-            .Setup(f => f.SaveFilesAsync(
-                It.IsAny<IReadOnlyList<IFormFile>>(),
-                It.IsAny<HashSet<string>>(),
-                It.IsAny<string>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(savedPaths);
+        var files = CreateFormFileCollection(("doc.pdf", "application/pdf", 512));
 
         var handler = new CreateApplicationFilesCommandHandler(
-            _dbContext, _fileServiceMock.Object, _userMock.Object, _identityServiceMock.Object);
+            _dbContext, _applicationFileServiceMock.Object, _userMock.Object, _identityServiceMock.Object);
         var command = new CreateApplicationFilesCommand
         {
             ApplicationId = app.Id,
-            Files = CreateFormFileCollection(("doc.pdf", "application/pdf", 512))
+            Files = files
         };
 
         await handler.Handle(command, CancellationToken.None);
 
-        var appFiles = await _dbContext.ApplicationFiles.ToListAsync();
-        appFiles.Count.ShouldBe(1);
-        appFiles[0].ApplicationId.ShouldBe(app.Id);
-        appFiles[0].StepId.ShouldBe(step.Id);
+        _applicationFileServiceMock.Verify(
+            f => f.AddFilesToApplicationAsync(
+                app.Id,
+                step.Id,
+                files,
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Test]
-    public async Task Handle_ShouldDeleteSavedFiles_WhenSaveChangesThrows()
+    public async Task Handle_ShouldRethrow_WhenApplicationFileServiceThrows()
     {
         var (app, step, roleId) = SetupApplicationWithStepAndDetail(
             ApplicationStatus.Draft, Roles.Teacher, addPermission: true);
@@ -315,27 +293,16 @@ public class CreateApplicationFilesCommandHandlerTests : IDisposable
             .Setup(s => s.GetRoleIdsAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<string> { roleId });
 
-        var savedPaths = new List<string> { "path/file.pdf" };
-        _fileServiceMock
-            .Setup(f => f.SaveFilesAsync(
-                It.IsAny<IReadOnlyList<IFormFile>>(),
-                It.IsAny<HashSet<string>>(),
-                It.IsAny<string>(),
+        _applicationFileServiceMock
+            .Setup(f => f.AddFilesToApplicationAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<Guid>(),
+                It.IsAny<IFormFileCollection>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(savedPaths);
-
-        var mockContext = new Mock<IApplicationDbContext>();
-        mockContext.Setup(c => c.Applications).Returns(_dbContext.Applications);
-        mockContext.Setup(c => c.StepDetails).Returns(_dbContext.StepDetails);
-        mockContext.Setup(c => c.Files).Returns(_dbContext.Files);
-        mockContext.Setup(c => c.ApplicationFiles).Returns(_dbContext.ApplicationFiles);
-        mockContext.Setup(c => c.RoleStepPermissions).Returns(_dbContext.RoleStepPermissions);
-        mockContext
-            .Setup(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ThrowsAsync(new DbUpdateException("Simulated save failure"));
 
         var handler = new CreateApplicationFilesCommandHandler(
-            mockContext.Object, _fileServiceMock.Object, _userMock.Object, _identityServiceMock.Object);
+            _dbContext, _applicationFileServiceMock.Object, _userMock.Object, _identityServiceMock.Object);
         var command = new CreateApplicationFilesCommand
         {
             ApplicationId = app.Id,
@@ -343,9 +310,5 @@ public class CreateApplicationFilesCommandHandlerTests : IDisposable
         };
 
         await Should.ThrowAsync<DbUpdateException>(() => handler.Handle(command, CancellationToken.None));
-
-        _fileServiceMock.Verify(
-            f => f.DeleteFile(It.Is<string>(p => savedPaths.Contains(p)), It.IsAny<CancellationToken>()),
-            Times.Exactly(savedPaths.Count));
     }
 }

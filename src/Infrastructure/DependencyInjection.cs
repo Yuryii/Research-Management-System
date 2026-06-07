@@ -87,6 +87,7 @@ public static class DependencyInjection
         builder.Services.AddScoped<ICodeGeneratorService, CodeGeneratorService>();
         builder.Services.AddScoped<IStepResolver, StepResolver>();
         builder.Services.AddScoped<IApplicationQueryService, ApplicationQueryService>();
+        builder.Services.AddScoped<IApplicationFileService, ApplicationFileService>();
 
         builder.Services.Configure<DefaultStepIdsOptions>(builder.Configuration.GetSection(DefaultStepIdsOptions.SectionName));
     }
