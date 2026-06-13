@@ -35,6 +35,22 @@
       <Folder Include="Common\Extensions\" />
       <Folder Include="Security\" />
       <Folder Include="Steps\Commands\" />
+      <Folder Include="Steps\Queries\" />
+      <Folder Include="Application\Queries\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <CoverletExclude Include="**/*Dto.cs" />
+      <CoverletExclude Include="**/I*.cs" />
+      <CoverletExclude Include="**/DependencyInjection.cs" />
+      <CoverletExclude Include="**/GlobalUsings.cs" />
+      <CoverletExclude Include="**/FileUploadDto.cs" />
+      <CoverletExclude Include="**/LookupDto.cs" />
+      <CoverletExclude Include="**/PaginatedResult.cs" />
+      <CoverletExclude Include="**/Result.cs" />
+      <CoverletExclude Include="**/PagedQuery.cs" />
+      <CoverletExclude Include="**/DefaultStepIdsOptions.cs" />
+      <CoverletExclude Include="**/IApplicationQueryService.cs" />
     </ItemGroup>
 
 </Project>

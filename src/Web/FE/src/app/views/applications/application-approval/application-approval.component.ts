@@ -26,6 +26,7 @@ import {
   UpdateApplicationCommand,
 } from '../../../web-api-client';
 import { AuthService } from '../../../../api-authorization/auth.service';
+import { Roles } from '../../../../api-authorization/Roles';
 import { ReturnApplicationModalComponent } from './return-application-modal/return-application-modal.component';
 import { DocumentCountBadgeComponent } from '../../../shared/components/document-count-badge/document-count-badge.component';
 import { ApplicationModalComponent } from '../applications/application-modal/application-modal.component';
@@ -89,10 +90,15 @@ export class ApplicationApprovalComponent implements OnInit {
   userSteps: StepDto[] = [];
   activeTabIndex = 0;
   searchTerm = '';
+  roles: string[] | null = null;
+  readonly Roles = Roles;
 
   private ref: DynamicDialogRef | null = null;
 
   ngOnInit(): void {
+    this.authService.roles$.subscribe((roles) => {
+      this.roles = roles;
+    });
     this.loadUserSteps();
   }
 

@@ -8,7 +8,7 @@ export const navItems: NavItem[] = [
     name: 'Quản lý hồ sơ & quy trình',
     url: '/workflow',
     iconComponent: { name: 'cil-calculator' },
-    roles: ['Administrator', 'Teacher', 'Tttv', 'Dvqltt', 'KhcnHtqt'],
+    roles: [Roles.Administrator, Roles.Teacher, Roles.Tttv, Roles.Dvqltt, Roles.KhcnHtqt],
     children: [
       {
         name: 'Hồ sơ',
@@ -20,7 +20,7 @@ export const navItems: NavItem[] = [
         name: 'Duyệt hồ sơ',
         url: '/workflow/application-approval',
         icon: 'nav-icon-bullet',
-        roles: ['Administrator', 'Tttv', 'Dvqltt', 'KhcnHtqt'],
+        roles: [Roles.Administrator, Roles.Tttv, Roles.Dvqltt, Roles.KhcnHtqt],
       },
     ],
   },

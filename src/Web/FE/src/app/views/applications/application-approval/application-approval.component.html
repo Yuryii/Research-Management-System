@@ -70,6 +70,7 @@
             <td>
               <div class="d-flex flex-column gap-1 align-items-stretch">
                 <button
+                  *ngIf="!roles?.includes(Roles.KhcnHtqt)"
                   cButton
                   color="success"
                   size="sm"

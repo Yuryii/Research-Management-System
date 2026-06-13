@@ -4,6 +4,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>RMS.AppHost</RootNamespace>
     <AssemblyName>RMS.AppHost</AssemblyName>
+    <NoWarn>$(NoWarn);NU1903</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

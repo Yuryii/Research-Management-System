@@ -4,9 +4,9 @@ using System.Text;
 
 namespace RMS.Domain.Constants;
 
-public class Config
+public static class Config
 {
-    public class Store
+    public static class Store
     {
         public const string UPLOAD_ROOT = "Upload";
         public const string ROOT_PATH = UPLOAD_ROOT; // relative path, resolved at runtime
