@@ -21,6 +21,7 @@
     <p-tab *ngFor="let step of userSteps; let i = index" [value]="i">
       {{ step.name }}
     </p-tab>
+    <p-tab [value]="'returned'">Hồ sơ đã trả</p-tab>
   </p-tablist>
   <p-tabpanels>
     <p-tabpanel *ngFor="let step of userSteps; let i = index" [value]="i">
@@ -28,6 +29,7 @@
         <thead>
           <tr>
             <th class="min-w-120" scope="col">STT</th>
+            <th class="min-w-120" scope="col">Mã hồ sơ</th>
             <th class="min-w-120" scope="col">Tiêu Đề</th>
             <th class="min-w-120" scope="col">Nội dung</th>
             <th class="min-w-120" scope="col">Tài liệu nhận</th>
@@ -39,10 +41,10 @@
         </thead>
         <tbody>
           <tr *ngIf="i === activeTabIndex && isLoading">
-            <td colspan="8" class="text-center py-4">Đang tải dữ liệu...</td>
+            <td colspan="9" class="text-center py-4">Đang tải dữ liệu...</td>
           </tr>
           <tr *ngIf="i === activeTabIndex && !isLoading && applications.length === 0">
-            <td colspan="8" class="text-center py-4">Chưa có hồ sơ nào.</td>
+            <td colspan="9" class="text-center py-4">Chưa có hồ sơ nào.</td>
           </tr>
           <tr
             class="clickable"
@@ -50,6 +52,7 @@
             *ngFor="let application of applications; let index = index"
           >
             <td>{{ (pageNumber - 1) * pageSize + index + 1 }}</td>
+            <td>{{ application.code || '-' }}</td>
             <td>{{ application.title | truncate: 50 }}</td>
             <td>{{ application.description | truncate: 80 }}</td>
             <td>
@@ -94,9 +97,56 @@
         </tbody>
       </table>
     </p-tabpanel>
+    <p-tabpanel [value]="'returned'">
+      <table class="table">
+        <thead>
+          <tr>
+            <th class="min-w-120" scope="col">STT</th>
+            <th class="min-w-120" scope="col">Mã hồ sơ</th>
+            <th class="min-w-120" scope="col">Tiêu đề hồ sơ</th>
+            <th class="min-w-120" scope="col">Người nhận</th>
+            <th class="min-w-120" scope="col">Tiêu đề trả</th>
+            <th class="min-w-120" scope="col">Mô tả</th>
+            <th class="min-w-120" scope="col">File</th>
+            <th class="min-w-120" scope="col">Ngày trả</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="isReturnedLoading">
+            <td colspan="8" class="text-center py-4">Đang tải dữ liệu...</td>
+          </tr>
+          <tr *ngIf="!isReturnedLoading && returnedRecords.length === 0">
+            <td colspan="8" class="text-center py-4">Chưa trả hồ sơ nào.</td>
+          </tr>
+          <tr *ngFor="let record of returnedRecords; let index = index">
+            <td>{{ (returnedPageNumber - 1) * returnedPageSize + index + 1 }}</td>
+            <td>{{ record.applicationCode || '-' }}</td>
+            <td>{{ record.applicationTitle | truncate: 50 }}</td>
+            <td>{{ record.recipientName || record.creatorName || '-' }}</td>
+            <td>{{ record.title | truncate: 40 }}</td>
+            <td>{{ record.description | truncate: 60 }}</td>
+            <td>
+              <app-document-count-badge [count]="record.files?.length || 0"></app-document-count-badge>
+            </td>
+            <td>{{ record.created | date: 'dd/MM/yyyy' }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="pagination-wrapper">
+        <p-paginator
+          [first]="(returnedPageNumber - 1) * returnedPageSize"
+          [rows]="returnedPageSize"
+          [totalRecords]="returnedTotalCount"
+          [rowsPerPageOptions]="rowsPerPageOptions"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="Trang {currentPage} / {totalPages}"
+          (onPageChange)="onReturnedPageChange($event)"
+        ></p-paginator>
+      </div>
+    </p-tabpanel>
   </p-tabpanels>
 </p-tabs>
-<div class="pagination-wrapper">
+<div class="pagination-wrapper" *ngIf="!isReturnedTabActive">
   <p-paginator
     [first]="(pageNumber - 1) * pageSize"
     [rows]="pageSize"

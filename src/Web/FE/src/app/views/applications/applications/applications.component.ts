@@ -21,11 +21,15 @@ import { ApplicationModalComponent } from './application-modal/application-modal
 import { StepFlowModalComponent } from '../step-flow-modal/step-flow-modal.component';
 import { DocumentCountBadgeComponent } from '../../../shared/components/document-count-badge/document-count-badge.component';
 import { PaginatorModule, PaginatorState } from 'primeng/paginator';
+import { Tabs, TabList, Tab, TabPanels, TabPanel } from 'primeng/tabs';
 import {
   ApplicationDto,
+  ApplicationReturnDto,
+  StepDto,
   ApplicationsClient,
   StepsClient,
   ApplicationFilesClient,
+  ApplicationReturnsClient,
   UpdateApplicationCommand,
 } from '../../../web-api-client';
 import { ApiErrorService } from '../../../shared/services/api-error.service';
@@ -56,6 +60,11 @@ export interface ApplicationFormData {
     ToastModule,
     DynamicDialogModule,
     PaginatorModule,
+    Tabs,
+    TabList,
+    Tab,
+    TabPanels,
+    TabPanel,
     DocumentCountBadgeComponent,
     TruncatePipe,
   ],
@@ -69,15 +78,22 @@ export class ApplicationsComponent implements OnInit {
   private readonly applicationService = inject(ApplicationsClient);
   private readonly stepsClient = inject(StepsClient);
   private readonly applicationFilesClient = inject(ApplicationFilesClient);
+  private readonly applicationReturnsClient = inject(ApplicationReturnsClient);
   private readonly apiErrorService = inject(ApiErrorService);
   applications: ApplicationDto[] = [];
+  returnedRecords: ApplicationReturnDto[] = [];
   isLoading = false;
+  isReturnedLoading = false;
   selectedStatus: ApplicationStatus | null | undefined = null;
   searchTerm = '';
   pageNumber = 1;
   pageSize = 10;
   totalCount = 0;
+  returnedPageNumber = 1;
+  returnedPageSize = 10;
+  returnedTotalCount = 0;
   currentStepId: string | undefined = undefined;
+  activeTabIndex = 0;
   readonly rowsPerPageOptions = [5, 10, 20, 50];
   private ref: DynamicDialogRef | null = null;
 
@@ -104,6 +120,15 @@ export class ApplicationsComponent implements OnInit {
     });
   }
 
+  onTabChange(index: string | number | undefined): void {
+    if (index === 1) {
+      this.activeTabIndex = 1;
+      this.loadReturnedRecords();
+    } else if (index === 0) {
+      this.activeTabIndex = 0;
+    }
+  }
+
   loadApplications(): void {
     this.isLoading = true;
     this.applicationService
@@ -116,6 +141,26 @@ export class ApplicationsComponent implements OnInit {
         },
         error: (err) => {
           this.isLoading = false;
+          this.apiErrorService.showError(
+            this.apiErrorService.extractMessage(err),
+            'Lỗi',
+          );
+        },
+      });
+  }
+
+  loadReturnedRecords(): void {
+    this.isReturnedLoading = true;
+    this.applicationReturnsClient
+      .getApplicationReturns(this.returnedPageNumber, this.returnedPageSize, undefined)
+      .subscribe({
+        next: (result) => {
+          this.returnedRecords = result?.items ?? [];
+          this.returnedTotalCount = result?.totalCount ?? 0;
+          this.isReturnedLoading = false;
+        },
+        error: (err) => {
+          this.isReturnedLoading = false;
           this.apiErrorService.showError(
             this.apiErrorService.extractMessage(err),
             'Lỗi',
@@ -146,6 +191,19 @@ export class ApplicationsComponent implements OnInit {
     this.pageNumber = nextPageNumber;
     this.pageSize = nextPageSize;
     this.loadApplications();
+  }
+
+  onReturnedPageChange(event: PaginatorState): void {
+    const nextPageNumber = (event.page ?? 0) + 1;
+    const nextPageSize = event.rows ?? this.returnedPageSize;
+
+    if (nextPageNumber === this.returnedPageNumber && nextPageSize === this.returnedPageSize) {
+      return;
+    }
+
+    this.returnedPageNumber = nextPageNumber;
+    this.returnedPageSize = nextPageSize;
+    this.loadReturnedRecords();
   }
 
   openModal(): void {

@@ -18,10 +18,12 @@ import { PaginatorModule, PaginatorState } from 'primeng/paginator';
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from 'primeng/tabs';
 import {
   ApplicationDto,
+  ApplicationReturnDto,
   StepDto,
   ApplicationsClient,
   StepsClient,
   ApplicationFilesClient,
+  ApplicationReturnsClient,
   ForwardNextToStepCommand,
   UpdateApplicationCommand,
 } from '../../../web-api-client';
@@ -78,12 +80,19 @@ export class ApplicationApprovalComponent implements OnInit {
   private readonly stepsClient = inject(StepsClient);
   private readonly authService = inject(AuthService);
   private readonly applicationFilesClient = inject(ApplicationFilesClient);
+  private readonly applicationReturnsClient = inject(ApplicationReturnsClient);
   private readonly apiErrorService = inject(ApiErrorService);
   applications: ApplicationDto[] = [];
+  returnedRecords: ApplicationReturnDto[] = [];
   isLoading = false;
+  isReturnedLoading = false;
+  isReturnedTabActive = false;
   pageNumber = 1;
   pageSize = 10;
   totalCount = 0;
+  returnedPageNumber = 1;
+  returnedPageSize = 10;
+  returnedTotalCount = 0;
   currentStepId: string | undefined = undefined;
   readonly rowsPerPageOptions = [5, 10, 20, 50];
 
@@ -119,11 +128,17 @@ export class ApplicationApprovalComponent implements OnInit {
   }
 
   onTabChange(index: string | number | undefined): void {
-    const idx = typeof index === 'string' ? parseInt(index, 10) : (index ?? 0);
+    if (typeof index === 'string' && index === 'returned') {
+      this.isReturnedTabActive = true;
+      this.loadReturnedRecords();
+      return;
+    }
+    const idx = index as number;
     if (idx >= 0 && idx < this.userSteps.length) {
       this.activeTabIndex = idx;
       this.currentStepId = this.userSteps[idx].id;
       this.pageNumber = 1;
+      this.isReturnedTabActive = false;
       this.loadApplications();
     }
   }
@@ -146,6 +161,35 @@ export class ApplicationApprovalComponent implements OnInit {
           );
         },
       });
+  }
+
+  loadReturnedRecords(): void {
+    this.isReturnedLoading = true;
+    this.applicationReturnsClient
+      .getApplicationReturns(this.returnedPageNumber, this.returnedPageSize, undefined)
+      .subscribe({
+        next: (result) => {
+          this.returnedRecords = result?.items ?? [];
+          this.returnedTotalCount = result?.totalCount ?? 0;
+          this.isReturnedLoading = false;
+        },
+        error: (err) => {
+          this.isReturnedLoading = false;
+          this.apiErrorService.showError(
+            this.apiErrorService.extractMessage(err),
+            'Lỗi',
+          );
+        },
+      });
+  }
+
+  onReturnedPageChange(event: PaginatorState): void {
+    const nextPageNumber = (event.page ?? 0) + 1;
+    const nextPageSize = event.rows ?? this.returnedPageSize;
+    if (nextPageNumber === this.returnedPageNumber && nextPageSize === this.returnedPageSize) return;
+    this.returnedPageNumber = nextPageNumber;
+    this.returnedPageSize = nextPageSize;
+    this.loadReturnedRecords();
   }
 
   onPageChange(event: PaginatorState): void {

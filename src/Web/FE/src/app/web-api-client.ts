@@ -265,6 +265,114 @@ export class ApplicationFilesClient implements IApplicationFilesClient {
     }
 }
 
+export interface IApplicationReturnsClient {
+    /**
+     * Get all Application Returns
+     * @param pageNumber (optional) 
+     * @param pageSize (optional) 
+     * @param search (optional) 
+     * @return OK
+     */
+    getApplicationReturns(pageNumber: number | undefined, pageSize: number | undefined, search: string | undefined): Observable<PaginatedResultOfApplicationReturnDto>;
+}
+
+@Injectable({
+    providedIn: 'root'
+})
+export class ApplicationReturnsClient implements IApplicationReturnsClient {
+    private http: HttpClient;
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
+        this.http = http;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * Get all Application Returns
+     * @param pageNumber (optional) 
+     * @param pageSize (optional) 
+     * @param search (optional) 
+     * @return OK
+     */
+    getApplicationReturns(pageNumber: number | undefined, pageSize: number | undefined, search: string | undefined): Observable<PaginatedResultOfApplicationReturnDto> {
+        let url_ = this.baseUrl + "/api/ApplicationReturns?";
+        if (pageNumber === null)
+            throw new globalThis.Error("The parameter 'pageNumber' cannot be null.");
+        else if (pageNumber !== undefined)
+            url_ += "pageNumber=" + encodeURIComponent("" + pageNumber) + "&";
+        if (pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (search === null)
+            throw new globalThis.Error("The parameter 'search' cannot be null.");
+        else if (search !== undefined)
+            url_ += "search=" + encodeURIComponent("" + search) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGetApplicationReturns(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGetApplicationReturns(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<PaginatedResultOfApplicationReturnDto>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<PaginatedResultOfApplicationReturnDto>;
+        }));
+    }
+
+    protected processGetApplicationReturns(response: HttpResponseBase): Observable<PaginatedResultOfApplicationReturnDto> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = PaginatedResultOfApplicationReturnDto.fromJS(resultData200);
+            return _observableOf(result200);
+            }));
+        } else if (status === 400) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = resultData400 !== undefined ? resultData400 : null as any;
+    
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+            }));
+        } else if (status === 401) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            }));
+        } else if (status === 403) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+}
+
 export interface IApplicationsClient {
     /**
      * Get all Applications
@@ -2497,6 +2605,106 @@ export interface IApplicationDto {
     [key: string]: any;
 }
 
+export class ApplicationReturnDto implements IApplicationReturnDto {
+    id!: string;
+    applicationId!: string;
+    applicationCode!: string;
+    applicationTitle!: string;
+    title!: string;
+    description!: string;
+    recipientId?: string | undefined;
+    recipientName?: string | undefined;
+    created!: Date;
+    createdBy!: string;
+    creatorName?: string | undefined;
+    files?: FileDto[];
+
+    [key: string]: any;
+
+    constructor(data?: IApplicationReturnDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.applicationId = _data["applicationId"];
+            this.applicationCode = _data["applicationCode"];
+            this.applicationTitle = _data["applicationTitle"];
+            this.title = _data["title"];
+            this.description = _data["description"];
+            this.recipientId = _data["recipientId"];
+            this.recipientName = _data["recipientName"];
+            this.created = _data["created"] ? new Date(_data["created"].toString()) : undefined as any;
+            this.createdBy = _data["createdBy"];
+            this.creatorName = _data["creatorName"];
+            if (Array.isArray(_data["files"])) {
+                this.files = [] as any;
+                for (let item of _data["files"])
+                    this.files!.push(FileDto.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): ApplicationReturnDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new ApplicationReturnDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["id"] = this.id;
+        data["applicationId"] = this.applicationId;
+        data["applicationCode"] = this.applicationCode;
+        data["applicationTitle"] = this.applicationTitle;
+        data["title"] = this.title;
+        data["description"] = this.description;
+        data["recipientId"] = this.recipientId;
+        data["recipientName"] = this.recipientName;
+        data["created"] = this.created ? this.created.toISOString() : undefined as any;
+        data["createdBy"] = this.createdBy;
+        data["creatorName"] = this.creatorName;
+        if (Array.isArray(this.files)) {
+            data["files"] = [];
+            for (let item of this.files)
+                data["files"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface IApplicationReturnDto {
+    id: string;
+    applicationId: string;
+    applicationCode: string;
+    applicationTitle: string;
+    title: string;
+    description: string;
+    recipientId?: string | undefined;
+    recipientName?: string | undefined;
+    created: Date;
+    createdBy: string;
+    creatorName?: string | undefined;
+    files?: FileDto[];
+
+    [key: string]: any;
+}
+
 export class CreateApplicationCommand implements ICreateApplicationCommand {
     title!: string;
     description!: string;
@@ -3299,6 +3507,81 @@ export interface IPaginatedResultOfApplicationDto {
     [key: string]: any;
 }
 
+export class PaginatedResultOfApplicationReturnDto implements IPaginatedResultOfApplicationReturnDto {
+    items!: ApplicationReturnDto[];
+    totalCount!: number;
+    pageNumber!: number;
+    pageSize!: number;
+    totalPages?: number;
+
+    [key: string]: any;
+
+    constructor(data?: IPaginatedResultOfApplicationReturnDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.items = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(ApplicationReturnDto.fromJS(item));
+            }
+            this.totalCount = _data["totalCount"];
+            this.pageNumber = _data["pageNumber"];
+            this.pageSize = _data["pageSize"];
+            this.totalPages = _data["totalPages"];
+        }
+    }
+
+    static fromJS(data: any): PaginatedResultOfApplicationReturnDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new PaginatedResultOfApplicationReturnDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["totalCount"] = this.totalCount;
+        data["pageNumber"] = this.pageNumber;
+        data["pageSize"] = this.pageSize;
+        data["totalPages"] = this.totalPages;
+        return data;
+    }
+}
+
+export interface IPaginatedResultOfApplicationReturnDto {
+    items: ApplicationReturnDto[];
+    totalCount: number;
+    pageNumber: number;
+    pageSize: number;
+    totalPages?: number;
+
+    [key: string]: any;
+}
+
 export class RefreshRequest implements IRefreshRequest {
     refreshToken!: string;
 
@@ -3580,6 +3863,7 @@ export class StepDetailDto implements IStepDetailDto {
     stepId!: string;
     name!: string;
     order?: number;
+    isReturnStep?: boolean;
 
     [key: string]: any;
 
@@ -3602,6 +3886,7 @@ export class StepDetailDto implements IStepDetailDto {
             this.stepId = _data["stepId"];
             this.name = _data["name"];
             this.order = _data["order"];
+            this.isReturnStep = _data["isReturnStep"];
         }
     }
 
@@ -3622,6 +3907,7 @@ export class StepDetailDto implements IStepDetailDto {
         data["stepId"] = this.stepId;
         data["name"] = this.name;
         data["order"] = this.order;
+        data["isReturnStep"] = this.isReturnStep;
         return data;
     }
 }
@@ -3631,6 +3917,7 @@ export interface IStepDetailDto {
     stepId: string;
     name: string;
     order?: number;
+    isReturnStep?: boolean;
 
     [key: string]: any;
 }

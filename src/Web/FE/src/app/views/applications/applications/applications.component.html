@@ -37,70 +37,135 @@
     </button>
   </form>
 </div>
-<table [striped]="true" cTable>
-  <thead>
-    <tr>
-      <th class="min-w-120" scope="col">STT</th>
-      <th class="min-w-120" scope="col">Tiêu Đề</th>
-      <th class="min-w-120" scope="col">Nội dung</th>
-      <th class="min-w-120" scope="col">Tài liệu</th>
-      <th class="min-w-120" scope="col">Bước Xử Lý</th>
-      <th class="min-w-120" scope="col">Trang thái</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr *ngIf="isLoading">
-      <td colspan="6" class="text-center py-4">Đang tải dữ liệu...</td>
-    </tr>
-    <tr *ngIf="!isLoading && applications.length === 0">
-      <td colspan="6" class="text-center py-4">Chưa có hồ sơ đăng ký nào.</td>
-    </tr>
-    <tr
-      class="clickable"
-      (click)="openUpdateModal(application)"
-      *ngFor="let application of applications; let index = index"
-    >
-      <th scope="row" class="w-10">
-        {{ (pageNumber - 1) * pageSize + index + 1 }}
-      </th>
-      <td>{{ application.title | truncate: 50 }}</td>
-      <td>{{ application.description | truncate: 80 }}</td>
-      <td>
-        <app-document-count-badge [count]="(application.myApplications?.length || 0) + (application.preAttachments?.length || 0)"></app-document-count-badge>
-      </td>
-      <td>
-        <span
-          class="step-detail-link"
-          (click)="openStepFlowModal($event, application)"
-        >
-          {{ application.stepDetailName || "Chưa có bước xử lý" }}
-        </span>
-      </td>
-      <td>
-        <i
-          class="pi pi-times-circle text-danger me-1"
-          *ngIf="application.status === 0"
-          aria-hidden="true"
-        ></i>
-        <i
-          class="pi pi-check-circle text-success me-1"
-          *ngIf="application.status !== 0"
-          aria-hidden="true"
-        ></i>
-        {{ application.status === 0 ? "Nháp" : "Đã Nộp" }}
-      </td>
-    </tr>
-  </tbody>
-</table>
-<div class="pagination-wrapper">
-  <p-paginator
-    [first]="(pageNumber - 1) * pageSize"
-    [rows]="pageSize"
-    [totalRecords]="totalCount"
-    [rowsPerPageOptions]="rowsPerPageOptions"
-    [showCurrentPageReport]="true"
-    currentPageReportTemplate="Trang {currentPage} / {totalPages}"
-    (onPageChange)="onPageChange($event)"
-  ></p-paginator>
-</div>
+<p-tabs [(value)]="activeTabIndex" (valueChange)="onTabChange($event)">
+  <p-tablist>
+    <p-tab [value]="0">Hồ sơ của tôi</p-tab>
+    <p-tab [value]="1">Hồ sơ bị trả</p-tab>
+  </p-tablist>
+  <p-tabpanels>
+    <p-tabpanel [value]="0">
+      <table [striped]="true" cTable>
+        <thead>
+          <tr>
+            <th class="min-w-120" scope="col">STT</th>
+            <th class="min-w-120" scope="col">Mã hồ sơ</th>
+            <th class="min-w-120" scope="col">Tiêu Đề</th>
+            <th class="min-w-120" scope="col">Nội dung</th>
+            <th class="min-w-120" scope="col">Tài liệu</th>
+            <th class="min-w-120" scope="col">Bước Xử Lý</th>
+            <th class="min-w-120" scope="col">Trang thái</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="isLoading">
+            <td colspan="7" class="text-center py-4">Đang tải dữ liệu...</td>
+          </tr>
+          <tr *ngIf="!isLoading && applications.length === 0">
+            <td colspan="7" class="text-center py-4">Chưa có hồ sơ đăng ký nào.</td>
+          </tr>
+          <tr
+            class="clickable"
+            (click)="openUpdateModal(application)"
+            *ngFor="let application of applications; let index = index"
+          >
+            <th scope="row" class="w-10">
+              {{ (pageNumber - 1) * pageSize + index + 1 }}
+            </th>
+            <td>{{ application.code || '-' }}</td>
+            <td>{{ application.title | truncate: 50 }}</td>
+            <td>{{ application.description | truncate: 80 }}</td>
+            <td>
+              <app-document-count-badge [count]="(application.myApplications?.length || 0) + (application.preAttachments?.length || 0)"></app-document-count-badge>
+            </td>
+            <td>
+              <span
+                class="step-detail-link"
+                (click)="openStepFlowModal($event, application)"
+              >
+                {{ application.stepDetailName || "Chưa có bước xử lý" }}
+              </span>
+            </td>
+            <td>
+              <i
+                class="pi pi-times-circle text-danger me-1"
+                *ngIf="application.status === 0"
+                aria-hidden="true"
+              ></i>
+              <i
+                class="pi pi-check-circle text-success me-1"
+                *ngIf="application.status !== 0"
+                aria-hidden="true"
+              ></i>
+              {{ application.status === 0 ? "Nháp" : "Đã Nộp" }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="pagination-wrapper">
+        <p-paginator
+          [first]="(pageNumber - 1) * pageSize"
+          [rows]="pageSize"
+          [totalRecords]="totalCount"
+          [rowsPerPageOptions]="rowsPerPageOptions"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="Trang {currentPage} / {totalPages}"
+          (onPageChange)="onPageChange($event)"
+        ></p-paginator>
+      </div>
+    </p-tabpanel>
+    <p-tabpanel [value]="1">
+      <table [striped]="true" cTable>
+        <thead>
+          <tr>
+            <th class="min-w-120" scope="col">STT</th>
+            <th class="min-w-120" scope="col">Mã hồ sơ</th>
+            <th class="min-w-120" scope="col">Tiêu đề hồ sơ</th>
+            <th class="min-w-120" scope="col">Người trả</th>
+            <th class="min-w-120" scope="col">Tiêu đề trả</th>
+            <th class="min-w-120" scope="col">Mô tả</th>
+            <th class="min-w-120" scope="col">File</th>
+            <th class="min-w-120" scope="col">Ngày trả</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="isReturnedLoading">
+            <td colspan="8" class="text-center py-4">Đang tải dữ liệu...</td>
+          </tr>
+          <tr *ngIf="!isReturnedLoading && returnedRecords.length === 0">
+            <td colspan="8" class="text-center py-4">Không có hồ sơ bị trả.</td>
+          </tr>
+          <tr
+            *ngFor="let record of returnedRecords; let index = index"
+          >
+            <th scope="row" class="w-10">
+              {{ (returnedPageNumber - 1) * returnedPageSize + index + 1 }}
+            </th>
+            <td>{{ record.applicationCode || '-' }}</td>
+            <td>{{ record.applicationTitle | truncate: 40 }}</td>
+            <td>{{ record.creatorName || '-' }}</td>
+            <td>
+              <span class="text-danger">{{ record.title | truncate: 40 }}</span>
+            </td>
+            <td>{{ record.description | truncate: 60 }}</td>
+            <td>
+              <app-document-count-badge [count]="record.files?.length || 0"></app-document-count-badge>
+            </td>
+            <td>{{ record.created | date: 'dd/MM/yyyy' }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="pagination-wrapper">
+        <p-paginator
+          [first]="(returnedPageNumber - 1) * returnedPageSize"
+          [rows]="returnedPageSize"
+          [totalRecords]="returnedTotalCount"
+          [rowsPerPageOptions]="rowsPerPageOptions"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="Trang {currentPage} / {totalPages}"
+          (onPageChange)="onReturnedPageChange($event)"
+        ></p-paginator>
+      </div>
+    </p-tabpanel>
+  </p-tabpanels>
+</p-tabs>
 <!-- Modal is opened dynamically via DialogService -->

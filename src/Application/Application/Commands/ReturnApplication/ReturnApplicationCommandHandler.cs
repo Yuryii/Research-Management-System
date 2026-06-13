@@ -34,6 +34,7 @@ public class ReturnApplicationCommandHandler : IRequestHandler<ReturnApplication
         var applicationReturn = new ApplicationReturn
         {
             Id = Guid.NewGuid(),
+            ApplicationId = application.Id,
             Title = request.Title,
             Description = request.Description,
             RecipientId = request.RecipientId ?? application.CreatedBy
