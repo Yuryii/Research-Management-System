@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RMS.Application.Common.Interfaces;
 using RMS.Application.Common.Models;
+using RMS.Infrastructure.Data;
 
 namespace RMS.Infrastructure.Identity;
 
@@ -12,17 +13,20 @@ public class IdentityService : IIdentityService
     private readonly RoleManager<ApplicationRole> _roleManager;
     private readonly IUserClaimsPrincipalFactory<ApplicationUser> _userClaimsPrincipalFactory;
     private readonly IAuthorizationService _authorizationService;
+    private readonly ApplicationDbContext _dbContext;
 
     public IdentityService(
         UserManager<ApplicationUser> userManager,
         RoleManager<ApplicationRole> roleManager,
         IUserClaimsPrincipalFactory<ApplicationUser> userClaimsPrincipalFactory,
-        IAuthorizationService authorizationService)
+        IAuthorizationService authorizationService,
+        ApplicationDbContext dbContext)
     {
         _userManager = userManager;
         _roleManager = roleManager;
         _userClaimsPrincipalFactory = userClaimsPrincipalFactory;
         _authorizationService = authorizationService;
+        _dbContext = dbContext;
     }
 
     public async Task<string?> GetUserNameAsync(string userId)
@@ -81,6 +85,53 @@ public class IdentityService : IIdentityService
             .Where(role => role.NormalizedName != null && normalizedRoleNames.Contains(role.NormalizedName))
             .Select(role => role.Id)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyCollection<string>> GetUserIdsInRolesAsync(IEnumerable<string> roleNames, CancellationToken cancellationToken)
+    {
+        var normalizedRoleNames = roleNames
+            .Where(roleName => !string.IsNullOrWhiteSpace(roleName))
+            .Select(roleName => roleName.ToUpperInvariant())
+            .Distinct()
+            .ToList();
+
+        if (normalizedRoleNames.Count == 0)
+        {
+            return [];
+        }
+
+        var userRoles = _dbContext.Set<IdentityUserRole<string>>();
+        var roles = _dbContext.Set<ApplicationRole>();
+
+        var query = from user in _userManager.Users
+                    join ur in userRoles on user.Id equals ur.UserId
+                    join role in roles on ur.RoleId equals role.Id
+                    where role.NormalizedName != null && normalizedRoleNames.Contains(role.NormalizedName)
+                    select user.Id;
+
+        return await query.Distinct().ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyCollection<string>> GetUserIdsInRoleIdsAsync(IEnumerable<string> roleIds, CancellationToken cancellationToken)
+    {
+        var ids = roleIds
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .Distinct()
+            .ToList();
+
+        if (ids.Count == 0)
+        {
+            return [];
+        }
+
+        var userRoles = _dbContext.Set<IdentityUserRole<string>>();
+
+        var query = from user in _userManager.Users
+                    join ur in userRoles on user.Id equals ur.UserId
+                    where ids.Contains(ur.RoleId)
+                    select user.Id;
+
+        return await query.Distinct().ToListAsync(cancellationToken);
     }
 
     public async Task<bool> AuthorizeAsync(string userId, string policyName)

@@ -1,0 +1,45 @@
+// Override CoreUI dropdown max-height và ensure full content display
+:host::ng-deep {
+  .notification-dropdown {
+    max-height: 500px !important;
+    overflow-y: auto !important;
+
+    // Notification item styling
+    .notification-item {
+      color: inherit;
+      transition: background-color 0.15s ease, color 0.15s ease;
+
+      // Active/clicked state - chuyển text thành trắng
+      &:active,
+      &.active,
+      &:focus,
+      &:focus-visible {
+        color: white !important;
+        background-color: var(--cui-primary, #0d6efd) !important;
+
+        .fw-semibold {
+          color: white !important;
+        }
+
+        .text-body-secondary {
+          color: rgba(255, 255, 255, 0.85) !important;
+        }
+
+        .notification-body {
+          color: rgba(255, 255, 255, 0.85) !important;
+        }
+      }
+    }
+
+    // Ensure notification body hiển thị đầy đủ
+    .notification-body {
+      display: block !important;
+      -webkit-line-clamp: unset !important;
+      -webkit-box-orient: unset !important;
+      overflow: visible !important;
+      max-width: none !important;
+      white-space: normal !important;
+      word-break: break-word !important;
+    }
+  }
+}

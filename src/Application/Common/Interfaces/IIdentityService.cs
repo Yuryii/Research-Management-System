@@ -12,6 +12,10 @@ public interface IIdentityService
 
     Task<IReadOnlyCollection<string>> GetRoleIdsAsync(IEnumerable<string> roleNames, CancellationToken cancellationToken);
 
+    Task<IReadOnlyCollection<string>> GetUserIdsInRolesAsync(IEnumerable<string> roleNames, CancellationToken cancellationToken);
+
+    Task<IReadOnlyCollection<string>> GetUserIdsInRoleIdsAsync(IEnumerable<string> roleIds, CancellationToken cancellationToken);
+
     Task<bool> AuthorizeAsync(string userId, string policyName);
 
     Task<(Result Result, string UserId)> CreateUserAsync(string userName, string password);

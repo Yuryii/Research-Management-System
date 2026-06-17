@@ -1,7 +1,8 @@
 using RMS.Application.Common.Interfaces;
 using RMS.Domain.Constants;
 using RMS.Domain.Entities.Models;
-using DomainApplication = RMS.Domain.Entities.Models.Application;   
+using RMS.Domain.Events;
+using DomainApplication = RMS.Domain.Entities.Models.Application;
 namespace RMS.Application.Application.Commands.ForwardNextToStep;
 
 public class ForwardNextToStepCommandHandler : IRequestHandler<ForwardNextToStepCommand, Guid>
@@ -18,7 +19,7 @@ public class ForwardNextToStepCommandHandler : IRequestHandler<ForwardNextToStep
     }
 
     public async Task<Guid> Handle(ForwardNextToStepCommand request, CancellationToken cancellationToken)
-    { 
+    {
         var application = await _context.Applications
             .Include(a => a.StepDetail)
             .FirstOrDefaultAsync(a => a.Id == request.ApplicationId, cancellationToken);
@@ -70,6 +71,16 @@ public class ForwardNextToStepCommandHandler : IRequestHandler<ForwardNextToStep
             .FirstAsync(cancellationToken);
 
         application.StepDetailId = nextStepDetail.Id;
+
+        application.AddDomainEvent(new ApplicationForwardedEvent
+        {
+            ApplicationId = application.Id,
+            ApplicationCode = application.Code,
+            FromStepName = currentStep.Name,
+            ToStepName = nextStepDetail.Name,
+            FromStepId = currentStep.Id,
+            NextStepId = currentStep.NextStepId!.Value,
+        });
 
         await _context.SaveChangesAsync(cancellationToken);
 

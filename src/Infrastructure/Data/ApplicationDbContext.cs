@@ -27,6 +27,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     public DbSet<ResearchHour> ResearchHours => Set<ResearchHour>();
     public DbSet<ApplicationReturn> ApplicationReturns => Set<ApplicationReturn>();
     public DbSet<ApplicationReturnFile> ApplicationReturnFiles => Set<ApplicationReturnFile>();
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<NotificationRecipient> NotificationRecipients => Set<NotificationRecipient>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

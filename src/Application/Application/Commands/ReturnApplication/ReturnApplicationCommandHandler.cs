@@ -2,6 +2,7 @@ using RMS.Application.Common.Interfaces;
 using RMS.Domain.Constants;
 using RMS.Domain.Entities;
 using RMS.Domain.Entities.Models;
+using RMS.Domain.Events;
 
 namespace RMS.Application.Application.Commands.ReturnApplication;
 
@@ -41,6 +42,15 @@ public class ReturnApplicationCommandHandler : IRequestHandler<ReturnApplication
         };
 
         _context.ApplicationReturns.Add(applicationReturn);
+
+        application.AddDomainEvent(new ApplicationReturnedEvent
+        {
+            ApplicationId = application.Id,
+            ApplicationCode = application.Code,
+            RecipientId = applicationReturn.RecipientId ?? application.CreatedBy ?? string.Empty,
+            Title = request.Title,
+            Description = request.Description,
+        });
 
         IReadOnlyList<string> savedFilePaths = [];
         if (request.Files?.Count > 0)

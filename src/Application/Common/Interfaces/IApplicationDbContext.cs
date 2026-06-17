@@ -21,6 +21,8 @@ public interface IApplicationDbContext
     DbSet<RoleStepPermission> RoleStepPermissions { get; }
     DbSet<AcademicDegree> AcademicDegrees { get; }
     DbSet<ResearchHour> ResearchHours { get; }
+    DbSet<Notification> Notifications { get; }
+    DbSet<NotificationRecipient> NotificationRecipients { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }
