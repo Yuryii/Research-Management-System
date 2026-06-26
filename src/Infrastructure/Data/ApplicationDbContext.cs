@@ -13,10 +13,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
-    public DbSet<TodoList> TodoLists => Set<TodoList>();
-
-    public DbSet<TodoItem> TodoItems => Set<TodoItem>();
-
     public DbSet<Step> Steps => Set<Step>();
     public DbSet<DomainApplication> Applications => Set<DomainApplication>();
     public DbSet<DomainFile> Files => Set<DomainFile>();

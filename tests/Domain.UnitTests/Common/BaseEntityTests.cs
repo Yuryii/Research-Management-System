@@ -1,6 +1,5 @@
 using NUnit.Framework;
 using RMS.Domain.Common;
-using RMS.Domain.Entities;
 using RMS.Domain.Events;
 using Shouldly;
 
@@ -9,6 +8,10 @@ namespace RMS.Domain.UnitTests.Common;
 [TestFixture]
 public class BaseEntityTests
 {
+    public class TestDomainEvent : BaseEvent
+    {
+    }
+
     [Test]
     public void DomainEvents_ShouldBeEmpty_WhenCreated()
     {
@@ -24,7 +27,7 @@ public class BaseEntityTests
     {
         // Arrange
         var entity = new TestEntity();
-        var domainEvent = new TodoItemCompletedEvent(new TodoItem { Id = 1, ListId = 1 });
+        var domainEvent = new TestDomainEvent();
 
         // Act
         entity.AddDomainEvent(domainEvent);
@@ -38,7 +41,7 @@ public class BaseEntityTests
     {
         // Arrange
         var entity = new TestEntity();
-        var domainEvent = new TodoItemCompletedEvent(new TodoItem { Id = 1, ListId = 1 });
+        var domainEvent = new TestDomainEvent();
         entity.AddDomainEvent(domainEvent);
 
         // Act
@@ -53,8 +56,8 @@ public class BaseEntityTests
     {
         // Arrange
         var entity = new TestEntity();
-        entity.AddDomainEvent(new TodoItemCompletedEvent(new TodoItem { Id = 1, ListId = 1 }));
-        entity.AddDomainEvent(new TodoItemCompletedEvent(new TodoItem { Id = 2, ListId = 1 }));
+        entity.AddDomainEvent(new TestDomainEvent());
+        entity.AddDomainEvent(new TestDomainEvent());
 
         // Act
         entity.ClearDomainEvents();
@@ -81,8 +84,8 @@ public class BaseEntityTests
     {
         // Arrange
         var entity = new TestEntity();
-        entity.AddDomainEvent(new TodoItemCompletedEvent(new TodoItem { Id = 1, ListId = 1 }));
-        entity.AddDomainEvent(new TodoItemCompletedEvent(new TodoItem { Id = 2, ListId = 1 }));
+        entity.AddDomainEvent(new TestDomainEvent());
+        entity.AddDomainEvent(new TestDomainEvent());
 
         // Act & Assert
         entity.DomainEvents.Count.ShouldBe(2);

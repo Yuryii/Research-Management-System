@@ -7,10 +7,6 @@ namespace RMS.Application.Common.Interfaces;
 
 public interface IApplicationDbContext
 {
-    DbSet<TodoList> TodoLists { get; }
-
-    DbSet<TodoItem> TodoItems { get; }
-
     DbSet<DomainApplication> Applications { get; }
     DbSet<Step> Steps { get; }
     DbSet<StepDetail> StepDetails { get; }
